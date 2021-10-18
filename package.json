@@ -4,9 +4,11 @@
   "description": "LISA plugin for Zephyr",
   "scripts": {
     "build": "tsc -p .",
-    "watch": "nodemon --exec npm run build -w ./src -e ts"
+    "watch": "nodemon --exec npm run build -w ./src -e ts",
+    "postinstall": "lisa zep install"
   },
   "lisa": {
+    "friendlyName": "zep",
     "taskPath": "./lib/tasks"
   },
   "repository": {
