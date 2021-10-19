@@ -23,6 +23,10 @@ export default ({ job, application, cmd }: typeof LISA) => {
         },
       });
     },
+    options: {
+      persistentOutput: true,
+      bottomBar: Infinity,
+    },
   });
 
 }
