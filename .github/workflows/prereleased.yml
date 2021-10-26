@@ -19,3 +19,11 @@ jobs:
           echo -e "//registry-lpm.listenai.com/:always-auth=true" >> .npmrc
       - run: npm install --ignore-scripts --registry=https://registry-lpm.listenai.com
       - run: npm publish --tag=beta --registry=https://registry-lpm.listenai.com
+
+      - name: WeChat Work notification by news
+      - uses: chf007/action-wechat-work@master
+        env:
+          WECHAT_WORK_BOT_WEBHOOK: ${{secrets.WECHAT_BOT_WEBHOOK_LISA_ZEPHYR}}
+        with:
+          msgtype: news
+          articles: '[{"title":"@lisa-plugin/zephyr发布beta","description":"发布了${{ steps.get_version.outputs.VERSION }}","url":"URL","picurl":"https://listenai-external.oss-cn-beijing.aliyuncs.com/public/doc_issues/3a830074d2f1b3d43ecc971642a38225.png"}]'
