@@ -3,7 +3,8 @@ import { ParsedArgs } from 'minimist';
 import { resolve, join } from 'path';
 import { pathExists, remove } from 'fs-extra';
 
-import { VENV_HOME, VENV_BIN } from '../env';
+import { VENV_HOME, VENV_BIN, loadEnv } from '../env';
+import { get } from '../config';
 
 import withOutput from '../utils/withOutput';
 import pathWith from '../utils/pathWith';
@@ -21,10 +22,19 @@ export default ({ job, application, cmd }: typeof LISA) => {
         throw new Error(`项目不存在: ${project}`);
       }
 
-      const { ZEPHYR_BASE } = process.env;
-      const zephyr: string | null = argv.z ?? argv.zephyr;
-      if (!zephyr && !ZEPHYR_BASE) {
-        throw new Error(`需要指定 Zephyr 目录 (-z [zephyr])`);
+      const env = await get('env');
+      const envModule = env ? await loadEnv(env) : null;
+      if (!envModule) {
+        throw new Error(`需要设置环境 (lisa zep use-env [name])`);
+      }
+      const envPaths = Object.values(await envModule.path());
+
+      const sdk = await get('sdk');
+      if (!sdk) {
+        throw new Error(`需要设置 SDK (lisa zep use-sdk [path])`);
+      }
+      if (!(await pathExists(sdk))) {
+        throw new Error(`SDK 不存在: ${sdk}`);
       }
 
       const board: string | null = argv.b ?? argv.board;
@@ -39,9 +49,13 @@ export default ({ job, application, cmd }: typeof LISA) => {
       ], {
         cwd: project,
         env: {
-          ZEPHYR_BASE: zephyr ? resolve(zephyr) : ZEPHYR_BASE,
+          ZEPHYR_BASE: sdk,
           VIRTUAL_ENV: VENV_HOME,
-          ...pathWith([VENV_BIN]),
+          ...pathWith([
+            VENV_BIN,
+            ...envPaths,
+          ]),
+          ...await envModule.env(),
         },
       });
     },
