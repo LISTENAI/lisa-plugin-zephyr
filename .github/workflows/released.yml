@@ -20,7 +20,7 @@ jobs:
       - run: npm install --ignore-scripts --registry=https://registry-lpm.listenai.com
       - run: npm publish --registry=https://registry-lpm.listenai.com
       - name: WeChat Work notification by news
-      - uses: chf007/action-wechat-work@master
+        uses: chf007/action-wechat-work@master
         env:
           WECHAT_WORK_BOT_WEBHOOK: ${{secrets.WECHAT_BOT_WEBHOOK_LISA_ZEPHYR}}
         with:
