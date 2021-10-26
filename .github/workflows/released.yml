@@ -17,5 +17,5 @@ jobs:
           echo -e "//registry-lpm.listenai.com/:username=lpmadmin" >> .npmrc
           echo -e "//registry-lpm.listenai.com/:email=lpm.admin@listenai.com" >> .npmrc
           echo -e "//registry-lpm.listenai.com/:always-auth=true" >> .npmrc
-      - run: npm install --registry=https://registry-lpm.listenai.com
+      - run: npm install --ignore-scripts --registry=https://registry-lpm.listenai.com
       - run: npm publish --registry=https://registry-lpm.listenai.com
