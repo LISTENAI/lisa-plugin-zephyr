@@ -1,7 +1,6 @@
 import LISA from '@listenai/lisa_core';
-import { remove } from 'fs-extra';
 
-import { PLUGIN_HOME, VENV_HOME, VENV_BIN } from '../env';
+import { VENV_HOME, VENV_BIN } from '../env';
 
 import withOutput from '../utils/withOutput';
 import pathWith from '../utils/pathWith';
@@ -25,13 +24,6 @@ export default ({ job, cmd }: typeof LISA) => {
           ...pathWith([VENV_BIN]),
         },
       });
-    },
-  });
-
-  job('uninstall', {
-    title: '环境卸载',
-    async task(ctx, task) {
-      await remove(PLUGIN_HOME);
     },
   });
 
