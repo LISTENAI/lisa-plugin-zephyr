@@ -1,6 +1,20 @@
 import { join } from 'path';
 
-export const PLUGIN_HOME = join(__dirname, '..');
+const PLUGIN_HOME = join(__dirname, '..');
 
-export const VENV_HOME = join(PLUGIN_HOME, 'venv');
-export const VENV_BIN = join(VENV_HOME, 'bin');
+const VENV_HOME = join(PLUGIN_HOME, 'venv');
+const VENV_BIN = join(VENV_HOME, 'bin');
+
+const env = () => {
+  return {
+    VENV_HOME,
+    VENV_BIN
+  }
+}
+
+export {
+  PLUGIN_HOME,
+  VENV_HOME,
+  VENV_BIN,
+  env
+}

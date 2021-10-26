@@ -1,15 +1,20 @@
 {
   "name": "@lisa-plugin/zephyr",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.0",
   "description": "LISA plugin for Zephyr",
+  "main": "./lib/main.js",
   "scripts": {
     "build": "tsc -p .",
     "watch": "nodemon --exec npm run build -w ./src -e ts",
+    "prepublish": "npm run build",
     "postinstall": "lisa zep install"
   },
   "lisa": {
     "friendlyName": "zep",
     "taskPath": "./lib/tasks"
+  },
+  "engines": {
+    "python": "^3"
   },
   "repository": {
     "type": "git",
@@ -21,9 +26,10 @@
     "url": "https://github.com/LISTENAI/lisa-plugin-zephyr/issues"
   },
   "homepage": "https://github.com/LISTENAI/lisa-plugin-zephyr#readme",
-  "dependencies": {},
+  "dependencies": {
+    "@listenai/lisa_core": "^2.0.5"
+  },
   "devDependencies": {
-    "@listenai/lisa_core": "^2.0.5",
     "@types/minimist": "^1.2.2",
     "@types/node": "^16.11.1",
     "nodemon": "^2.0.13",
