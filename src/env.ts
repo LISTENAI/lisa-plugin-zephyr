@@ -1,20 +1,28 @@
 import { join } from 'path';
 
-const PLUGIN_HOME = join(__dirname, '..');
+export const PLUGIN_HOME = join(__dirname, '..');
 
-const VENV_HOME = join(PLUGIN_HOME, 'venv');
-const VENV_BIN = join(VENV_HOME, 'bin');
+export const VENV_HOME = join(PLUGIN_HOME, 'venv');
+export const VENV_BIN = join(VENV_HOME, 'bin');
 
-const env = () => {
-  return {
-    VENV_HOME,
-    VENV_BIN
+interface IEnv {
+  path(): Promise<Record<string, string>>;
+  version(): Promise<Record<string, string>>;
+  env(): Promise<Record<string, string>>;
+}
+
+export async function loadEnv(name: string): Promise<IEnv | null> {
+  try {
+    return await import(`@tool/${name}-env`);
+  } catch (e) {
+    return null;
   }
 }
 
-export {
-  PLUGIN_HOME,
-  VENV_HOME,
-  VENV_BIN,
-  env
+export function env() {
+  return {
+    PLUGIN_HOME,
+    VENV_HOME,
+    VENV_BIN
+  }
 }
