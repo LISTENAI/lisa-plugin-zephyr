@@ -1,10 +1,10 @@
 import LISA from '@listenai/lisa_core';
 import { ParsedArgs } from 'minimist';
 
-import { VENV_HOME, VENV_BIN } from '../env';
+import { loadBundle, makeEnv } from '../env';
+import { get } from '../config';
 
 import withOutput from '../utils/withOutput';
-import pathWith from '../utils/pathWith';
 
 export default ({ job, application, cmd }: typeof LISA) => {
 
@@ -16,10 +16,16 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
       const westArgs = argv._.slice(1);
 
+      const env = await get('env');
+      const bundle = env ? await loadBundle(env) : null;
+
+      const sdk = await get('sdk');
+      const sdkEnv = sdk ? { ZEPHYR_BASE: sdk } : {};
+
       await exec('west', westArgs, {
         env: {
-          VIRTUAL_ENV: VENV_HOME,
-          ...pathWith([VENV_BIN]),
+          ...sdkEnv,
+          ...await makeEnv(bundle),
         },
       });
     },

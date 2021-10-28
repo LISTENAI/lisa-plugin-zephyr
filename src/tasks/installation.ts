@@ -1,6 +1,6 @@
 import LISA from '@listenai/lisa_core';
 
-import { VENV_HOME, VENV_BIN } from '../env';
+import venv from '../venv';
 
 import withOutput from '../utils/withOutput';
 import pathWith from '../utils/pathWith';
@@ -13,15 +13,15 @@ export default ({ job, cmd }: typeof LISA) => {
       const exec = withOutput(cmd, task);
 
       await exec('python3', [
-        '-m', 'venv', VENV_HOME,
+        '-m', 'venv', venv.homeDir,
       ]);
 
       await exec('pip3', [
         'install', '-U', 'west',
       ], {
         env: {
-          VIRTUAL_ENV: VENV_HOME,
-          ...pathWith([VENV_BIN]),
+          ...venv.env,
+          ...pathWith([venv.binaryDir]),
         },
       });
     },

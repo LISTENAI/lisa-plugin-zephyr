@@ -1,4 +1,4 @@
-const SEP = process.platform == 'win32' ? ';' : ':';
+import { delimiter } from 'path';
 
 function findPathKey(): string | undefined {
   for (const key in process.env) {
@@ -14,8 +14,8 @@ export default function pathWith(prepend: string[]): Record<string, string> {
 
   const path = [
     ...prepend,
-    ...process.env[key]!.split(SEP),
-  ].join(SEP);
+    ...process.env[key]!.split(delimiter),
+  ].join(delimiter);
 
   return { [key]: path };
 }

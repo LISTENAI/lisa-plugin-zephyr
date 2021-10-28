@@ -1,13 +1,12 @@
 import LISA from '@listenai/lisa_core';
 import { ParsedArgs } from 'minimist';
-import { resolve, join } from 'path';
+import { join } from 'path';
 import { pathExists, remove } from 'fs-extra';
 
-import { VENV_HOME, VENV_BIN, loadEnv } from '../env';
+import { loadBundle, makeEnv } from '../env';
 import { get } from '../config';
 
 import withOutput from '../utils/withOutput';
-import pathWith from '../utils/pathWith';
 
 export default ({ job, application, cmd }: typeof LISA) => {
 
@@ -23,11 +22,10 @@ export default ({ job, application, cmd }: typeof LISA) => {
       }
 
       const env = await get('env');
-      const envModule = env ? await loadEnv(env) : null;
-      if (!envModule) {
+      const bundle = env ? await loadBundle(env) : null;
+      if (!bundle) {
         throw new Error(`需要设置环境 (lisa zep use-env [name])`);
       }
-      const envPaths = Object.values(await envModule.path());
 
       const sdk = await get('sdk');
       if (!sdk) {
@@ -50,12 +48,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
         cwd: project,
         env: {
           ZEPHYR_BASE: sdk,
-          VIRTUAL_ENV: VENV_HOME,
-          ...pathWith([
-            VENV_BIN,
-            ...envPaths,
-          ]),
-          ...await envModule.env(),
+          ...await makeEnv(bundle),
         },
       });
     },

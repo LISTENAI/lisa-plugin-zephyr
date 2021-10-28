@@ -3,11 +3,10 @@ import { ParsedArgs } from 'minimist';
 import { resolve, join } from 'path';
 import { pathExists } from 'fs-extra';
 
-import { PLUGIN_HOME, VENV_HOME, VENV_BIN, loadEnv } from '../env';
+import { PLUGIN_HOME, loadBundle, makeEnv } from '../env';
 import { get, set } from '../config';
 
 import withOutput from '../utils/withOutput';
-import pathWith from '../utils/pathWith';
 
 export default ({ job, application, cmd }: typeof LISA) => {
 
@@ -26,27 +25,8 @@ export default ({ job, application, cmd }: typeof LISA) => {
       }
 
       const env = await get('env');
-      const mod = env ? await loadEnv(env) : null;
+      const mod = env ? await loadBundle(env) : null;
       task.output = `当前环境: ${env && mod ? env : '(未设置)'}`;
-
-      if (mod) {
-        if (argv['print-paths']) {
-          const paths = await mod.path();
-          for (const tool in paths) {
-            task.output = `${tool}: ${paths[tool]}`;
-          }
-        } else if (argv['print-vers']) {
-          const vers = await mod.version();
-          for (const tool in vers) {
-            task.output = `${tool}: ${vers[tool]}`;
-          }
-        } else if (argv['print-env']) {
-          const envs = await mod.env();
-          for (const key in envs) {
-            task.output = `${key}=${envs[key]}`;
-          }
-        }
-      }
     },
     options: {
       persistentOutput: true,
@@ -73,12 +53,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
       if (sdk) {
         await exec('pip3', [
           'install', '-U', '-r', join(sdk, 'scripts', 'requirements.txt'),
-        ], {
-          env: {
-            VIRTUAL_ENV: VENV_HOME,
-            ...pathWith([VENV_BIN]),
-          },
-        });
+        ], { env: await makeEnv() });
       }
 
       task.output = `SDK: ${sdk || '(未设置)'}`;
