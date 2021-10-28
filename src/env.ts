@@ -8,6 +8,7 @@ export const PLUGIN_HOME = join(__dirname, '..');
 const BUILTIN_BINARIES = [
   './venv',
   '@binary/cmake',
+  '@binary/ninja',
 ];
 
 interface Module<T> {
