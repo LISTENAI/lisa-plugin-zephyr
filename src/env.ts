@@ -28,29 +28,29 @@ export async function loadBundle(name: string): Promise<Bundle | null> {
   }
 }
 
-export async function makeEnv(bundle?: Bundle | null): Promise<Record<string, string>> {
-  const binaries = [...BUILTIN_BINARIES];
-  for (const name of bundle?.binaries || []) {
-    binaries.push(`@binary/${name}`);
+export async function loadBinaries(bundle?: Bundle | null): Promise<Record<string, Binary>> {
+  const binaries: Record<string, Binary> = {};
+  for (const name of BUILTIN_BINARIES) {
+    const unprefixedName = name.split('/').slice(1).join('/');
+    binaries[unprefixedName] = await loadModule<Binary>(name);
   }
+  for (const name of bundle?.binaries || []) {
+    binaries[name] = await loadModule<Binary>(`@binary/${name}`);
+  }
+  return binaries;
+}
 
+export async function makeEnv(bundle?: Bundle | null): Promise<Record<string, string>> {
   const env: Record<string, string> = {};
   const paths: string[] = [];
 
-  for (const binary of binaries) {
-    const pkg = await loadModule<Binary>(binary);
-    Object.assign(env, pkg.env);
-    paths.push(pkg.binaryDir);
+  for (const binary of Object.values(await loadBinaries(bundle))) {
+    Object.assign(env, binary.env);
+    paths.push(binary.binaryDir);
   }
 
   Object.assign(env, bundle?.env || {});
   Object.assign(env, pathWith(paths));
 
   return env;
-}
-
-export function env() {
-  return {
-    PLUGIN_HOME,
-  }
 }
