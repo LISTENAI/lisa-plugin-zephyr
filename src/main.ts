@@ -1,5 +1,9 @@
-import { PLUGIN_HOME, loadBundle, loadBinaries } from './env';
+import { promisify } from 'util';
+import { execFile as _execFile } from 'child_process';
+import { PLUGIN_HOME, loadBundle, loadBinaries, makeEnv } from './env';
 import { get } from './config';
+
+const execFile = promisify(_execFile);
 
 export async function env(): Promise<Record<string, string>> {
   const env = await get('env');
@@ -16,9 +20,21 @@ export async function env(): Promise<Record<string, string>> {
   Object.assign(variables, bundle?.env || {});
 
   return {
+    west: await getWestVersion() || '(未安装)',
     ...versions,
     ZEPHYR_BASE: await get('sdk') || '(未设置)',
     PLUGIN_HOME,
     ...variables,
   };
+}
+
+async function getWestVersion(): Promise<string | null> {
+  try {
+    const { stdout } = await execFile('python', [
+      '-m', 'west', '--version',
+    ], { env: await makeEnv() });
+    return stdout.trim();
+  } catch (e) {
+    return null;
+  }
 }
