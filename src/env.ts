@@ -53,8 +53,12 @@ export async function makeEnv(options?: MakeEnvOptions): Promise<Record<string, 
   const paths: string[] = [];
 
   for (const binary of Object.values(await loadBinaries(options?.bundle))) {
-    Object.assign(env, binary.env);
-    paths.push(binary.binaryDir);
+    if (binary.env) {
+      Object.assign(env, binary.env);
+    }
+    if (binary.binaryDir) {
+      paths.push(binary.binaryDir);
+    }
   }
 
   if (options?.sdk) {

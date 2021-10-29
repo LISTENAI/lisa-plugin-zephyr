@@ -36,6 +36,11 @@
   resolved "https://registry-lpm.listenai.com/@binary/type/download/@binary/type-1.0.1.tgz#e406b88ed1d83be1236516a10c3ad3992168a242"
   integrity sha1-5Aa4jtHYO+EjZRahDDrTmSFookI=
 
+"@binary/type@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry-lpm.listenai.com/@binary/type/download/@binary/type-1.0.2.tgz#eb4c2edd772bfb44a6ff127762e2ff48700a8359"
+  integrity sha1-60wu3Xcr+0Sm/xJ3YuL/SHAKg1k=
+
 "@binary/xz@^1.0.0-5.2.5":
   version "1.0.0-5.2.5"
   resolved "https://registry-lpm.listenai.com/@binary/xz/download/@binary/xz-1.0.0-5.2.5.tgz#d45a2b1cf9fd0d11dd1652c966550e7ad8148ed6"
