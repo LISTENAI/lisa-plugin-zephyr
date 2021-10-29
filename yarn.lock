@@ -15,6 +15,14 @@
     "@binary/type" "^1.0.1"
     download "^8.0.0"
 
+"@binary/dtc@^1.0.0-1.6.0":
+  version "1.0.0-1.6.0"
+  resolved "https://registry-lpm.listenai.com/@binary/dtc/download/@binary/dtc-1.0.0-1.6.0.tgz#b950aa00cd5c5f2ec0be807be38371c7e267e01f"
+  integrity sha1-uVCqAM1cXy7AvoB744Nxx+Jn4B8=
+  dependencies:
+    "@binary/type" "^1.0.2"
+    download "^8.0.0"
+
 "@binary/ninja@^1.0.0-v1.10.2":
   version "1.0.0-v1.10.2"
   resolved "https://registry-lpm.listenai.com/@binary/ninja/download/@binary/ninja-1.0.0-v1.10.2.tgz#5f722c11514afe57ad56e733063e5b0fb6b7c9bf"
