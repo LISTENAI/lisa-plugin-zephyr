@@ -8,6 +8,8 @@ export const PLUGIN_HOME = join(__dirname, '..');
 const CONFIG_DIR = join(PLUGIN_HOME, 'config');
 const WEST_CONFIG_GLOBAL = join(CONFIG_DIR, 'westconfig');
 
+const PIP_INDEX_URL = 'https://pypi.tuna.tsinghua.edu.cn/simple';
+
 const BUILTIN_BINARIES = [
   '@binary/cmake',
   '@binary/ninja',
@@ -67,6 +69,7 @@ export async function makeEnv(options?: MakeEnvOptions): Promise<Record<string, 
   }
 
   Object.assign(env, {
+    PIP_INDEX_URL,
     WEST_CONFIG_GLOBAL,
   });
 

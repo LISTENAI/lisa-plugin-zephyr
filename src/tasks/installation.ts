@@ -1,7 +1,6 @@
 import LISA from '@listenai/lisa_core';
 
 import withOutput from '../utils/withOutput';
-import pathWith from '../utils/pathWith';
 import { makeEnv } from '../env';
 
 export default ({ job, cmd }: typeof LISA) => {
