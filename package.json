@@ -27,6 +27,7 @@
     "@binary/bundle": "^1.0.0",
     "@binary/cmake": "^1.0.1-3.21.3",
     "@binary/ninja": "^1.0.0-v1.10.2",
+    "@binary/python3": "^1.0.0-3.10.0",
     "@binary/type": "^1.0.1",
     "@binary/xz": "^1.0.0-5.2.5",
     "@listenai/lisa_core": "^2.0.5",

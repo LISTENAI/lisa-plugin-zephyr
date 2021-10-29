@@ -1,9 +1,8 @@
 import LISA from '@listenai/lisa_core';
 
-import venv from '../venv';
-
 import withOutput from '../utils/withOutput';
 import pathWith from '../utils/pathWith';
+import { makeEnv } from '../env';
 
 export default ({ job, cmd }: typeof LISA) => {
 
@@ -11,19 +10,17 @@ export default ({ job, cmd }: typeof LISA) => {
     title: '环境安装',
     async task(ctx, task) {
       const exec = withOutput(cmd, task);
+      const env = await makeEnv();
 
-      await exec('python3', [
-        '-m', 'venv', venv.homeDir,
-      ]);
+      await exec('python', [
+        '-m', 'pip',
+        'install', '--upgrade', 'pip',
+      ], { env });
 
-      await exec('pip3', [
-        'install', '-U', 'west',
-      ], {
-        env: {
-          ...venv.env,
-          ...pathWith([venv.binaryDir]),
-        },
-      });
+      await exec('python', [
+        '-m', 'pip',
+        'install', 'west',
+      ], { env });
     },
   });
 

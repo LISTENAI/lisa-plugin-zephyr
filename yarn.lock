@@ -23,6 +23,14 @@
     "@binary/type" "^1.0.1"
     download "^8.0.0"
 
+"@binary/python3@^1.0.0-3.10.0":
+  version "1.0.0-3.10.0"
+  resolved "https://registry-lpm.listenai.com/@binary/python3/download/@binary/python3-1.0.0-3.10.0.tgz#b550898105e79155f6e8152b935145cb4cdcdf4a"
+  integrity sha1-tVCJgQXnkVX26BUrk1FFy0zc30o=
+  dependencies:
+    "@binary/type" "^1.0.1"
+    download "^8.0.0"
+
 "@binary/type@^1.0.1":
   version "1.0.1"
   resolved "https://registry-lpm.listenai.com/@binary/type/download/@binary/type-1.0.1.tgz#e406b88ed1d83be1236516a10c3ad3992168a242"

@@ -51,8 +51,9 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
       const sdk = await get('sdk');
       if (sdk) {
-        await exec('pip3', [
-          'install', '-U', '-r', join(sdk, 'scripts', 'requirements.txt'),
+        await exec('python', [
+          '-m', 'pip',
+          'install', '-r', join(sdk, 'scripts', 'requirements.txt'),
         ], { env: await makeEnv() });
       }
 

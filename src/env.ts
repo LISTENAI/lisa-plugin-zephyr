@@ -6,9 +6,9 @@ import pathWith from './utils/pathWith';
 export const PLUGIN_HOME = join(__dirname, '..');
 
 const BUILTIN_BINARIES = [
-  './venv',
   '@binary/cmake',
   '@binary/ninja',
+  '@binary/python3',
   '@binary/xz',
 ];
 
