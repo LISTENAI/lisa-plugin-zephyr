@@ -5,7 +5,8 @@ import pathWith from './utils/pathWith';
 
 export const PLUGIN_HOME = join(__dirname, '..');
 
-const WEST_CONFIG_GLOBAL = join(PLUGIN_HOME, 'westconfig');
+const CONFIG_DIR = join(PLUGIN_HOME, 'config');
+const WEST_CONFIG_GLOBAL = join(CONFIG_DIR, 'westconfig');
 
 const BUILTIN_BINARIES = [
   '@binary/cmake',
@@ -65,7 +66,9 @@ export async function makeEnv(options?: MakeEnvOptions): Promise<Record<string, 
     env['ZEPHYR_BASE'] = options.sdk;
   }
 
-  env['WEST_CONFIG_GLOBAL'] = WEST_CONFIG_GLOBAL;
+  Object.assign(env, {
+    WEST_CONFIG_GLOBAL,
+  });
 
   Object.assign(env, options?.bundle?.env || {});
   Object.assign(env, pathWith(paths));
