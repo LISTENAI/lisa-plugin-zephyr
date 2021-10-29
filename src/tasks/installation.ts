@@ -21,6 +21,11 @@ export default ({ job, cmd }: typeof LISA) => {
         '-m', 'pip',
         'install', 'west',
       ], { env });
+
+      await exec('west', [
+        'config', '--global',
+        'zephyr.base-prefer', 'env',
+      ], { env });
     },
   });
 
