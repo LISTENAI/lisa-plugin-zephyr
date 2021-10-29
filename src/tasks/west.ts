@@ -20,13 +20,9 @@ export default ({ job, application, cmd }: typeof LISA) => {
       const bundle = env ? await loadBundle(env) : null;
 
       const sdk = await get('sdk');
-      const sdkEnv = sdk ? { ZEPHYR_BASE: sdk } : {};
 
       await exec('west', westArgs, {
-        env: {
-          ...sdkEnv,
-          ...await makeEnv(bundle),
-        },
+        env: await makeEnv({ bundle, sdk }),
       });
     },
     options: {

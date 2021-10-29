@@ -41,16 +41,25 @@ export async function loadBinaries(bundle?: Bundle | null): Promise<Record<strin
   return binaries;
 }
 
-export async function makeEnv(bundle?: Bundle | null): Promise<Record<string, string>> {
+interface MakeEnvOptions {
+  bundle?: Bundle | null;
+  sdk?: string | null;
+}
+
+export async function makeEnv(options?: MakeEnvOptions): Promise<Record<string, string>> {
   const env: Record<string, string> = {};
   const paths: string[] = [];
 
-  for (const binary of Object.values(await loadBinaries(bundle))) {
+  for (const binary of Object.values(await loadBinaries(options?.bundle))) {
     Object.assign(env, binary.env);
     paths.push(binary.binaryDir);
   }
 
-  Object.assign(env, bundle?.env || {});
+  if (options?.sdk) {
+    env['ZEPHYR_BASE'] = options.sdk;
+  }
+
+  Object.assign(env, options?.bundle?.env || {});
   Object.assign(env, pathWith(paths));
 
   return env;

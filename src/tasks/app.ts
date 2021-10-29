@@ -46,10 +46,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
         '.'
       ], {
         cwd: project,
-        env: {
-          ZEPHYR_BASE: sdk,
-          ...await makeEnv(bundle),
-        },
+        env: await makeEnv({ bundle, sdk }),
       });
     },
     options: {
