@@ -9,6 +9,7 @@ const BUILTIN_BINARIES = [
   './venv',
   '@binary/cmake',
   '@binary/ninja',
+  '@binary/xz',
 ];
 
 interface Module<T> {

@@ -28,6 +28,14 @@
   resolved "https://registry-lpm.listenai.com/@binary/type/download/@binary/type-1.0.1.tgz#e406b88ed1d83be1236516a10c3ad3992168a242"
   integrity sha1-5Aa4jtHYO+EjZRahDDrTmSFookI=
 
+"@binary/xz@^1.0.0-5.2.5":
+  version "1.0.0-5.2.5"
+  resolved "https://registry-lpm.listenai.com/@binary/xz/download/@binary/xz-1.0.0-5.2.5.tgz#d45a2b1cf9fd0d11dd1652c966550e7ad8148ed6"
+  integrity sha1-1ForHPn9DRHdFlLJZlUOetgUjtY=
+  dependencies:
+    "@binary/type" "^1.0.1"
+    download "^8.0.0"
+
 "@cspotcode/source-map-consumer@0.8.0":
   version "0.8.0"
   resolved "https://registry.npmjs.org/@cspotcode/source-map-consumer/-/source-map-consumer-0.8.0.tgz#33bf4b7b39c178821606f669bbc447a6a629786b"
