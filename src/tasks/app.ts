@@ -40,7 +40,8 @@ export default ({ job, application, cmd }: typeof LISA) => {
         throw new Error(`需要指定板型 (-b [board])`);
       }
 
-      await exec('west', [
+      await exec('python', [
+        '-m', 'west',
         'build',
         '-b', board,
         '.'

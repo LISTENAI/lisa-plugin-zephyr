@@ -21,7 +21,10 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
       const sdk = await get('sdk');
 
-      await exec('west', westArgs, {
+      await exec('python', [
+        '-m', 'west',
+        ...westArgs,
+      ], {
         env: await makeEnv({ bundle, sdk }),
       });
     },
