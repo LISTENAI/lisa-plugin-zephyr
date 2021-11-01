@@ -19,6 +19,9 @@
   },
   "author": "LISTENAI",
   "license": "UNLICENSED",
+  "files": [
+    "lib"
+  ],
   "bugs": {
     "url": "https://github.com/LISTENAI/lisa-plugin-zephyr/issues"
   },
