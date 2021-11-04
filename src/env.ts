@@ -1,6 +1,6 @@
 import { Bundle } from '@binary/bundle';
 import { Binary } from '@binary/type';
-import { join } from 'path';
+import { delimiter, join } from 'path';
 import pathWith from './utils/pathWith';
 
 export const PLUGIN_HOME = join(__dirname, '..');
@@ -54,14 +54,16 @@ interface MakeEnvOptions {
 
 export async function makeEnv(options?: MakeEnvOptions): Promise<Record<string, string>> {
   const env: Record<string, string> = {};
-  const paths: string[] = [];
+  const binaries: string[] = [];
+  const libraries: string[] = [];
 
   for (const binary of Object.values(await loadBinaries(options?.bundle))) {
     if (binary.env) {
       Object.assign(env, binary.env);
     }
-    if (binary.binaryDir) {
-      paths.push(binary.binaryDir);
+    binaries.push(binary.binaryDir);
+    if (binary.libraryDir) {
+      libraries.push(binary.libraryDir);
     }
   }
 
@@ -75,7 +77,15 @@ export async function makeEnv(options?: MakeEnvOptions): Promise<Record<string, 
   });
 
   Object.assign(env, options?.bundle?.env || {});
-  Object.assign(env, pathWith(paths));
+  Object.assign(env, pathWith(binaries));
+
+  if (libraries.length > 0 && process.platform == 'linux') {
+    const { LD_LIBRARY_PATH } = process.env;
+    env['LD_LIBRARY_PATH'] = [
+      ...libraries,
+      ...LD_LIBRARY_PATH ? LD_LIBRARY_PATH.split(delimiter) : [],
+    ].join(delimiter);
+  }
 
   return env;
 }

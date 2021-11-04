@@ -32,7 +32,7 @@
     "@binary/dtc": "^1.1.1-1.6.0",
     "@binary/ninja": "^1.1.0-v1.10.2",
     "@binary/python3": "^1.1.2-3.10.0",
-    "@binary/type": "^1.0.2",
+    "@binary/type": "^1.0.4",
     "@binary/xz": "^1.1.0-5.2.5",
     "@listenai/lisa_core": "^2.0.5",
     "js-yaml": "^4.1.0"

@@ -39,11 +39,6 @@
     "@binary/type" "^1.0.3"
     "@xingrz/download2" "^9.0.0-alpha.2"
 
-"@binary/type@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry-lpm.listenai.com/@binary/type/download/@binary/type-1.0.2.tgz#eb4c2edd772bfb44a6ff127762e2ff48700a8359"
-  integrity sha1-60wu3Xcr+0Sm/xJ3YuL/SHAKg1k=
-
 "@binary/type@^1.0.3", "@binary/type@^1.0.4":
   version "1.0.4"
   resolved "https://registry-lpm.listenai.com/@binary/type/download/@binary/type-1.0.4.tgz#90f1ee052574b4dcc074e1a3a55a8b11de1bd13e"
