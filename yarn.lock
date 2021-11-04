@@ -23,6 +23,14 @@
     "@binary/type" "^1.0.4"
     "@xingrz/download2" "^9.0.0-alpha.2"
 
+"@binary/gperf@^1.0.0-3.1":
+  version "1.0.0-3.1"
+  resolved "https://registry-lpm.listenai.com/@binary/gperf/download/@binary/gperf-1.0.0-3.1.tgz#d49b75c83f477b7a5fa7c1151b0640739324108a"
+  integrity sha1-1Jt1yD9He3pfp8EVGwZAc5MkEIo=
+  dependencies:
+    "@binary/type" "^1.0.4"
+    "@xingrz/download2" "^9.0.0-alpha.2"
+
 "@binary/ninja@^1.1.0-v1.10.2":
   version "1.1.0-v1.10.2"
   resolved "https://registry-lpm.listenai.com/@binary/ninja/download/@binary/ninja-1.1.0-v1.10.2.tgz#4b135ddeb266a67d09e64d3e4f74422adad74d9a"

@@ -13,6 +13,7 @@ const PIP_INDEX_URL = 'https://pypi.tuna.tsinghua.edu.cn/simple';
 const BUILTIN_BINARIES = [
   '@binary/cmake',
   '@binary/dtc',
+  '@binary/gperf',
   '@binary/ninja',
   '@binary/python3',
   '@binary/xz',
