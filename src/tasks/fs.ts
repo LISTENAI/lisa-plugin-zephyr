@@ -2,6 +2,8 @@ import LISA from '@listenai/lisa_core'
 import * as path from 'path'
 import { ParsedArgs } from 'minimist'
 import * as YAML from 'js-yaml'
+import { workspace } from '../utils/ux'
+import { LTFSBuild } from '../utils/fsbuild'
 
 const RESOURCE_DIR = 'resource'
 const FS_CONFIG_PATH = path.join(RESOURCE_DIR, 'fs.yaml')
@@ -21,6 +23,22 @@ const MOCK_DTS: {
   },
 }
 
+function loadYaml(fsymlPath: string) {
+  const {fs, application} = LISA
+  let fsyml: {
+    [key: string]: any
+  }
+  try {
+    fsyml = YAML.load(fs.readFileSync(fsymlPath).toString()) as {
+      [key: string]: any
+    }
+  } catch (e) {
+    application.debug(e)
+    fsyml = {}
+  }
+  return fsyml
+}
+
 export default ({ job, application, cmd, fs }: typeof LISA) => {
 
   job('fs:init', {
@@ -30,31 +48,19 @@ export default ({ job, application, cmd, fs }: typeof LISA) => {
       // ...
 
       // 确定项目目录
-      const argv = application.argv as ParsedArgs
-      const projectRoot = argv.p ? path.resolve(process.cwd(), argv.p) : process.cwd()
-      application.debug('projectRoot->', projectRoot)
+      const projectRoot = workspace()
       fs.mkdirpSync(path.resolve(path.join(projectRoot, RESOURCE_DIR)))
 
       // YAML解析
       const fsymlPath = path.resolve(path.join(projectRoot, FS_CONFIG_PATH))
-      let fsyml: {
-        [key: string]: any
-      }
-      try {
-        fsyml = YAML.load(fs.readFileSync(fsymlPath).toString()) as {
-          [key: string]: any
-        }
-      } catch (e) {
-        application.debug(e)
-        fsyml = {}
-      }
+      let fsyml = loadYaml(fsymlPath)
 
       // 创建文件夹结构
       Object.keys(MOCK_DTS).forEach(key => {
         const labelName = MOCK_DTS[key]?.label
         application.debug('mkdirp->', path.resolve(path.join(projectRoot, RESOURCE_DIR, labelName)))
         fs.mkdirpSync(path.resolve(path.join(projectRoot, RESOURCE_DIR, labelName)))
-        fsyml[key] = fsyml[key] || DEFAULT_FS_SYSTEM
+        fsyml[labelName] = fsyml[labelName] || DEFAULT_FS_SYSTEM
       })
 
       // 写入fs.yaml
@@ -65,7 +71,29 @@ export default ({ job, application, cmd, fs }: typeof LISA) => {
   job('fs:build', {
     title: '打包资源镜像',
     async task(ctx, task) {
+      // 确定项目目录
+      const projectRoot = workspace()
+      const fsymlPath = path.resolve(path.join(projectRoot, FS_CONFIG_PATH))
+      // 判断是否存在fsyml配置文件
+      if (!fs.existsSync(fsymlPath)) {
+        throw new Error(`当前无需要打包的资源配置，可先执行lisa zep fs:init进行初始化`);
+      }
+      // 解析fsyml配置文件
+      let fsyml = loadYaml(fsymlPath)
+      application.debug(fsyml)
 
+      const res = await Promise.all(
+        Object.keys(fsyml).map(item => {
+          // 确保存在该资源文件夹
+          fs.mkdirpSync(path.resolve(path.join(projectRoot, RESOURCE_DIR, item)))
+          return LTFSBuild(
+            path.resolve(path.join(projectRoot, RESOURCE_DIR, item)),
+            path.resolve(path.join(projectRoot, 'build', 'resource', `${item}.bin`)),
+            4096
+          )
+        })
+      )
+      application.debug(res)
     },
   });
 
