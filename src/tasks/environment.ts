@@ -18,12 +18,11 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
       const name = argv._[1];
       if (name && (name != await get('env') || argv['update'])) {
-        await exec('npm', [
-          '--registry', 'https://registry-lpm.listenai.com',
-          '--loglevel', 'info',
+        await exec('lisa', [
           'install', `@tool/${name}-env`,
           '--no-save',
           '--package-lock', 'false',
+          '--loglevel', 'info',
         ], {
           cwd: PLUGIN_HOME,
         });
