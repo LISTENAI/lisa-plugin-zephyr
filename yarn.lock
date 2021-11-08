@@ -31,6 +31,14 @@
     "@binary/type" "^1.0.4"
     "@xingrz/download2" "^9.0.0-alpha.2"
 
+"@binary/mklfs@^1.0.0-1.0.0":
+  version "1.0.0-1.0.0"
+  resolved "https://registry-lpm.listenai.com/@binary/mklfs/download/@binary/mklfs-1.0.0-1.0.0.tgz#01c05a5bed43ed7878f4e5a824ae3e32079a3939"
+  integrity sha1-AcBaW+1D7Xh49OWoJK4+MgeaOTk=
+  dependencies:
+    "@binary/type" "^1.0.4"
+    "@xingrz/download2" "^9.0.0-alpha.2"
+
 "@binary/ninja@^1.1.0-v1.10.2":
   version "1.1.0-v1.10.2"
   resolved "https://registry-lpm.listenai.com/@binary/ninja/download/@binary/ninja-1.1.0-v1.10.2.tgz#4b135ddeb266a67d09e64d3e4f74422adad74d9a"
@@ -2433,3 +2441,8 @@ yn@3.1.1:
   version "3.1.1"
   resolved "https://registry.nlark.com/yn/download/yn-3.1.1.tgz#1e87401a09d767c1d5eab26a6e4c185182d2eb50"
   integrity sha1-HodAGgnXZ8HV6rJqbkwYUYLS61A=
+
+zephyr-dts@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmmirror.com/zephyr-dts/download/zephyr-dts-1.0.1.tgz#1aa582e98dfd8c2a337a5364d897af1ac2dbfedd"
+  integrity sha512-W8z2D/bqtkwpyXV6ZTctS+eQvn2ORZGXVcei8sAGjDGoEROIWbTtEPLorG/f7qgSMAd5JCulMzPtpSZrfURTSw==
