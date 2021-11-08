@@ -2442,7 +2442,7 @@ yn@3.1.1:
   resolved "https://registry.nlark.com/yn/download/yn-3.1.1.tgz#1e87401a09d767c1d5eab26a6e4c185182d2eb50"
   integrity sha1-HodAGgnXZ8HV6rJqbkwYUYLS61A=
 
-zephyr-dts@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmmirror.com/zephyr-dts/download/zephyr-dts-1.0.0.tgz#a98961dc0baefc31165c43f0af178006c97e2fcb"
-  integrity sha1-qYlh3Auu/DEWXEPwrxeABsl+L8s=
+zephyr-dts@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmmirror.com/zephyr-dts/download/zephyr-dts-1.0.1.tgz#1aa582e98dfd8c2a337a5364d897af1ac2dbfedd"
+  integrity sha512-W8z2D/bqtkwpyXV6ZTctS+eQvn2ORZGXVcei8sAGjDGoEROIWbTtEPLorG/f7qgSMAd5JCulMzPtpSZrfURTSw==

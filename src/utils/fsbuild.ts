@@ -10,7 +10,7 @@ import { loadBundle, makeEnv } from '../env';
 export async function LTFSBuild(dir: string, targetPath: string, regSize: number) {
   // test
   try {
-    await LISA.cmd('mklfs', [ dir, targetPath, regSize+''], {
+    await LISA.cmd('mklfs', [ dir, targetPath, String(regSize)], {
       env: await makeEnv(),
     });  
   } catch (error) {
