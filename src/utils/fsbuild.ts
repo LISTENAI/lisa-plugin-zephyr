@@ -1,4 +1,5 @@
 import LISA from '@listenai/lisa_core'
+import { loadBundle, makeEnv } from '../env';
 
 /**
  * LTFS打包
@@ -8,10 +9,13 @@ import LISA from '@listenai/lisa_core'
  */
 export async function LTFSBuild(dir: string, targetPath: string, regSize: number) {
   // test
-  await new Promise((resolve, reject) => {
-    setTimeout(() => {
-      LISA.fs.writeFileSync(targetPath, '')
-    }, 3000)
-  })
+  try {
+    await LISA.cmd('mklfs', [ dir, targetPath, regSize+''], {
+      env: await makeEnv(),
+    });  
+  } catch (error) {
+    LISA.application.debug(error)
+    throw new Error('打包失败')    
+  }
 }
 

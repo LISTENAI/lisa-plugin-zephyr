@@ -14,6 +14,7 @@ const BUILTIN_BINARIES = [
   '@binary/cmake',
   '@binary/dtc',
   '@binary/gperf',
+  '@binary/mklfs',
   '@binary/ninja',
   '@binary/python3',
   '@binary/xz',

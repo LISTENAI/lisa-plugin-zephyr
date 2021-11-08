@@ -1,11 +1,12 @@
 import LISA from '@listenai/lisa_core'
 import * as path from 'path'
-import { ParsedArgs } from 'minimist'
 import * as YAML from 'js-yaml'
 import { workspace } from '../utils/ux'
 import { LTFSBuild } from '../utils/fsbuild'
+import { loadDT } from 'zephyr-dts';
 
 const RESOURCE_DIR = 'resource'
+const BUILD_DIR = 'build'
 const FS_CONFIG_PATH = path.join(RESOURCE_DIR, 'fs.yaml')
 const DEFAULT_FS_SYSTEM = 'LFSE'
 
@@ -44,11 +45,23 @@ export default ({ job, application, cmd, fs }: typeof LISA) => {
   job('fs:init', {
     title: '资源结构初始化',
     async task(ctx, task) {
+      const projectRoot = workspace()
       // 解析dts
       // ...
+      // if (!fs.existsSync(path.resolve(path.join(projectRoot, BUILD_DIR)))) {
+        
+      // }
 
+      // const dt = await loadDT(path.resolve(path.join(projectRoot, BUILD_DIR)))
+      // application.debug(dt)
+      // const flash = dt.choose('zephyr,flash');
+      // application.debug(flash)
+      // if (!flash) {
+      //   throw new Error(`当前项目没有分配flash分区`);
+      // }
+      // return
       // 确定项目目录
-      const projectRoot = workspace()
+      
       fs.mkdirpSync(path.resolve(path.join(projectRoot, RESOURCE_DIR)))
 
       // YAML解析
@@ -89,7 +102,7 @@ export default ({ job, application, cmd, fs }: typeof LISA) => {
           return LTFSBuild(
             path.resolve(path.join(projectRoot, RESOURCE_DIR, item)),
             path.resolve(path.join(projectRoot, 'build', 'resource', `${item}.bin`)),
-            4096
+            40960
           )
         })
       )
@@ -107,7 +120,8 @@ export default ({ job, application, cmd, fs }: typeof LISA) => {
   job('fs:clean', {
     title: '清理资源镜像',
     async task(ctx, task) {
-      
+      const projectRoot = workspace()
+      await fs.remove(path.resolve(path.join(projectRoot, 'build', 'resource')))
     },
   });
 
