@@ -16,7 +16,7 @@ const BUILTIN_BINARIES = [
   '@binary/gperf',
   '@binary/mklfs',
   '@binary/ninja',
-  '@binary/python3',
+  '@binary/python-3.9',
   '@binary/xz',
 ];
 
