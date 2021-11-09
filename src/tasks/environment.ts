@@ -19,7 +19,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
       const name = argv._[1];
       if (name && (name != await get('env') || argv['update'])) {
         await exec('lisa', [
-          'install', `@tool/${name}-env`,
+          'install', `@lisa-env/${name}`,
           '--no-save',
           '--package-lock', 'false',
           '--loglevel', 'info',

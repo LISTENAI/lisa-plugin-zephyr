@@ -1,4 +1,4 @@
-import { Bundle } from '@binary/bundle';
+import { Bundle } from '@lisa-env/type';
 import { Binary } from '@binary/type';
 import { delimiter, join } from 'path';
 import pathWith from './utils/pathWith';
@@ -31,7 +31,7 @@ async function loadModule<T>(name: string): Promise<T> {
 
 export async function loadBundle(name: string): Promise<Bundle | null> {
   try {
-    return await loadModule(`@tool/${name}-env`);
+    return await loadModule(`@lisa-env/${name}`);
   } catch (e) {
     return null;
   }

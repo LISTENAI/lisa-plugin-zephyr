@@ -2,11 +2,6 @@
 # yarn lockfile v1
 
 
-"@binary/bundle@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry-lpm.listenai.com/@binary/bundle/download/@binary/bundle-1.0.0.tgz#7760bb93de8ed3c975343569997c1979aeb0833d"
-  integrity sha1-d2C7k96O08l1NDVpmXwZea6wgz0=
-
 "@binary/cmake@^1.1.0-3.21.4":
   version "1.1.0-3.21.4"
   resolved "https://registry-lpm.listenai.com/@binary/cmake/download/@binary/cmake-1.1.0-3.21.4.tgz#fdee7032d3ab84b6211e6042b11f1d33cbf740fa"
@@ -79,6 +74,11 @@
   integrity sha512-X4xqRHqN8ACt2aHVe51OxeA2HjbcL4MqFqXkrmQszJ1NOUuUu5u6Vqx/0lZSVNku7velL5FC/s5uEAj1lsBMhA==
   dependencies:
     "@cspotcode/source-map-consumer" "0.8.0"
+
+"@lisa-env/type@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry-lpm.listenai.com/@lisa-env/type/download/@lisa-env/type-1.1.0.tgz#105487f445e876e8c7066ce02ebaf6c956adf0b3"
+  integrity sha1-EFSH9EXodujHBmzgLrr2yVat8LM=
 
 "@listenai/lisa_core@^2.0.5":
   version "2.0.5"
