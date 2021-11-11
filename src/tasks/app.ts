@@ -1,6 +1,6 @@
 import LISA from '@listenai/lisa_core';
 import { ParsedArgs } from 'minimist';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { pathExists, remove } from 'fs-extra';
 
 import { loadBundle, makeEnv } from '../env';
@@ -16,7 +16,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
       const argv = application.argv as ParsedArgs;
       const exec = withOutput(cmd, task);
 
-      const project = argv._[1];
+      const project = resolve(argv._[1]);
       if (!(await pathExists(project))) {
         throw new Error(`项目不存在: ${project}`);
       }
