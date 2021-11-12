@@ -11,6 +11,15 @@ export default ({ job, application, Tasks }: typeof LISA) => {
     },
   });
 
+  job('flash', {
+    title: '烧录',
+    async task(ctx, task) {
+      return new Tasks([
+        application.tasks['app:flash'],
+      ]);
+    },
+  });
+
   job('clean', {
     title: '清理',
     async task(ctx, task) {
