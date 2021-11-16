@@ -1,9 +1,9 @@
 import LISA from '@listenai/lisa_core';
 import { ParsedArgs } from 'minimist';
 import { resolve, join } from 'path';
-import { pathExists } from 'fs-extra';
 
 import { PLUGIN_HOME, loadBundle, makeEnv } from '../env';
+import { zephyrVersion } from '../sdk';
 import { get, set } from '../config';
 
 import withOutput from '../utils/withOutput';
@@ -69,8 +69,8 @@ export default ({ job, application, cmd }: typeof LISA) => {
         }
         if (target) {
           const fullPath = resolve(target);
-          if (!(await pathExists(fullPath))) {
-            throw new Error(`SDK 路径不存在: ${fullPath}`);
+          if (!(await zephyrVersion(fullPath))) {
+            throw new Error(`该路径不是一个 Zephyr base: ${fullPath}`);
           }
           await exec('python', [
             '-m', 'pip',
@@ -81,7 +81,8 @@ export default ({ job, application, cmd }: typeof LISA) => {
       }
 
       const sdk = await get('sdk');
-      task.output = `SDK: ${sdk || '(未设置)'}`;
+      const version = sdk ? await zephyrVersion(sdk) : null;
+      task.output = `当前 SDK: ${sdk && version ? `Zephyr ${version} (${sdk})` : '(未设置)'}`;
     },
     options: {
       persistentOutput: true,
