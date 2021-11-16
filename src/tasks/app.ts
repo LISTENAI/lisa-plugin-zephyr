@@ -72,9 +72,9 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
       const env = await get('env');
       const bundle = env ? await loadBundle(env) : null;
-      if (!bundle) {
-        throw new Error(`需要设置环境 (lisa zep use-env [name])`);
-      }
+      // if (!bundle) {
+      //   throw new Error(`需要设置环境 (lisa zep use-env [name])`);
+      // }
 
       const sdk = await get('sdk');
       if (!sdk) {

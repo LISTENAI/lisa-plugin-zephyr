@@ -20,6 +20,7 @@ export async function env(): Promise<Record<string, string>> {
   Object.assign(variables, bundle?.env || {});
 
   return {
+    env: env || '(未设置)',
     west: await getWestVersion() || '(未安装)',
     ...versions,
     ZEPHYR_BASE: await get('sdk') || '(未设置)',
