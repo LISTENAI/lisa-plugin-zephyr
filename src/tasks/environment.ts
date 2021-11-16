@@ -16,17 +16,28 @@ export default ({ job, application, cmd }: typeof LISA) => {
       const argv = application.argv as ParsedArgs;
       const exec = withOutput(cmd, task);
 
-      const name = argv._[1];
-      if (name && (name != await get('env') || argv['update'])) {
-        await exec('lisa', [
-          'install', `@lisa-env/${name}`,
-          '--no-save',
-          '--package-lock', 'false',
-          '--loglevel', 'info',
-        ], {
-          cwd: PLUGIN_HOME,
-        });
-        await set('env', name);
+      if (argv['clear']) {
+        await set('env', undefined);
+      } else {
+        const name = argv._[1];
+        const current = await get('env');
+        let target: string | undefined;
+        if (name && name != current) {
+          target = name;
+        } else if (argv['update']) {
+          target = name || current;
+        }
+        if (target) {
+          await exec('lisa', [
+            'install', `@lisa-env/${target}`,
+            '--no-save',
+            '--package-lock', 'false',
+            '--loglevel', 'info',
+          ], {
+            cwd: PLUGIN_HOME,
+          });
+          await set('env', target);
+        }
       }
 
       const env = await get('env');
@@ -45,23 +56,31 @@ export default ({ job, application, cmd }: typeof LISA) => {
       const argv = application.argv as ParsedArgs;
       const exec = withOutput(cmd, task);
 
-      const path = argv._[1];
-      if (path) {
-        const fullPath = resolve(path);
-        if (!(await pathExists(fullPath))) {
-          throw new Error(`SDK 路径不存在: ${fullPath}`);
+      if (argv['clear']) {
+        await set('sdk', undefined);
+      } else {
+        const path = argv._[1];
+        const current = await get('sdk');
+        let target: string | undefined;
+        if (path && path != current) {
+          target = path;
+        } else if (argv['update']) {
+          target = path || current;
         }
-        await set('sdk', path);
+        if (target) {
+          const fullPath = resolve(target);
+          if (!(await pathExists(fullPath))) {
+            throw new Error(`SDK 路径不存在: ${fullPath}`);
+          }
+          await exec('python', [
+            '-m', 'pip',
+            'install', '-r', join(fullPath, 'scripts', 'requirements.txt'),
+          ], { env: await makeEnv() });
+          await set('sdk', fullPath);
+        }
       }
 
       const sdk = await get('sdk');
-      if (sdk) {
-        await exec('python', [
-          '-m', 'pip',
-          'install', '-r', join(sdk, 'scripts', 'requirements.txt'),
-        ], { env: await makeEnv() });
-      }
-
       task.output = `SDK: ${sdk || '(未设置)'}`;
     },
     options: {
