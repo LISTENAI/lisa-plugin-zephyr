@@ -13,7 +13,11 @@ export async function env(): Promise<Record<string, string>> {
   const variables: Record<string, string> = {};
 
   for (const [name, binary] of Object.entries(await loadBinaries(bundle))) {
-    versions[name] = await binary.version();
+    try {
+      versions[name] = await binary.version();
+    } catch (e) {
+      versions[name] = '(缺失)';
+    }
     Object.assign(variables, binary.env);
   }
 
