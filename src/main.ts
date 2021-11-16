@@ -2,6 +2,7 @@ import { promisify } from 'util';
 import { execFile as _execFile } from 'child_process';
 import { PLUGIN_HOME, loadBundle, loadBinaries, makeEnv } from './env';
 import { get } from './config';
+import { zephyrVersion } from './sdk';
 
 const execFile = promisify(_execFile);
 
@@ -13,17 +14,23 @@ export async function env(): Promise<Record<string, string>> {
   const variables: Record<string, string> = {};
 
   for (const [name, binary] of Object.entries(await loadBinaries(bundle))) {
-    versions[name] = await binary.version();
+    try {
+      versions[name] = await binary.version();
+    } catch (e) {
+      versions[name] = '(缺失)';
+    }
     Object.assign(variables, binary.env);
   }
 
   Object.assign(variables, bundle?.env || {});
 
+  const sdk = await get('sdk');
+
   return {
     env: env || '(未设置)',
     west: await getWestVersion() || '(未安装)',
     ...versions,
-    ZEPHYR_BASE: await get('sdk') || '(未设置)',
+    ZEPHYR_BASE: sdk ? `${sdk} (版本: ${await zephyrVersion(sdk)})` : '(未设置)',
     PLUGIN_HOME,
     ...variables,
   };
