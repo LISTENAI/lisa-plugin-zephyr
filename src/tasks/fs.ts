@@ -1,130 +1,141 @@
-import LISA from '@listenai/lisa_core'
-import * as path from 'path'
-import * as YAML from 'js-yaml'
-import { workspace } from '../utils/ux'
-import { LTFSBuild } from '../utils/fsbuild'
-import { loadDT } from 'zephyr-dts'
+import LISA from '@listenai/lisa_core';
+import { join } from 'path';
+import { readFile, pathExists, mkdirs, writeFile, remove } from 'fs-extra';
+import * as YAML from 'js-yaml';
+import { loadDT } from 'zephyr-dts';
 
-const RESOURCE_DIR = 'resource'
-const BUILD_DIR = 'build'
-const FS_CONFIG_PATH = path.join(RESOURCE_DIR, 'fs.yaml')
-const DEFAULT_FS_SYSTEM = 'LFS'
+import { makeEnv } from '../env';
 
-interface Iflash {
+import withOutput from '../utils/withOutput';
+import { workspace } from '../utils/ux';
+
+const FS_DEFAULT = 'LFS';
+
+interface IPartition {
   label: string;
   addr: number;
   size: number;
-  fs_system?: string;
+  fs?: string;
 }
 
-function loadYaml(fsymlPath: string) {
-  const { fs, application } = LISA
-  let fsyml: Iflash[]
+async function loadPartitions(buildDir: string): Promise<IPartition[]> {
+  const partitions: IPartition[] = []
   try {
-    fsyml = YAML.load(fs.readFileSync(fsymlPath).toString()) as []
-    fsyml = Array.from(fsyml)
+    const dt = await loadDT(buildDir);
+    const flash = dt.choose('zephyr,flash');
+    if (flash) {
+      for (const part of dt.under(`${flash.path}/partitions`)) {
+        if (!part.label) continue;
+        if (!part.reg || !part.reg[0]) continue;
+        const reg = part.reg[0];
+        if (typeof reg.addr != 'number' || typeof reg.size != 'number') continue;
+        partitions.push({
+          label: part.label,
+          addr: reg.addr,
+          size: reg.size,
+        });
+      }
+    }
   } catch (e) {
-    application.debug(e)
-    fsyml = []
   }
-  return fsyml
+  return partitions;
 }
 
-export default ({ job, application, cmd, fs }: typeof LISA) => {
+async function loadFsConfig(path: string): Promise<IPartition[]> {
+  try {
+    return YAML.load(await readFile(path, { encoding: 'utf-8' })) as IPartition[];
+  } catch (e) {
+    return [];
+  }
+}
+
+export default ({ job, cmd }: typeof LISA) => {
 
   job('fs:init', {
     title: '资源结构初始化',
     async task(ctx, task) {
-      // 确定项目目录
-      const projectRoot = workspace()
+      const project = workspace();
+      if (!(await pathExists(project))) {
+        throw new Error(`项目不存在: ${project}`);
+      }
 
-      // 解析dts
-      let flashs: Iflash[] = []
-      try {
-        const dt = await loadDT(path.resolve(path.join(projectRoot, BUILD_DIR)))
-        const flash = dt.choose('zephyr,flash')
-        if (flash) {
-          for (const part of dt.under(`${flash.path}/partitions`)) {
-            const reg = part.reg![0]!
-            flashs.push({
-              label: part.label || '',
-              addr: reg.addr || 0,
-              size: reg.size || 0
-            })
-          }
-        }
-      } catch (error) {
-        flashs = []
+      const partitions = await loadPartitions(join(project, 'build'));
+      if (!partitions.length) {
+        throw new Error(`当前项目没有声明 fixed-partitions`);
       }
-      if (!flashs.length) {
-        throw new Error(`当前项目没有分配flash分区`)
-      }
-      application.debug(flashs)
+
+      const resourceDir = join(project, 'resource');
 
       // 初始化目录
-      fs.mkdirpSync(path.resolve(path.join(projectRoot, RESOURCE_DIR)))
+      await mkdirs(resourceDir);
 
-      // YAML解析
-      const fsymlPath = path.resolve(path.join(projectRoot, FS_CONFIG_PATH))
-      let fsyml = loadYaml(fsymlPath)
-
+      // 加载 FS 配置
+      const fsConfigPath = join(resourceDir, 'fs.yaml');
+      const fsConfig = await loadFsConfig(fsConfigPath);
 
       // 创建文件夹结构
-      flashs.forEach(flash => {
-        const labelName = flash.label || ''
-        application.debug('mkdirp->', path.resolve(path.join(projectRoot, RESOURCE_DIR, labelName)))
-        fs.mkdirpSync(path.resolve(path.join(projectRoot, RESOURCE_DIR, labelName)))
-        const basicFlash: { [key: string]: any } | Iflash = fsyml.find((item: Iflash) => item.label === labelName) || {}
-        flash.fs_system = basicFlash?.fs_system || DEFAULT_FS_SYSTEM
-      })
+      for (const part of partitions) {
+        await mkdirs(join(resourceDir, part.label));
+        const config = fsConfig.find(item => item.label == part.label);
+        part.fs = config?.fs || FS_DEFAULT;
+      }
 
       // 写入fs.yaml
-      fs.writeFileSync(fsymlPath, YAML.dump(flashs))
+      await writeFile(fsConfigPath, YAML.dump(partitions, {
+        styles: {
+          '!!int': 'hexadecimal',
+        },
+      }));
     }
-  })
+  });
 
   job('fs:build', {
     title: '打包资源镜像',
     async task(ctx, task) {
-      // 确定项目目录
-      const projectRoot = workspace()
-      const fsymlPath = path.resolve(path.join(projectRoot, FS_CONFIG_PATH))
-      // 判断是否存在fsyml配置文件
-      if (!fs.existsSync(fsymlPath)) {
-        throw new Error(`当前无需要打包的资源配置，可先执行lisa zep fs:init进行初始化`)
-      }
-      // 解析fsyml配置文件
-      let fsyml = loadYaml(fsymlPath)
-      application.debug(fsyml)
+      const exec = withOutput(cmd, task);
 
-      const res = await Promise.all(
-        fsyml.map((item: Iflash) => {
-          // 确保存在该资源文件夹
-          fs.mkdirpSync(path.resolve(path.join(projectRoot, RESOURCE_DIR, item.label)))
-          return LTFSBuild(
-            path.resolve(path.join(projectRoot, RESOURCE_DIR, item.label)),
-            path.resolve(path.join(projectRoot, 'build', 'resource', `${item.label}.bin`)),
-            item.size
-          )
-        })
-      )
-      application.debug(res)
+      const project = workspace();
+      if (!(await pathExists(project))) {
+        throw new Error(`项目不存在: ${project}`);
+      }
+
+      const resourceDir = join(project, 'resource');
+      const fsConfigPath = join(resourceDir, 'fs.yaml');
+      if (!(await pathExists(fsConfigPath))) {
+        throw new Error(`当前无需要打包的资源配置，可先执行 lisa zep fs:init 进行初始化`)
+      }
+
+      const buildDir = join(project, 'build', 'resource');
+      await mkdirs(buildDir);
+
+      const env = await makeEnv();
+      const partitions = await loadFsConfig(fsConfigPath);
+      for (const part of partitions) {
+        await mkdirs(join(resourceDir, part.label));
+        await exec('mklfs', ['.', join(buildDir, `${part.label}.bin`), `${part.size}`], {
+          env,
+          cwd: join(resourceDir, part.label),
+        });
+      }
     },
-  })
+  });
 
   job('fs:flash', {
     title: '烧录资源镜像',
     async task(ctx, task) {
 
     },
-  })
+  });
 
   job('fs:clean', {
     title: '清理资源镜像',
     async task(ctx, task) {
-      const projectRoot = workspace()
-      await fs.remove(path.resolve(path.join(projectRoot, 'build', 'resource')))
+      const project = workspace();
+      if (!(await pathExists(project))) {
+        throw new Error(`项目不存在: ${project}`);
+      }
+      await remove(join(project, 'build', 'resource'));
     },
-  })
+  });
 
 }
