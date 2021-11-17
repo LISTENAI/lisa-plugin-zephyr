@@ -1,6 +1,6 @@
 import LISA from '@listenai/lisa_core';
 import { ParsedArgs } from 'minimist';
-import { join, resolve } from 'path';
+import { join } from 'path';
 import { pathExists, remove } from 'fs-extra';
 
 import { loadBundle, makeEnv } from '../env';
@@ -24,9 +24,6 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
       const env = await get('env');
       const bundle = env ? await loadBundle(env) : null;
-      // if (!bundle) {
-      //   throw new Error(`需要设置环境 (lisa zep use-env [name])`);
-      // }
 
       const sdk = await get('sdk');
       if (!sdk) {
@@ -60,9 +57,6 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('app:flash', {
     title: '应用烧录',
     async task(ctx, task) {
-      const argv = application.argv as ParsedArgs;
-      
-      
       const exec = withOutput(cmd, task);
 
       const project = workspace();
@@ -72,9 +66,6 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
       const env = await get('env');
       const bundle = env ? await loadBundle(env) : null;
-      // if (!bundle) {
-      //   throw new Error(`需要设置环境 (lisa zep use-env [name])`);
-      // }
 
       const sdk = await get('sdk');
       if (!sdk) {
