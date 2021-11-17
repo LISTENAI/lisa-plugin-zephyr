@@ -75,10 +75,10 @@
   dependencies:
     "@cspotcode/source-map-consumer" "0.8.0"
 
-"@lisa-env/type@^1.1.0":
-  version "1.1.0"
-  resolved "https://registry-lpm.listenai.com/@lisa-env/type/download/@lisa-env/type-1.1.0.tgz#105487f445e876e8c7066ce02ebaf6c956adf0b3"
-  integrity sha1-EFSH9EXodujHBmzgLrr2yVat8LM=
+"@lisa-env/type@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry-lpm.listenai.com/@lisa-env/type/download/@lisa-env/type-1.2.0.tgz#945aeb49d9b167e1675ee2aea1dcdfecb5be27aa"
+  integrity sha1-lFrrSdmxZ+FnXuKuodzf7LW+J6o=
 
 "@listenai/lisa_core@^2.0.5":
   version "2.0.5"

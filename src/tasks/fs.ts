@@ -4,7 +4,8 @@ import { readFile, pathExists, mkdirs, writeFile, remove } from 'fs-extra';
 import * as YAML from 'js-yaml';
 import { loadDT } from 'zephyr-dts';
 
-import { makeEnv } from '../env';
+import { loadBundles, makeEnv } from '../env';
+import { get } from '../config';
 
 import withOutput from '../utils/withOutput';
 import { workspace } from '../utils/ux';
@@ -19,7 +20,7 @@ interface IPartition {
 }
 
 async function loadPartitions(buildDir: string): Promise<IPartition[]> {
-  const partitions: IPartition[] = []
+  const partitions: IPartition[] = [];
   try {
     const dt = await loadDT(buildDir);
     const flash = dt.choose('zephyr,flash');
@@ -49,7 +50,7 @@ async function loadFsConfig(path: string): Promise<IPartition[]> {
   }
 }
 
-export default ({ job, cmd }: typeof LISA) => {
+export default ({ job, application, cmd }: typeof LISA) => {
 
   job('fs:init', {
     title: '资源结构初始化',
@@ -123,7 +124,48 @@ export default ({ job, cmd }: typeof LISA) => {
   job('fs:flash', {
     title: '烧录资源镜像',
     async task(ctx, task) {
+      const exec = withOutput(cmd, task);
 
+      const project = workspace();
+      if (!(await pathExists(project))) {
+        throw new Error(`项目不存在: ${project}`);
+      }
+
+      const env = await get('env');
+      const bundles = await loadBundles(env);
+      if (!env || bundles.length == 0) {
+        throw new Error(`未设置环境，不支持烧录 (lisa zep use-env [name])`);
+      }
+
+      const flasher = bundles[0].flasher;
+      if (!flasher) {
+        throw new Error(`当前环境 "${env[0]}" 不支持烧录`);
+      }
+
+      const fsConfigPath = join(project, 'resource', 'fs.yaml');
+      if (!(await pathExists(fsConfigPath))) {
+        throw new Error(`当前无需要打包的资源配置，可先执行 lisa zep fs:init 进行初始化`);
+      }
+
+      const flashArgs: Record<number, string> = {};
+
+      const buildDir = join(project, 'build', 'resource');
+      const partitions = await loadFsConfig(fsConfigPath);
+      for (const part of partitions) {
+        const partFile = join(buildDir, `${part.label}.bin`);
+        if (await pathExists(partFile)) {
+          flashArgs[part.addr] = partFile;
+        } else {
+          throw new Error(`分区 "${part.label}.bin" 不存在，请先执行 lisa zep fs:build 构建`);
+        }
+      }
+
+      const { command, args } = flasher.makeFlashExecArgs(flashArgs);
+      application.debug({ command, args });
+
+      await exec(command, args, {
+        env: await makeEnv({ bundles }),
+      });
     },
   });
 

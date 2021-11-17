@@ -35,7 +35,7 @@
     "@binary/python-3.9": "^2.0.2-3.9.7",
     "@binary/type": "^1.0.4",
     "@binary/xz": "^1.1.1-5.2.5",
-    "@lisa-env/type": "^1.1.0",
+    "@lisa-env/type": "^1.2.0",
     "@listenai/lisa_core": "^2.0.5",
     "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
