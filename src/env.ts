@@ -11,12 +11,12 @@ const WEST_CONFIG_GLOBAL = join(CONFIG_DIR, 'westconfig');
 const PIP_INDEX_URL = 'https://pypi.tuna.tsinghua.edu.cn/simple';
 
 const BUILTIN_BINARIES = [
+  './venv',
   '@binary/cmake',
   '@binary/dtc',
   '@binary/gperf',
   '@binary/mklfs',
   '@binary/ninja',
-  '@binary/python-3.9',
   '@binary/xz',
 ];
 
