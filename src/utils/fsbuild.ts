@@ -1,4 +1,6 @@
 import LISA from '@listenai/lisa_core'
+import { mkdirs } from 'fs-extra';
+import { dirname } from 'path';
 import { makeEnv } from '../env';
 
 /**
@@ -8,14 +10,9 @@ import { makeEnv } from '../env';
  * @param regSize 内存大小
  */
 export async function LTFSBuild(dir: string, targetPath: string, regSize: number) {
-  // test
-  try {
-    await LISA.cmd('mklfs', [ dir, targetPath, String(regSize)], {
-      env: await makeEnv(),
-    });  
-  } catch (error) {
-    LISA.application.debug(error)
-    throw new Error('打包失败')    
-  }
+  await mkdirs(dirname(targetPath));
+  await LISA.cmd('mklfs', ['.', targetPath, String(regSize)], {
+    env: await makeEnv(),
+    cwd: dir,
+  });
 }
-

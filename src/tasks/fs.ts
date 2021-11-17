@@ -18,7 +18,7 @@ interface Iflash {
 }
 
 function loadYaml(fsymlPath: string) {
-  const {fs, application} = LISA
+  const { fs, application } = LISA
   let fsyml: Iflash[]
   try {
     fsyml = YAML.load(fs.readFileSync(fsymlPath).toString()) as []
@@ -67,14 +67,14 @@ export default ({ job, application, cmd, fs }: typeof LISA) => {
       // YAML解析
       const fsymlPath = path.resolve(path.join(projectRoot, FS_CONFIG_PATH))
       let fsyml = loadYaml(fsymlPath)
-      
+
 
       // 创建文件夹结构
       flashs.forEach(flash => {
         const labelName = flash.label || ''
         application.debug('mkdirp->', path.resolve(path.join(projectRoot, RESOURCE_DIR, labelName)))
         fs.mkdirpSync(path.resolve(path.join(projectRoot, RESOURCE_DIR, labelName)))
-        const basicFlash: {[key: string]: any} | Iflash = fsyml.find((item: Iflash) => item.label === labelName) || {}
+        const basicFlash: { [key: string]: any } | Iflash = fsyml.find((item: Iflash) => item.label === labelName) || {}
         flash.fs_system = basicFlash?.fs_system || DEFAULT_FS_SYSTEM
       })
 
