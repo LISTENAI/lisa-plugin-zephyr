@@ -1,6 +1,6 @@
 import LISA from '@listenai/lisa_core';
 import { ParsedArgs } from 'minimist';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { pathExists, remove } from 'fs-extra';
 import { uniq } from 'lodash';
 
@@ -46,13 +46,15 @@ export default ({ job, application, cmd }: typeof LISA) => {
         throw new Error(`需要指定板型 (-b [board])`);
       }
 
+      const buildDir = resolve(argv.d ?? argv['build-dir'] ?? 'build');
+
       await exec('python', [
         '-m', 'west',
         'build',
         '-b', board,
-        '.'
+        '--build-dir', buildDir,
+        project,
       ], {
-        cwd: project,
         env: await makeEnv({ bundles, sdk }),
       });
     },
@@ -65,6 +67,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('app:flash', {
     title: '应用烧录',
     async task(ctx, task) {
+      const argv = application.argv as ParsedArgs;
       const exec = withOutput(cmd, task);
 
       const project = workspace();
@@ -83,11 +86,13 @@ export default ({ job, application, cmd }: typeof LISA) => {
         throw new Error(`SDK 不存在: ${sdk}`);
       }
 
+      const buildDir = resolve(argv.d ?? argv['build-dir'] ?? 'build');
+
       await exec('python', [
         '-m', 'west',
         'flash',
+        '--build-dir', buildDir,
       ], {
-        cwd: project,
         env: await makeEnv({ bundles, sdk }),
       });
     },
@@ -101,13 +106,8 @@ export default ({ job, application, cmd }: typeof LISA) => {
     title: '应用清理',
     async task(ctx, task) {
       const argv = application.argv as ParsedArgs;
-
-      const project = argv._[1];
-      if (!(await pathExists(project))) {
-        throw new Error(`项目不存在: ${project}`);
-      }
-
-      await remove(join(project, 'build'));
+      const buildDir = resolve(argv.d ?? argv['build-dir'] ?? 'build');
+      await remove(buildDir);
     },
   });
 
