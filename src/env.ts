@@ -2,11 +2,13 @@ import { Bundle } from '@lisa-env/type';
 import { Binary } from '@binary/type';
 import { delimiter, join } from 'path';
 import { homedir } from 'os';
+import { defaults } from 'lodash';
 import pathWith from './utils/pathWith';
 
 export const PLUGIN_HOME = join(homedir(), '.listenai', 'lisa-zephyr');
 
 export const PACKAGE_HOME = join(PLUGIN_HOME, 'packages');
+const PACKAGE_MODULES_DIR = join(PACKAGE_HOME, 'node_modules');
 
 const CONFIG_DIR = join(PLUGIN_HOME, 'config');
 const WEST_CONFIG_GLOBAL = join(CONFIG_DIR, 'westconfig');
@@ -32,28 +34,29 @@ async function loadModule<T>(name: string): Promise<T> {
   return mod.default;
 }
 
-export async function loadBundle(name: string): Promise<Bundle | null> {
+export async function loadBundles(envs: string[] | undefined): Promise<Bundle[]> {
+  if (!envs) return [];
   try {
-    return await loadModule(`${PACKAGE_HOME}/node_modules/@lisa-env/${name}`);
+    return await Promise.all(envs.map(name => loadModule<Bundle>(`${PACKAGE_MODULES_DIR}/@lisa-env/${name}`)));
   } catch (e) {
-    return null;
+    return [];
   }
 }
 
-export async function loadBinaries(bundle?: Bundle | null): Promise<Record<string, Binary>> {
+export async function loadBinaries(bundle: Bundle): Promise<Record<string, Binary>> {
   const binaries: Record<string, Binary> = {};
   for (const name of BUILTIN_BINARIES) {
     const unprefixedName = name.split('/').slice(1).join('/');
     binaries[unprefixedName] = await loadModule<Binary>(name);
   }
-  for (const name of bundle?.binaries || []) {
-    binaries[name] = await loadModule<Binary>(`${PACKAGE_HOME}/node_modules/@binary/${name}`);
+  for (const name of bundle.binaries || []) {
+    binaries[name] = await loadModule<Binary>(`${PACKAGE_MODULES_DIR}/@binary/${name}`);
   }
   return binaries;
 }
 
 interface MakeEnvOptions {
-  bundle?: Bundle | null;
+  bundles?: Bundle[];
   sdk?: string | null;
 }
 
@@ -62,13 +65,15 @@ export async function makeEnv(options?: MakeEnvOptions): Promise<Record<string, 
   const binaries: string[] = [];
   const libraries: string[] = [];
 
-  for (const binary of Object.values(await loadBinaries(options?.bundle))) {
-    if (binary.env) {
-      Object.assign(env, binary.env);
-    }
-    binaries.push(binary.binaryDir);
-    if (binary.libraryDir) {
-      libraries.push(binary.libraryDir);
+  for (const bundle of options?.bundles || []) {
+    for (const binary of Object.values(await loadBinaries(bundle))) {
+      if (binary.env) {
+        Object.assign(env, binary.env);
+      }
+      binaries.push(binary.binaryDir);
+      if (binary.libraryDir) {
+        libraries.push(binary.libraryDir);
+      }
     }
   }
 
@@ -81,7 +86,14 @@ export async function makeEnv(options?: MakeEnvOptions): Promise<Record<string, 
     WEST_CONFIG_GLOBAL,
   });
 
-  Object.assign(env, options?.bundle?.env || {});
+  if (options?.bundles && options.bundles.length > 0) {
+    const masterBundle = options.bundles[0];
+    Object.assign(env, masterBundle.env);
+    for (const bundle of options.bundles.slice(1)) {
+      defaults(env, bundle.env);
+    }
+  }
+
   Object.assign(env, pathWith(binaries));
 
   if (libraries.length > 0 && process.platform == 'linux') {

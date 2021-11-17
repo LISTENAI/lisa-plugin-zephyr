@@ -1,7 +1,7 @@
 import LISA from '@listenai/lisa_core';
 import { ParsedArgs } from 'minimist';
 
-import { loadBundle, makeEnv } from '../env';
+import { loadBundles, makeEnv } from '../env';
 import { get } from '../config';
 
 import withOutput from '../utils/withOutput';
@@ -17,7 +17,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
       const westArgs = argv._.slice(1);
 
       const env = await get('env');
-      const bundle = env ? await loadBundle(env) : null;
+      const bundles = await loadBundles(env);
 
       const sdk = await get('sdk');
 
@@ -25,7 +25,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
         '-m', 'west',
         ...westArgs,
       ], {
-        env: await makeEnv({ bundle, sdk }),
+        env: await makeEnv({ bundles, sdk }),
       });
     },
     options: {

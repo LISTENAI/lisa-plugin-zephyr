@@ -3,7 +3,7 @@ import { ParsedArgs } from 'minimist';
 import { join } from 'path';
 import { pathExists, remove } from 'fs-extra';
 
-import { loadBundle, makeEnv } from '../env';
+import { loadBundles, makeEnv } from '../env';
 import { get } from '../config';
 
 import withOutput from '../utils/withOutput';
@@ -23,7 +23,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
       }
 
       const env = await get('env');
-      const bundle = env ? await loadBundle(env) : null;
+      const bundles = await loadBundles(env);
 
       const sdk = await get('sdk');
       if (!sdk) {
@@ -45,7 +45,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
         '.'
       ], {
         cwd: project,
-        env: await makeEnv({ bundle, sdk }),
+        env: await makeEnv({ bundles, sdk }),
       });
     },
     options: {
@@ -65,7 +65,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
       }
 
       const env = await get('env');
-      const bundle = env ? await loadBundle(env) : null;
+      const bundles = await loadBundles(env);
 
       const sdk = await get('sdk');
       if (!sdk) {
@@ -80,7 +80,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
         'flash',
       ], {
         cwd: project,
-        env: await makeEnv({ bundle, sdk }),
+        env: await makeEnv({ bundles, sdk }),
       });
     },
     options: {

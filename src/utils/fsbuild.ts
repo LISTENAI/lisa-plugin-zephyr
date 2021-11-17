@@ -1,5 +1,5 @@
 import LISA from '@listenai/lisa_core'
-import { loadBundle, makeEnv } from '../env';
+import { makeEnv } from '../env';
 
 /**
  * LTFS打包

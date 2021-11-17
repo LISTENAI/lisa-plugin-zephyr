@@ -5,7 +5,7 @@ import { PLUGIN_HOME } from './env';
 const CONFIG_FILE = join(PLUGIN_HOME, 'config.json');
 
 interface IPluginConfig {
-  env?: string;
+  env?: string[];
   sdk?: string;
 }
 
@@ -16,6 +16,9 @@ async function load<T>(): Promise<T | null> {
 
 export async function get<K extends keyof IPluginConfig>(key: K): Promise<IPluginConfig[K]> {
   const config = await load<IPluginConfig>();
+  if (config && typeof config.env == 'string') {
+    config.env = [config.env]; // 向后兼容
+  }
   return config ? config[key] : undefined;
 }
 

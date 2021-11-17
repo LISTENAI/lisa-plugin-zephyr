@@ -2,8 +2,9 @@ import LISA from '@listenai/lisa_core';
 import { ParsedArgs } from 'minimist';
 import { resolve, join } from 'path';
 import { mkdirs } from 'fs-extra';
+import { isEqual } from 'lodash';
 
-import { PACKAGE_HOME, loadBundle, makeEnv } from '../env';
+import { PACKAGE_HOME, loadBundles, makeEnv } from '../env';
 import { zephyrVersion } from '../sdk';
 import { get, set } from '../config';
 
@@ -22,17 +23,17 @@ export default ({ job, application, cmd }: typeof LISA) => {
       if (argv['clear']) {
         await set('env', undefined);
       } else {
-        const name = argv._[1];
-        const current = await get('env');
-        let target: string | undefined;
-        if (name && name != current) {
-          target = name;
+        const envs = argv._.slice(1);
+        const current = await get('env') || [];
+        let target: string[] = [];
+        if (envs.length > 0 && !isEqual(envs, current)) {
+          target = envs;
         } else if (argv['update']) {
-          target = name || current;
+          target = envs.length > 0 ? envs : current;
         }
-        if (target) {
+        if (target.length > 0) {
           await exec('lisa', [
-            'install', `@lisa-env/${target}`,
+            'install', ...target.map(name => `@lisa-env/${name}`),
             '--loglevel', 'info',
           ], {
             cwd: PACKAGE_HOME,
@@ -42,8 +43,8 @@ export default ({ job, application, cmd }: typeof LISA) => {
       }
 
       const env = await get('env');
-      const mod = env ? await loadBundle(env) : null;
-      task.output = `当前环境: ${env && mod ? env : '(未设置)'}`;
+      const mod = await loadBundles(env);
+      task.output = `当前环境: ${env && mod.length > 0 ? env.join(', ') : '(未设置)'}`;
     },
     options: {
       persistentOutput: true,
