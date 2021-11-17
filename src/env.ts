@@ -1,9 +1,10 @@
 import { Bundle } from '@lisa-env/type';
 import { Binary } from '@binary/type';
 import { delimiter, join } from 'path';
+import { homedir } from 'os';
 import pathWith from './utils/pathWith';
 
-export const PLUGIN_HOME = join(__dirname, '..');
+export const PLUGIN_HOME = join(homedir(), '.listenai', 'lisa-zephyr');
 
 const CONFIG_DIR = join(PLUGIN_HOME, 'config');
 const WEST_CONFIG_GLOBAL = join(CONFIG_DIR, 'westconfig');

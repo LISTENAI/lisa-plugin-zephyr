@@ -1,9 +1,5 @@
 .DS_Store
 node_modules
 
-/config.json
-/config
-/venv
-
 /lib
 .npmrc

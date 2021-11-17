@@ -1,8 +1,9 @@
 import LISA from '@listenai/lisa_core';
 import { join } from 'path';
+import { mkdirs, remove } from 'fs-extra';
 
 import withOutput from '../utils/withOutput';
-import { makeEnv } from '../env';
+import { PLUGIN_HOME, makeEnv } from '../env';
 
 import python from '@binary/python-3.9';
 import venv from '../venv';
@@ -13,6 +14,8 @@ export default ({ job, cmd }: typeof LISA) => {
     title: '环境安装',
     async task(ctx, task) {
       const exec = withOutput(cmd, task);
+
+      await mkdirs(PLUGIN_HOME);
 
       await exec(join(python.binaryDir, 'python'), [
         '-m', 'venv',
@@ -29,6 +32,13 @@ export default ({ job, cmd }: typeof LISA) => {
         'config', '--global',
         'zephyr.base-prefer', 'env',
       ], { env: await makeEnv() });
+    },
+  });
+
+  job('uninstall', {
+    title: '环境卸载',
+    async task(ctx, task) {
+      await remove(PLUGIN_HOME);
     },
   });
 
