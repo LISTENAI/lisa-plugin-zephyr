@@ -1,8 +1,9 @@
 import LISA from '@listenai/lisa_core';
 import { ParsedArgs } from 'minimist';
 import { resolve, join } from 'path';
+import { mkdirs } from 'fs-extra';
 
-import { PLUGIN_HOME, loadBundle, makeEnv } from '../env';
+import { PACKAGE_HOME, loadBundle, makeEnv } from '../env';
 import { zephyrVersion } from '../sdk';
 import { get, set } from '../config';
 
@@ -15,6 +16,8 @@ export default ({ job, application, cmd }: typeof LISA) => {
     async task(ctx, task) {
       const argv = application.argv as ParsedArgs;
       const exec = withOutput(cmd, task);
+
+      await mkdirs(PACKAGE_HOME);
 
       if (argv['clear']) {
         await set('env', undefined);
@@ -30,11 +33,9 @@ export default ({ job, application, cmd }: typeof LISA) => {
         if (target) {
           await exec('lisa', [
             'install', `@lisa-env/${target}`,
-            '--no-save',
-            '--package-lock', 'false',
             '--loglevel', 'info',
           ], {
-            cwd: PLUGIN_HOME,
+            cwd: PACKAGE_HOME,
           });
           await set('env', target);
         }
@@ -46,7 +47,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
     },
     options: {
       persistentOutput: true,
-      bottomBar: Infinity,
+      bottomBar: 5,
     },
   });
 

@@ -6,6 +6,8 @@ import pathWith from './utils/pathWith';
 
 export const PLUGIN_HOME = join(homedir(), '.listenai', 'lisa-zephyr');
 
+export const PACKAGE_HOME = join(PLUGIN_HOME, 'packages');
+
 const CONFIG_DIR = join(PLUGIN_HOME, 'config');
 const WEST_CONFIG_GLOBAL = join(CONFIG_DIR, 'westconfig');
 
@@ -32,7 +34,7 @@ async function loadModule<T>(name: string): Promise<T> {
 
 export async function loadBundle(name: string): Promise<Bundle | null> {
   try {
-    return await loadModule(`@lisa-env/${name}`);
+    return await loadModule(`${PACKAGE_HOME}/node_modules/@lisa-env/${name}`);
   } catch (e) {
     return null;
   }
@@ -45,7 +47,7 @@ export async function loadBinaries(bundle?: Bundle | null): Promise<Record<strin
     binaries[unprefixedName] = await loadModule<Binary>(name);
   }
   for (const name of bundle?.binaries || []) {
-    binaries[name] = await loadModule<Binary>(`@binary/${name}`);
+    binaries[name] = await loadModule<Binary>(`${PACKAGE_HOME}/node_modules/@binary/${name}`);
   }
   return binaries;
 }
