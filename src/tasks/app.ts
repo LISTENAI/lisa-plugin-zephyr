@@ -2,6 +2,7 @@ import LISA from '@listenai/lisa_core';
 import { ParsedArgs } from 'minimist';
 import { join } from 'path';
 import { pathExists, remove } from 'fs-extra';
+import { uniq } from 'lodash';
 
 import { loadBundles, makeEnv } from '../env';
 import { get } from '../config';
@@ -22,8 +23,15 @@ export default ({ job, application, cmd }: typeof LISA) => {
         throw new Error(`项目不存在: ${project}`);
       }
 
-      const env = await get('env');
-      const bundles = await loadBundles(env);
+      const env = await get('env') || [];
+      if (typeof argv.env == 'string') {
+        const bundles = await loadBundles([argv.env]);
+        if (bundles.length == 0) {
+          throw new Error(`环境 "${argv.env}" 不存在，请先尝试执行 \`lisa zep use-env ${argv.env}\` 启用`);
+        }
+        env.unshift(argv.env);
+      }
+      const bundles = await loadBundles(uniq(env));
 
       const sdk = await get('sdk');
       if (!sdk) {
