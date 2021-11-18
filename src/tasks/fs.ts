@@ -58,7 +58,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
     async task(ctx, task) {
       const argv = application.argv as ParsedArgs;
 
-      const project = workspace();
+      const project = workspace() ?? process.cwd();
       if (!(await pathExists(project))) {
         throw new Error(`项目不存在: ${project}`);
       }
@@ -101,7 +101,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
       const argv = application.argv as ParsedArgs;
       const exec = withOutput(cmd, task);
 
-      const project = workspace();
+      const project = workspace() ?? process.cwd();
       if (!(await pathExists(project))) {
         throw new Error(`项目不存在: ${project}`);
       }
@@ -134,7 +134,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
       const argv = application.argv as ParsedArgs;
       const exec = withOutput(cmd, task);
 
-      const project = workspace();
+      const project = workspace() ?? process.cwd();
       if (!(await pathExists(project))) {
         throw new Error(`项目不存在: ${project}`);
       }

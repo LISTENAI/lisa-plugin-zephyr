@@ -25,10 +25,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
       const sdk = await get('sdk');
 
-      await exec('python', [
-        '-m', 'west',
-        ...westArgs,
-      ], {
+      await exec('python', ['-m', 'west', ...westArgs], {
         env: await makeEnv({ bundles, sdk }),
       });
     },
@@ -43,11 +40,6 @@ export default ({ job, application, cmd }: typeof LISA) => {
       const argv = application.argv as ParsedArgs;
       const exec = withOutput(cmd, task);
 
-      const project = workspace();
-      if (!(await pathExists(project))) {
-        throw new Error(`项目不存在: ${project}`);
-      }
-
       const env = await get('env');
       const bundles = await loadBundles(env);
 
@@ -59,21 +51,26 @@ export default ({ job, application, cmd }: typeof LISA) => {
         throw new Error(`SDK 不存在: ${sdk}`);
       }
 
+      const westArgs = ['build', '--target', 'menuconfig'];
+
       const buildDir = resolve(argv.d ?? argv['build-dir'] ?? 'build');
+      westArgs.push('--build-dir', buildDir);
 
       const board: string | null = argv.b ?? argv.board ?? await getCMakeCache(buildDir, 'CACHED_BOARD', 'STRING');
       if (!board) {
         throw new Error(`需要指定板型 (-b [board])`);
       }
+      westArgs.push('--board', board);
 
-      await exec('python', [
-        '-m', 'west',
-        'build',
-        '--board', board,
-        '--build-dir', buildDir,
-        '--target', 'menuconfig',
-        project,
-      ], {
+      const project = workspace();
+      if (project) {
+        if (!(await pathExists(project))) {
+          throw new Error(`项目不存在: ${project}`);
+        }
+        westArgs.push(project);
+      }
+
+      await exec('python', ['-m', 'west', ...westArgs], {
         env: await makeEnv({ bundles, sdk }),
         stdio: 'inherit',
       });
