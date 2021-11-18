@@ -1,0 +1,40 @@
+name: publish-latest
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '16.x'
+
+      - name: NPM config
+        run: |
+          npm config set //registry-lpm.listenai.com/:_password ${{ secrets.LPM_ADMIN_TOKEN }}
+          npm config set //registry-lpm.listenai.com/:username lpmadmin
+          npm config set //registry-lpm.listenai.com/:email lpm.admin@listenai.com
+          npm config set //registry-lpm.listenai.com/:always-auth true
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts --registry=https://registry-lpm.listenai.com
+
+      - name: Publish (latest)
+        run: npm publish --registry=https://registry-lpm.listenai.com
+
+      - uses: battila7/get-version-action@v2
+        id: get_version
+
+      - name: WeChat Work notification by news
+        uses: chf007/action-wechat-work@master
+        env:
+          WECHAT_WORK_BOT_WEBHOOK: ${{secrets.WECHAT_BOT_WEBHOOK_LISA_ZEPHYR}}
+        with:
+          msgtype: news
+          articles: '[{"title":"@lisa-plugin/zephyr@latest","description":"最新版本 ${{ steps.get_version.outputs.version-without-v }}","url":"URL","picurl":"https://cdn.iflyos.cn/public/qwfb.jpeg"}]'

@@ -18,6 +18,11 @@
     "url": "git+https://github.com/LISTENAI/lisa-plugin-zephyr.git"
   },
   "author": "LISTENAI",
+  "maintainers": [
+    "lpmadmin <lpm.admin@listenai.com>",
+    "xychen <xychen@listenai.com>",
+    "zbzhao <zbzhao@listenai.com>"
+  ],
   "license": "UNLICENSED",
   "files": [
     "lib"
