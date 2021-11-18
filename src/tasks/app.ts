@@ -9,6 +9,7 @@ import { get } from '../config';
 
 import withOutput from '../utils/withOutput';
 import { workspace } from '../utils/ux';
+import { getCMakeCache } from '../utils/cmake';
 
 export default ({ job, application, cmd }: typeof LISA) => {
 
@@ -41,17 +42,17 @@ export default ({ job, application, cmd }: typeof LISA) => {
         throw new Error(`SDK 不存在: ${sdk}`);
       }
 
-      const board: string | null = argv.b ?? argv.board;
+      const buildDir = resolve(argv.d ?? argv['build-dir'] ?? 'build');
+
+      const board: string | null = argv.b ?? argv.board ?? await getCMakeCache(buildDir, 'CACHED_BOARD', 'STRING');
       if (!board) {
         throw new Error(`需要指定板型 (-b [board])`);
       }
 
-      const buildDir = resolve(argv.d ?? argv['build-dir'] ?? 'build');
-
       await exec('python', [
         '-m', 'west',
         'build',
-        '-b', board,
+        '--board', board,
         '--build-dir', buildDir,
         project,
       ], {
