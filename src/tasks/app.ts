@@ -55,7 +55,10 @@ export default ({ job, application, cmd }: typeof LISA) => {
         '--build-dir', buildDir,
         project,
       ], {
-        env: await makeEnv({ bundles, sdk }),
+        env: {
+          ...await makeEnv({ bundles, sdk }),
+          CMAKE_EXPORT_COMPILE_COMMANDS: '1',
+        },
       });
     },
     options: {
