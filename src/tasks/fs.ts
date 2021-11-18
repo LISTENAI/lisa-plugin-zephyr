@@ -1,5 +1,4 @@
 import LISA from '@listenai/lisa_core';
-import { ParsedArgs } from 'minimist';
 import { join, resolve } from 'path';
 import { readFile, pathExists, mkdirs, writeFile, remove } from 'fs-extra';
 import * as YAML from 'js-yaml';
@@ -8,6 +7,7 @@ import { loadDT } from 'zephyr-dts';
 import { loadBundles, makeEnv } from '../env';
 import { get } from '../config';
 
+import { ParseArgOptions, parseArgs, printHelp } from '../utils/parseArgs';
 import withOutput from '../utils/withOutput';
 import { workspace } from '../utils/ux';
 
@@ -56,14 +56,24 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('fs:init', {
     title: '资源结构初始化',
     async task(ctx, task) {
-      const argv = application.argv as ParsedArgs;
+      const options: ParseArgOptions = {
+        'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
+        'task-help': { short: 'h', help: '打印帮助' },
+      };
+
+      const args = parseArgs(application.argv, options);
+      if (args['task-help']) {
+        return printHelp(options, [
+          'fs:init [options] [project-path]',
+        ]);
+      }
 
       const project = workspace() ?? process.cwd();
       if (!(await pathExists(project))) {
         throw new Error(`项目不存在: ${project}`);
       }
 
-      const buildDir = resolve(argv.d ?? argv['build-dir'] ?? 'build');
+      const buildDir = resolve(args['build-dir'] ?? 'build');
 
       const partitions = await loadPartitions(buildDir);
       if (!partitions.length) {
@@ -98,8 +108,19 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('fs:build', {
     title: '打包资源镜像',
     async task(ctx, task) {
-      const argv = application.argv as ParsedArgs;
       const exec = withOutput(cmd, task);
+
+      const options: ParseArgOptions = {
+        'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
+        'task-help': { short: 'h', help: '打印帮助' },
+      };
+
+      const args = parseArgs(application.argv, options);
+      if (args['task-help']) {
+        return printHelp(options, [
+          'fs:build [options] [project-path]',
+        ]);
+      }
 
       const project = workspace() ?? process.cwd();
       if (!(await pathExists(project))) {
@@ -112,7 +133,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
         throw new Error(`当前无需要打包的资源配置，可先执行 lisa zep fs:init 进行初始化`)
       }
 
-      const buildDir = resolve(argv.d ?? argv['build-dir'] ?? 'build');
+      const buildDir = resolve(args['build-dir'] ?? 'build');
 
       await mkdirs(join(buildDir, 'resource'));
 
@@ -131,8 +152,19 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('fs:flash', {
     title: '烧录资源镜像',
     async task(ctx, task) {
-      const argv = application.argv as ParsedArgs;
       const exec = withOutput(cmd, task);
+
+      const options: ParseArgOptions = {
+        'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
+        'task-help': { short: 'h', help: '打印帮助' },
+      };
+
+      const args = parseArgs(application.argv, options);
+      if (args['task-help']) {
+        return printHelp(options, [
+          'fs:flash [options] [project-path]',
+        ]);
+      }
 
       const project = workspace() ?? process.cwd();
       if (!(await pathExists(project))) {
@@ -155,7 +187,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
         throw new Error(`当前无需要打包的资源配置，可先执行 lisa zep fs:init 进行初始化`);
       }
 
-      const buildDir = resolve(argv.d ?? argv['build-dir'] ?? 'build');
+      const buildDir = resolve(args['build-dir'] ?? 'build');
 
       const flashArgs: Record<number, string> = {};
       const partitions = await loadFsConfig(fsConfigPath);
@@ -168,10 +200,10 @@ export default ({ job, application, cmd }: typeof LISA) => {
         }
       }
 
-      const { command, args } = flasher.makeFlashExecArgs(flashArgs);
+      const { command, args: execArgs } = flasher.makeFlashExecArgs(flashArgs);
       application.debug({ command, args });
 
-      await exec(command, args, {
+      await exec(command, execArgs, {
         env: await makeEnv({ bundles }),
       });
     },
@@ -180,8 +212,17 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('fs:clean', {
     title: '清理资源镜像',
     async task(ctx, task) {
-      const argv = application.argv as ParsedArgs;
-      const buildDir = resolve(argv.d ?? argv['build-dir'] ?? 'build');
+      const options: ParseArgOptions = {
+        'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
+        'task-help': { short: 'h', help: '打印帮助' },
+      };
+
+      const args = parseArgs(application.argv, options);
+      if (args['task-help']) {
+        return printHelp(options);
+      }
+
+      const buildDir = resolve(args['build-dir'] ?? 'build');
       await remove(join(buildDir, 'resource'));
     },
   });

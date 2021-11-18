@@ -8,6 +8,7 @@ import { PACKAGE_HOME, loadBundles, makeEnv } from '../env';
 import { zephyrVersion } from '../sdk';
 import { get, set } from '../config';
 
+import { ParseArgOptions, parseArgs, printHelp } from '../utils/parseArgs';
 import withOutput from '../utils/withOutput';
 
 export default ({ job, application, cmd }: typeof LISA) => {
@@ -15,12 +16,26 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('use-env', {
     title: '环境设置',
     async task(ctx, task) {
-      const argv = application.argv as ParsedArgs;
       const exec = withOutput(cmd, task);
+
+      const options: ParseArgOptions = {
+        'clear': { help: '清除设置' },
+        'update': { help: '更新环境' },
+        'task-help': { short: 'h', help: '打印帮助' },
+      };
+
+      const argv = application.argv as ParsedArgs;
+      const args = parseArgs(application.argv, options);
+      if (args['task-help']) {
+        return printHelp(options, [
+          'use-env [path] [--update]',
+          'uss-env --clear',
+        ]);
+      }
 
       await mkdirs(PACKAGE_HOME);
 
-      if (argv['clear']) {
+      if (args['clear']) {
         await set('env', undefined);
       } else {
         const envs = argv._.slice(1);
@@ -28,7 +43,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
         let target: string[] = [];
         if (envs.length > 0 && !isEqual(envs, current)) {
           target = envs;
-        } else if (argv['update']) {
+        } else if (args['update']) {
           target = envs.length > 0 ? envs : current;
         }
         if (target.length > 0) {
@@ -55,10 +70,24 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('use-sdk', {
     title: 'SDK 设置',
     async task(ctx, task) {
-      const argv = application.argv as ParsedArgs;
       const exec = withOutput(cmd, task);
 
-      if (argv['clear']) {
+      const options: ParseArgOptions = {
+        'clear': { help: '清除设置' },
+        'update': { help: '更新 SDK' },
+        'task-help': { short: 'h', help: '打印帮助' },
+      };
+
+      const argv = application.argv as ParsedArgs;
+      const args = parseArgs(application.argv, options);
+      if (args['task-help']) {
+        return printHelp(options, [
+          'use-sdk [path] [--update]',
+          'uss-sdk --clear',
+        ]);
+      }
+
+      if (args['clear']) {
         await set('sdk', undefined);
       } else {
         const path = argv._[1];
@@ -66,7 +95,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
         let target: string | undefined;
         if (path && path != current) {
           target = path;
-        } else if (argv['update']) {
+        } else if (args['update']) {
           target = path || current;
         }
         if (target) {

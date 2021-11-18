@@ -1,12 +1,12 @@
 import LISA from '@listenai/lisa_core';
-import { ParsedArgs } from 'minimist';
-import { join, resolve } from 'path';
+import { resolve } from 'path';
 import { pathExists, remove } from 'fs-extra';
 import { uniq } from 'lodash';
 
 import { loadBundles, makeEnv } from '../env';
 import { get } from '../config';
 
+import { ParseArgOptions, parseArgs, printHelp } from '../utils/parseArgs';
 import withOutput from '../utils/withOutput';
 import { workspace } from '../utils/ux';
 import { getCMakeCache } from '../utils/cmake';
@@ -16,16 +16,30 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('app:build', {
     title: '应用构建',
     async task(ctx, task) {
-      const argv = application.argv as ParsedArgs;
       const exec = withOutput(cmd, task);
 
+      const options: ParseArgOptions = {
+        'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
+        'board': { short: 'b', arg: 'name', help: '要构建的板型' },
+        'clean': { short: 'c', help: '构建前清除 (全新构建)' },
+        'env': { arg: 'name', help: '指定当次编译有效的环境' },
+        'task-help': { short: 'h', help: '打印帮助' },
+      };
+
+      const args = parseArgs(application.argv, options);
+      if (args['task-help']) {
+        return printHelp(options, [
+          'app:build [options] [project-path]',
+        ]);
+      }
+
       const env = await get('env') || [];
-      if (typeof argv.env == 'string') {
-        const bundles = await loadBundles([argv.env]);
+      if (typeof args.env == 'string') {
+        const bundles = await loadBundles([args.env]);
         if (bundles.length == 0) {
-          throw new Error(`环境 "${argv.env}" 不存在，请先尝试执行 \`lisa zep use-env ${argv.env}\` 启用`);
+          throw new Error(`环境 "${args.env}" 不存在，请先尝试执行 \`lisa zep use-env ${args.env}\` 启用`);
         }
-        env.unshift(argv.env);
+        env.unshift(args.env);
       }
       const bundles = await loadBundles(uniq(env));
 
@@ -39,16 +53,16 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
       const westArgs = ['build'];
 
-      const buildDir = resolve(argv.d ?? argv['build-dir'] ?? 'build');
+      const buildDir = resolve(args['build-dir'] ?? 'build');
       westArgs.push('--build-dir', buildDir);
 
-      const board: string | null = argv.b ?? argv.board ?? await getCMakeCache(buildDir, 'CACHED_BOARD', 'STRING');
+      const board: string | undefined = args['board'] ?? await getCMakeCache(buildDir, 'CACHED_BOARD', 'STRING');
       if (!board) {
         throw new Error(`需要指定板型 (-b [board])`);
       }
       westArgs.push('--board', board);
 
-      if (argv['c'] || argv['clean']) {
+      if (args['clean']) {
         westArgs.push('--pristine', 'always');
       }
 
@@ -76,8 +90,17 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('app:flash', {
     title: '应用烧录',
     async task(ctx, task) {
-      const argv = application.argv as ParsedArgs;
       const exec = withOutput(cmd, task);
+
+      const options: ParseArgOptions = {
+        'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
+        'task-help': { short: 'h', help: '打印帮助' },
+      };
+
+      const args = parseArgs(application.argv, options);
+      if (args['task-help']) {
+        return printHelp(options);
+      }
 
       const env = await get('env');
       const bundles = await loadBundles(env);
@@ -92,7 +115,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
       const westArgs = ['flash'];
 
-      const buildDir = resolve(argv.d ?? argv['build-dir'] ?? 'build');
+      const buildDir = resolve(args['build-dir'] ?? 'build');
       westArgs.push('--build-dir', buildDir);
 
       await exec('python', ['-m', 'west', ...westArgs], {
@@ -108,8 +131,17 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('app:clean', {
     title: '应用清理',
     async task(ctx, task) {
-      const argv = application.argv as ParsedArgs;
-      const buildDir = resolve(argv.d ?? argv['build-dir'] ?? 'build');
+      const options: ParseArgOptions = {
+        'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
+        'task-help': { short: 'h', help: '打印帮助' },
+      };
+
+      const args = parseArgs(application.argv, options);
+      if (args['task-help']) {
+        return printHelp(options);
+      }
+
+      const buildDir = resolve(args['build-dir'] ?? 'build');
       await remove(buildDir);
     },
   });
