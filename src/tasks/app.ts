@@ -49,11 +49,18 @@ export default ({ job, application, cmd }: typeof LISA) => {
         throw new Error(`需要指定板型 (-b [board])`);
       }
 
+      const additionalArgs: string[] = [];
+
+      if (argv['c'] || argv['clean']) {
+        additionalArgs.push('--pristine', 'always');
+      }
+
       await exec('python', [
         '-m', 'west',
         'build',
         '--board', board,
         '--build-dir', buildDir,
+        ...additionalArgs,
         project,
       ], {
         env: {
