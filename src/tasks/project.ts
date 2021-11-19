@@ -1,4 +1,6 @@
 import LISA from '@listenai/lisa_core';
+import { add, sortBy } from 'lodash';
+import { stat } from 'fs-extra';
 
 import { loadBundles, makeEnv } from '../env';
 import { get } from '../config';
@@ -59,6 +61,8 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
       application.debug('flash configured', ctx);
 
+      await checkFlashArgs(flashArgs);
+
       const { command, args: execArgs } = flasher.makeFlashExecArgs(flashArgs);
       application.debug({ command, execArgs });
 
@@ -78,4 +82,21 @@ export default ({ job, application, cmd }: typeof LISA) => {
     },
   });
 
+}
+
+async function checkFlashArgs(flashArgs: Record<number, string>): Promise<void> {
+  let lastAddr = 0;
+  let lastTail = 0;
+  for (const addr of sortBy(Object.keys(flashArgs).map(Number))) {
+    if (addr < lastTail) {
+      throw new Error(`分区 ${formatAddr(addr)} 与上一个分区 (${formatAddr(lastAddr)} ~ ${formatAddr(lastTail)}) 地址重叠`);
+    }
+    const s = await stat(flashArgs[addr]);
+    lastAddr = addr;
+    lastTail = addr + s.size;
+  }
+}
+
+function formatAddr(addr: number): string {
+  return `0x${addr.toString(16).padStart(8, '0')}`;
 }
