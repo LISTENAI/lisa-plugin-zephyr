@@ -4,7 +4,7 @@ import { delimiter, join } from 'path';
 import { uniq, defaults } from 'lodash';
 import { pathExists, readJson, outputJson, remove } from 'fs-extra';
 
-import pathWith from '../utils/pathWith';
+import { KEY_OF_PATH, SYSTEM_PATHS, makePath, splitPath } from '../utils/path';
 import typedImport from '../utils/typedImport';
 
 import { PLUGIN_HOME, get } from './config';
@@ -34,10 +34,13 @@ export async function getEnv(override?: string): Promise<Record<string, string>>
   const cacheName = override ? `cache_${escape(override)}.json` : 'cache.json';
   const cacheFile = join(ENV_CACHE_DIR, cacheName);
   if (await pathExists(cacheFile)) {
-    return await readJson(cacheFile);
+    const env = await readJson(cacheFile);
+    Object.assign(env, makePath([...splitPath(env[KEY_OF_PATH]), ...SYSTEM_PATHS]));
+    return env;
   } else {
     const env = await makeEnv(override);
     await outputJson(cacheFile, env);
+    Object.assign(env, makePath([...splitPath(env[KEY_OF_PATH]), ...SYSTEM_PATHS]));
     return env;
   }
 }
@@ -106,7 +109,7 @@ async function makeEnv(override?: string): Promise<Record<string, string>> {
     }
   }
 
-  Object.assign(env, pathWith(binaries));
+  Object.assign(env, makePath(binaries));
 
   if (libraries.length > 0 && process.platform == 'linux') {
     const { LD_LIBRARY_PATH } = process.env;
