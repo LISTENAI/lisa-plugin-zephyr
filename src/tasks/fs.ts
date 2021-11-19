@@ -51,6 +51,14 @@ async function loadFsConfig(path: string): Promise<IPartition[]> {
   }
 }
 
+async function writeFsConfig(path: string, partitions: IPartition[]): Promise<void> {
+  await writeFile(path, YAML.dump(partitions, {
+    styles: {
+      '!!int': 'hexadecimal',
+    },
+  }));
+}
+
 export default ({ job, application, cmd }: typeof LISA) => {
 
   job('fs:init', {
@@ -74,6 +82,9 @@ export default ({ job, application, cmd }: typeof LISA) => {
       }
 
       const buildDir = resolve(args['build-dir'] ?? 'build');
+      if (!(await pathExists(buildDir))) {
+        await task.newListr(application.tasks['app:build']).run();
+      }
 
       const partitions = await loadPartitions(buildDir);
       if (!partitions.length) {
@@ -96,12 +107,8 @@ export default ({ job, application, cmd }: typeof LISA) => {
         part.fs = config?.fs || FS_DEFAULT;
       }
 
-      // 写入fs.yaml
-      await writeFile(fsConfigPath, YAML.dump(partitions, {
-        styles: {
-          '!!int': 'hexadecimal',
-        },
-      }));
+      // 写入 FS 配置
+      await writeFsConfig(fsConfigPath, partitions);
     }
   });
 
@@ -134,18 +141,21 @@ export default ({ job, application, cmd }: typeof LISA) => {
       }
 
       const buildDir = resolve(args['build-dir'] ?? 'build');
+      const resourceBuildDir = join(buildDir, 'resource');
 
-      await mkdirs(join(buildDir, 'resource'));
+      await mkdirs(resourceBuildDir);
 
       const env = await makeEnv();
       const partitions = await loadFsConfig(fsConfigPath);
       for (const part of partitions) {
         await mkdirs(join(resourceDir, part.label));
-        await exec('mklfs', ['.', join(buildDir, 'resource', `${part.label}.bin`), `${part.size}`], {
+        await exec('mklfs', ['.', join(resourceBuildDir, `${part.label}.bin`), `${part.size}`], {
           env,
           cwd: join(resourceDir, part.label),
         });
       }
+
+      await writeFsConfig(join(resourceBuildDir, 'fs.yaml'), partitions);
     },
   });
 
@@ -166,11 +176,6 @@ export default ({ job, application, cmd }: typeof LISA) => {
         ]);
       }
 
-      const project = workspace() ?? process.cwd();
-      if (!(await pathExists(project))) {
-        throw new Error(`项目不存在: ${project}`);
-      }
-
       const env = await get('env');
       const bundles = await loadBundles(env);
       if (!env || bundles.length == 0) {
@@ -182,17 +187,18 @@ export default ({ job, application, cmd }: typeof LISA) => {
         throw new Error(`当前环境 "${env[0]}" 不支持烧录`);
       }
 
-      const fsConfigPath = join(project, 'resource', 'fs.yaml');
-      if (!(await pathExists(fsConfigPath))) {
-        throw new Error(`当前无需要打包的资源配置，可先执行 lisa zep fs:init 进行初始化`);
-      }
-
       const buildDir = resolve(args['build-dir'] ?? 'build');
+      const resourceBuildDir = join(buildDir, 'resource');
+
+      const fsConfigPath = join(resourceBuildDir, 'fs.yaml');
+      if (!(await pathExists(fsConfigPath))) {
+        await task.newListr(application.tasks['fs:build']).run();
+      }
 
       const flashArgs: Record<number, string> = {};
       const partitions = await loadFsConfig(fsConfigPath);
       for (const part of partitions) {
-        const partFile = join(buildDir, 'resource', `${part.label}.bin`);
+        const partFile = join(resourceBuildDir, `${part.label}.bin`);
         if (await pathExists(partFile)) {
           flashArgs[part.addr] = partFile;
         } else {
