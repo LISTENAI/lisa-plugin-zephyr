@@ -6,7 +6,7 @@ import project from './project';
 import app from './app';
 import west from './west';
 import fs from './fs';
-import term from './term';
+
 
 export default (core: typeof LISA) => {
   installation(core);
@@ -15,5 +15,4 @@ export default (core: typeof LISA) => {
   app(core);
   fs(core);
   west(core);
-  term(core);
 }
