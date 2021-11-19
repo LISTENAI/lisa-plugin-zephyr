@@ -4,12 +4,12 @@ import { resolve, join } from 'path';
 import { mkdirs } from 'fs-extra';
 import { isEqual } from 'lodash';
 
-import { PACKAGE_HOME, loadBundles, makeEnv } from '../env';
-import { zephyrVersion } from '../sdk';
-import { get, set } from '../config';
+import { PACKAGE_HOME, loadBundles, getEnv, invalidateEnv } from '../env';
+import { get, set } from '../env/config';
 
 import { ParseArgOptions, parseArgs, printHelp } from '../utils/parseArgs';
 import withOutput from '../utils/withOutput';
+import { zephyrVersion } from '../utils/sdk';
 
 export default ({ job, application, cmd }: typeof LISA) => {
 
@@ -37,6 +37,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
       if (args['clear']) {
         await set('env', undefined);
+        await invalidateEnv();
       } else {
         const envs = argv._.slice(1);
         const current = await get('env') || [];
@@ -54,6 +55,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
             cwd: PACKAGE_HOME,
           });
           await set('env', target);
+          await invalidateEnv();
         }
       }
 
@@ -89,6 +91,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
       if (args['clear']) {
         await set('sdk', undefined);
+        await invalidateEnv();
       } else {
         const path = argv._[1];
         const current = await get('sdk');
@@ -106,8 +109,9 @@ export default ({ job, application, cmd }: typeof LISA) => {
           await exec('python', [
             '-m', 'pip',
             'install', '-r', join(fullPath, 'scripts', 'requirements.txt'),
-          ], { env: await makeEnv() });
+          ], { env: await getEnv() });
           await set('sdk', fullPath);
+          await invalidateEnv();
         }
       }
 

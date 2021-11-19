@@ -1,6 +1,8 @@
 import { pathExists, readJson, writeJson } from 'fs-extra';
 import { join } from 'path';
-import { PLUGIN_HOME } from './env';
+import { homedir } from 'os';
+
+export const PLUGIN_HOME = join(homedir(), '.listenai', 'lisa-zephyr');
 
 const CONFIG_FILE = join(PLUGIN_HOME, 'config.json');
 

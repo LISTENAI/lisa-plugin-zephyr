@@ -2,8 +2,8 @@ import LISA from '@listenai/lisa_core';
 import { add, sortBy } from 'lodash';
 import { stat } from 'fs-extra';
 
-import { loadBundles, makeEnv } from '../env';
-import { get } from '../config';
+import { loadBundles, getEnv } from '../env';
+import { get } from '../env/config';
 
 import { ParseArgOptions, parseArgs, printHelp } from '../utils/parseArgs';
 import withOutput from '../utils/withOutput';
@@ -67,7 +67,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
       application.debug({ command, execArgs });
 
       await exec(command, execArgs, {
-        env: await makeEnv({ bundles }),
+        env: await getEnv(),
       });
     },
   });

@@ -1,10 +1,8 @@
 import LISA from '@listenai/lisa_core';
 import { resolve, join } from 'path';
 import { pathExists, remove } from 'fs-extra';
-import { uniq } from 'lodash';
 
-import { loadBundles, makeEnv } from '../env';
-import { get } from '../config';
+import { getEnv } from '../env';
 
 import { ParseArgOptions, parseArgs, printHelp } from '../utils/parseArgs';
 import withOutput from '../utils/withOutput';
@@ -41,22 +39,12 @@ export default ({ job, application, cmd }: typeof LISA) => {
         ]);
       }
 
-      const env = await get('env') || [];
-      if (typeof args.env == 'string') {
-        const bundles = await loadBundles([args.env]);
-        if (bundles.length == 0) {
-          throw new Error(`环境 "${args.env}" 不存在，请先尝试执行 \`lisa zep use-env ${args.env}\` 启用`);
-        }
-        env.unshift(args.env);
-      }
-      const bundles = await loadBundles(uniq(env));
-
-      const sdk = await get('sdk');
-      if (!sdk) {
+      const env = await getEnv(args['env']);
+      if (!env['ZEPHYR_BASE']) {
         throw new Error(`需要设置 SDK (lisa zep use-sdk [path])`);
       }
-      if (!(await pathExists(sdk))) {
-        throw new Error(`SDK 不存在: ${sdk}`);
+      if (!(await pathExists(env['ZEPHYR_BASE']))) {
+        throw new Error(`SDK 不存在: ${env['ZEPHYR_BASE']}`);
       }
 
       const westArgs = ['build'];
@@ -84,7 +72,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
       await exec('python', ['-m', 'west', ...westArgs], {
         env: {
-          ...await makeEnv({ bundles, sdk }),
+          ...env,
           CMAKE_EXPORT_COMPILE_COMMANDS: '1',
         },
       });

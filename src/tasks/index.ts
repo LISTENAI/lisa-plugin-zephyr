@@ -7,7 +7,6 @@ import app from './app';
 import west from './west';
 import fs from './fs';
 
-
 export default (core: typeof LISA) => {
   installation(core);
   environment(core);

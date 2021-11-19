@@ -3,7 +3,7 @@ import { join, resolve } from 'path';
 import { pathExists, mkdirs, remove } from 'fs-extra';
 import { loadDT } from 'zephyr-dts';
 
-import { makeEnv } from '../env';
+import { getEnv } from '../env';
 
 import { ParseArgOptions, parseArgs, printHelp } from '../utils/parseArgs';
 import withOutput from '../utils/withOutput';
@@ -121,7 +121,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
       await mkdirs(resourceBuildDir);
 
-      const env = await makeEnv();
+      const env = await getEnv();
       const partitions = await loadFsConfig(fsConfigPath);
       for (const part of partitions) {
         await mkdirs(join(resourceDir, part.label));

@@ -1,11 +1,13 @@
 import { Bundle } from '@lisa-env/type';
 import { Binary } from '@binary/type';
 import { delimiter, join } from 'path';
-import { homedir } from 'os';
-import { defaults } from 'lodash';
-import pathWith from './utils/pathWith';
+import { uniq, defaults } from 'lodash';
+import { pathExists, readJson, outputJson, remove } from 'fs-extra';
 
-export const PLUGIN_HOME = join(homedir(), '.listenai', 'lisa-zephyr');
+import pathWith from '../utils/pathWith';
+import typedImport from '../utils/typedImport';
+
+import { PLUGIN_HOME, get } from './config';
 
 export const PACKAGE_HOME = join(PLUGIN_HOME, 'packages');
 const PACKAGE_MODULES_DIR = join(PACKAGE_HOME, 'node_modules');
@@ -13,10 +15,12 @@ const PACKAGE_MODULES_DIR = join(PACKAGE_HOME, 'node_modules');
 const CONFIG_DIR = join(PLUGIN_HOME, 'config');
 const WEST_CONFIG_GLOBAL = join(CONFIG_DIR, 'westconfig');
 
+const ENV_CACHE_DIR = join(PLUGIN_HOME, 'envs');
+
 const PIP_INDEX_URL = 'https://pypi.tuna.tsinghua.edu.cn/simple';
 
 const BUILTIN_BINARIES = [
-  './venv',
+  '../venv',
   '@binary/cmake',
   '@binary/dtc',
   '@binary/gperf',
@@ -25,19 +29,27 @@ const BUILTIN_BINARIES = [
   '@binary/xz',
 ];
 
-interface Module<T> {
-  default: T;
+export async function getEnv(override?: string): Promise<Record<string, string>> {
+  const escape = (name: string) => name.replaceAll('/', '_').replaceAll('\\', '_');
+  const cacheName = override ? `cache_${escape(override)}.json` : 'cache.json';
+  const cacheFile = join(ENV_CACHE_DIR, cacheName);
+  if (await pathExists(cacheFile)) {
+    return await readJson(cacheFile);
+  } else {
+    const env = await makeEnv(override);
+    await outputJson(cacheFile, env);
+    return env;
+  }
 }
 
-async function loadModule<T>(name: string): Promise<T> {
-  const mod = await import(name) as Module<T>;
-  return mod.default;
+export async function invalidateEnv(): Promise<void> {
+  await remove(ENV_CACHE_DIR);
 }
 
-export async function loadBundles(envs: string[] | undefined): Promise<Bundle[]> {
+export async function loadBundles(envs?: string[]): Promise<Bundle[]> {
   if (!envs) return [];
   try {
-    return await Promise.all(envs.map(name => loadModule<Bundle>(`${PACKAGE_MODULES_DIR}/@lisa-env/${name}`)));
+    return await Promise.all(envs.map(name => typedImport<Bundle>(`${PACKAGE_MODULES_DIR}/@lisa-env/${name}`)));
   } catch (e) {
     return [];
   }
@@ -47,27 +59,26 @@ export async function loadBinaries(bundles?: Bundle[]): Promise<Record<string, B
   const binaries: Record<string, Binary> = {};
   for (const name of BUILTIN_BINARIES) {
     const unprefixedName = name.split('/').slice(1).join('/');
-    binaries[unprefixedName] = await loadModule<Binary>(name);
+    binaries[unprefixedName] = await typedImport<Binary>(name);
   }
   for (const bundle of bundles || []) {
     for (const name of bundle.binaries || []) {
-      binaries[name] = await loadModule<Binary>(`${PACKAGE_MODULES_DIR}/@binary/${name}`);
+      binaries[name] = await typedImport<Binary>(`${PACKAGE_MODULES_DIR}/@binary/${name}`);
     }
   }
   return binaries;
 }
 
-interface MakeEnvOptions {
-  bundles?: Bundle[];
-  sdk?: string | null;
-}
-
-export async function makeEnv(options?: MakeEnvOptions): Promise<Record<string, string>> {
+async function makeEnv(override?: string): Promise<Record<string, string>> {
   const env: Record<string, string> = {};
   const binaries: string[] = [];
   const libraries: string[] = [];
 
-  for (const binary of Object.values(await loadBinaries(options?.bundles))) {
+  const envs = await get('env') || [];
+  if (override) envs.unshift(override);
+  const bundles = await loadBundles(uniq(envs));
+
+  for (const binary of Object.values(await loadBinaries(bundles))) {
     if (binary.env) {
       Object.assign(env, binary.env);
     }
@@ -77,8 +88,9 @@ export async function makeEnv(options?: MakeEnvOptions): Promise<Record<string, 
     }
   }
 
-  if (options?.sdk) {
-    env['ZEPHYR_BASE'] = options.sdk;
+  const sdk = await get('sdk');
+  if (sdk) {
+    env['ZEPHYR_BASE'] = sdk;
   }
 
   Object.assign(env, {
@@ -86,10 +98,10 @@ export async function makeEnv(options?: MakeEnvOptions): Promise<Record<string, 
     WEST_CONFIG_GLOBAL,
   });
 
-  if (options?.bundles && options.bundles.length > 0) {
-    const masterBundle = options.bundles[0];
+  if (bundles.length > 0) {
+    const masterBundle = bundles[0];
     Object.assign(env, masterBundle.env);
-    for (const bundle of options.bundles.slice(1)) {
+    for (const bundle of bundles.slice(1)) {
       defaults(env, bundle.env);
     }
   }

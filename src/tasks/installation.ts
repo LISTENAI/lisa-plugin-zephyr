@@ -3,7 +3,8 @@ import { join } from 'path';
 import { mkdirs, remove } from 'fs-extra';
 
 import withOutput from '../utils/withOutput';
-import { PLUGIN_HOME, makeEnv } from '../env';
+import { getEnv, invalidateEnv } from '../env';
+import { PLUGIN_HOME } from '../env/config';
 
 import python from '@binary/python-3.9';
 import venv from '../venv';
@@ -26,12 +27,14 @@ export default ({ job, cmd }: typeof LISA) => {
       await exec('python', [
         '-m', 'pip',
         'install', 'west',
-      ], { env: await makeEnv() });
+      ], { env: await getEnv() });
 
       await exec('west', [
         'config', '--global',
         'zephyr.base-prefer', 'env',
-      ], { env: await makeEnv() });
+      ], { env: await getEnv() });
+
+      await invalidateEnv();
     },
   });
 

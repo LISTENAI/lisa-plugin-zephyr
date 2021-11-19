@@ -3,8 +3,7 @@ import { ParsedArgs } from 'minimist';
 import { resolve } from 'path';
 import { pathExists } from 'fs-extra';
 
-import { loadBundles, makeEnv } from '../env';
-import { get } from '../config';
+import { getEnv } from '../env';
 
 import { ParseArgOptions, parseArgs, printHelp } from '../utils/parseArgs';
 import withOutput from '../utils/withOutput';
@@ -21,13 +20,8 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
       const westArgs = argv._.slice(1);
 
-      const env = await get('env');
-      const bundles = await loadBundles(env);
-
-      const sdk = await get('sdk');
-
       await exec('python', ['-m', 'west', ...westArgs], {
-        env: await makeEnv({ bundles, sdk }),
+        env: await getEnv(),
       });
     },
     options: {
@@ -56,15 +50,12 @@ export default ({ job, application, cmd }: typeof LISA) => {
         ]);
       }
 
-      const env = await get('env');
-      const bundles = await loadBundles(env);
-
-      const sdk = await get('sdk');
-      if (!sdk) {
+      const env = await getEnv(args['env']);
+      if (!env['ZEPHYR_BASE']) {
         throw new Error(`需要设置 SDK (lisa zep use-sdk [path])`);
       }
-      if (!(await pathExists(sdk))) {
-        throw new Error(`SDK 不存在: ${sdk}`);
+      if (!(await pathExists(env['ZEPHYR_BASE']))) {
+        throw new Error(`SDK 不存在: ${env['ZEPHYR_BASE']}`);
       }
 
       const westArgs = ['build', '--target', 'menuconfig'];
@@ -87,7 +78,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
       }
 
       await exec('python', ['-m', 'west', ...westArgs], {
-        env: await makeEnv({ bundles, sdk }),
+        env,
         stdio: 'inherit',
       });
     },

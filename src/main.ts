@@ -1,9 +1,9 @@
 import { promisify } from 'util';
 import { execFile as _execFile } from 'child_process';
 import { defaults } from 'lodash';
-import { PLUGIN_HOME, loadBundles, loadBinaries, makeEnv } from './env';
-import { get } from './config';
-import { zephyrVersion } from './sdk';
+import { loadBundles, loadBinaries, getEnv } from './env';
+import { PLUGIN_HOME, get } from './env/config';
+import { zephyrVersion } from './utils/sdk';
 
 const execFile = promisify(_execFile);
 
@@ -47,7 +47,7 @@ async function getWestVersion(): Promise<string | null> {
   try {
     const { stdout } = await execFile('python', [
       '-m', 'west', '--version',
-    ], { env: await makeEnv() });
+    ], { env: await getEnv() });
     return stdout.trim();
   } catch (e) {
     return null;

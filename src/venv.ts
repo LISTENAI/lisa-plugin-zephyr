@@ -2,7 +2,7 @@ import { join } from 'path';
 import { promisify } from 'util';
 import { execFile as _execFile } from 'child_process';
 import { Binary } from "@binary/type";
-import { PLUGIN_HOME } from './env';
+import { PLUGIN_HOME } from './env/config';
 
 const execFile = promisify(_execFile);
 
