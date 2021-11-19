@@ -11,7 +11,7 @@ const HOME = join(PLUGIN_HOME, 'venv');
 export default <Binary>{
   homeDir: HOME,
 
-  binaryDir: join(HOME, 'bin'),
+  binaryDir: join(HOME, process.platform == 'win32' ? 'Scripts' : 'bin'),
 
   env: {
     VIRTUAL_ENV: HOME,
