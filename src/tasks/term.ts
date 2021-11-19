@@ -39,7 +39,10 @@ function parseStopBits(input: string): 1 | 2 | undefined {
 export default ({ job, application }: typeof LISA) => {
 
   job('term', {
+    title: '终端模拟器',
     async task(ctx, task) {
+      task.title = '';
+
       const options: ParseArgOptions = {
         'list': { short: 'l', help: '列出本机所有串口路径' },
         'path': { short: 'p', arg: 'path', help: '指定串口路径' },

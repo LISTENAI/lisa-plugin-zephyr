@@ -37,7 +37,10 @@ export default ({ job, application, cmd }: typeof LISA) => {
   });
 
   job('menuconfig', {
+    title: '构建选项',
     async task(ctx, task) {
+      task.title = '';
+
       const exec = withOutput(cmd, task);
 
       const options: ParseArgOptions = {
