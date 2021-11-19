@@ -1,4 +1,4 @@
-import LISA from '@listenai/lisa_core';
+import { LisaType, job } from '../utils/lisa_ex';
 import { join } from 'path';
 import { mkdirs, remove } from 'fs-extra';
 
@@ -9,7 +9,7 @@ import { PLUGIN_HOME } from '../env/config';
 import python from '@binary/python-3.9';
 import venv from '../venv';
 
-export default ({ job, cmd }: typeof LISA) => {
+export default ({ cmd }: LisaType) => {
 
   job('install', {
     title: '环境安装',

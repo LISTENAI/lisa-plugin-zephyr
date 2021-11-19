@@ -1,4 +1,4 @@
-import LISA from '@listenai/lisa_core';
+import { LisaType, job } from '../utils/lisa_ex';
 import { sortBy } from 'lodash';
 import { stat } from 'fs-extra';
 
@@ -7,7 +7,7 @@ import { getEnv, getFlasher } from '../env';
 import parseArgs from '../utils/parseArgs';
 import withOutput from '../utils/withOutput';
 
-export default ({ job, application, cmd }: typeof LISA) => {
+export default ({ application, cmd }: LisaType) => {
 
   job('build', {
     title: '构建',
@@ -32,6 +32,14 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
   job('flash', {
     title: '烧录',
+    before: (ctx) => {
+      if (ctx.flashConfigured) return [];
+      ctx.flashConfigOnly = true;
+      return [
+        application.tasks['app:flash'],
+        application.tasks['fs:flash'],
+      ];
+    },
     async task(ctx, task) {
       const exec = withOutput(cmd, task);
 
@@ -54,14 +62,6 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
       const flashArgs: Record<number, string> = ctx.flashArgs || {};
       ctx.flashArgs = flashArgs;
-
-      if (!ctx.flashConfigured) {
-        ctx.flashConfigOnly = true;
-        await task.newListr([
-          application.tasks['app:flash'],
-          application.tasks['fs:flash'],
-        ], { ctx }).run();
-      }
 
       application.debug('flash configured', ctx);
 

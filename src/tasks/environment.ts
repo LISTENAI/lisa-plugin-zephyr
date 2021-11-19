@@ -1,4 +1,4 @@
-import LISA from '@listenai/lisa_core';
+import { LisaType, job } from '../utils/lisa_ex';
 import { ParsedArgs } from 'minimist';
 import { resolve, join } from 'path';
 import { mkdirs } from 'fs-extra';
@@ -11,7 +11,7 @@ import parseArgs from '../utils/parseArgs';
 import withOutput from '../utils/withOutput';
 import { zephyrVersion } from '../utils/sdk';
 
-export default ({ job, application, cmd }: typeof LISA) => {
+export default ({ application, cmd }: LisaType) => {
 
   job('use-env', {
     title: '环境设置',

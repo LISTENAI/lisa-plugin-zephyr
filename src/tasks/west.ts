@@ -1,4 +1,4 @@
-import LISA from '@listenai/lisa_core';
+import { LisaType, job } from '../utils/lisa_ex';
 import { ParsedArgs } from 'minimist';
 import { resolve } from 'path';
 import { pathExists } from 'fs-extra';
@@ -10,7 +10,7 @@ import withOutput from '../utils/withOutput';
 import { workspace } from '../utils/ux';
 import { getCMakeCache } from '../utils/cmake';
 
-export default ({ job, application, cmd }: typeof LISA) => {
+export default ({ application, cmd }: LisaType) => {
 
   job('west', {
     title: 'west',
@@ -32,9 +32,8 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
   job('menuconfig', {
     title: '构建选项',
+    hideTitle: true,
     async task(ctx, task) {
-      task.title = '';
-
       const exec = withOutput(cmd, task);
 
       const { args, printHelp } = parseArgs(application.argv, {

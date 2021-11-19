@@ -1,4 +1,4 @@
-import LISA from '@listenai/lisa_core';
+import { LisaType, job } from '../utils/lisa_ex';
 import { resolve, join } from 'path';
 import { pathExists, remove } from 'fs-extra';
 
@@ -17,7 +17,7 @@ async function getAppFlashAddr(buildDir: string): Promise<number> {
   return isNaN(loadOffset) ? 0 : loadOffset;
 }
 
-export default ({ job, application, cmd }: typeof LISA) => {
+export default ({ application, cmd }: LisaType) => {
 
   job('app:build', {
     title: '应用构建',
@@ -83,6 +83,9 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
   job('app:flash', {
     title: '应用烧录',
+    before: (ctx) => [
+      application.tasks['app:build'],
+    ],
     async task(ctx, task) {
       const { args, printHelp } = parseArgs(application.argv, {
         'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
@@ -92,24 +95,21 @@ export default ({ job, application, cmd }: typeof LISA) => {
         return printHelp();
       }
 
-      await task.newListr(application.tasks['app:build']).run();
+      const buildDir = resolve(args['build-dir'] ?? 'build');
 
       const flashArgs: Record<number, string> = ctx.flashArgs || {};
       ctx.flashArgs = flashArgs;
-
-      const buildDir = resolve(args['build-dir'] ?? 'build');
 
       const appAddr = await getAppFlashAddr(buildDir);
       const appFile = join(buildDir, 'zephyr', 'zephyr.bin');
       flashArgs[appAddr] = appFile;
 
+      ctx.flashConfigured = true;
       application.debug('app:flash configured', ctx);
-
-      if (!ctx.flashConfigOnly) {
-        ctx.flashConfigured = true;
-        return task.newListr(application.tasks['flash'], { ctx });
-      }
     },
+    after: (ctx) => ctx.flashConfigOnly ? [] : [
+      application.tasks['flash'],
+    ],
     options: {
       persistentOutput: true,
       bottomBar: 10,

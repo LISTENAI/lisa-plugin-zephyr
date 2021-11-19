@@ -1,4 +1,4 @@
-import LISA from '@listenai/lisa_core';
+import { LisaType } from '../utils/lisa_ex';
 
 import installation from './installation';
 import environment from './environment';
@@ -7,7 +7,7 @@ import app from './app';
 import west from './west';
 import fs from './fs';
 
-export default (core: typeof LISA) => {
+export default (core: LisaType) => {
   installation(core);
   environment(core);
   project(core);

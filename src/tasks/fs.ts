@@ -1,4 +1,4 @@
-import LISA from '@listenai/lisa_core';
+import { LisaType, job } from '../utils/lisa_ex';
 import { join, resolve } from 'path';
 import { pathExists, mkdirs, remove } from 'fs-extra';
 import { loadDT } from 'zephyr-dts';
@@ -35,10 +35,13 @@ async function loadPartitions(buildDir: string): Promise<IPartition[]> {
   return partitions;
 }
 
-export default ({ job, application, cmd }: typeof LISA) => {
+export default ({ application, cmd }: LisaType) => {
 
   job('fs:init', {
     title: '资源结构初始化',
+    before: (ctx) => [
+      application.tasks['app:build'],
+    ],
     async task(ctx, task) {
       const { args, printHelp } = parseArgs(application.argv, {
         'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
@@ -56,9 +59,6 @@ export default ({ job, application, cmd }: typeof LISA) => {
       }
 
       const buildDir = resolve(args['build-dir'] ?? 'build');
-      if (!(await pathExists(buildDir))) {
-        await task.newListr(application.tasks['app:build']).run();
-      }
 
       const partitions = await loadPartitions(buildDir);
       if (!partitions.length) {
@@ -133,6 +133,9 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
   job('fs:flash', {
     title: '资源镜像烧录',
+    before: (ctx) => [
+      application.tasks['fs:build'],
+    ],
     async task(ctx, task) {
       const { args, printHelp } = parseArgs(application.argv, {
         'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
@@ -144,34 +147,29 @@ export default ({ job, application, cmd }: typeof LISA) => {
         ]);
       }
 
-      await task.newListr(application.tasks['fs:build']).run();
-
-      const flashArgs: Record<number, string> = ctx.flashArgs || {};
-      ctx.flashArgs = flashArgs;
-
       const buildDir = resolve(args['build-dir'] ?? 'build');
       const resourceBuildDir = join(buildDir, 'resource');
 
       const fsConfigPath = join(resourceBuildDir, 'fs.yaml');
-      if (!(await pathExists(fsConfigPath))) {
-        return;
-      }
+      if (await pathExists(fsConfigPath)) {
+        const flashArgs: Record<number, string> = ctx.flashArgs || {};
+        ctx.flashArgs = flashArgs;
 
-      const partitions = await loadFsConfig(fsConfigPath);
-      for (const part of partitions) {
-        const partFile = join(resourceBuildDir, `${part.label}.bin`);
-        if (await pathExists(partFile)) {
-          flashArgs[part.addr] = partFile;
+        const partitions = await loadFsConfig(fsConfigPath);
+        for (const part of partitions) {
+          const partFile = join(resourceBuildDir, `${part.label}.bin`);
+          if (await pathExists(partFile)) {
+            flashArgs[part.addr] = partFile;
+          }
         }
       }
 
+      ctx.flashConfigured = true;
       application.debug('fs:flash configured', ctx);
-
-      if (!ctx.flashConfigOnly) {
-        ctx.flashConfigured = true;
-        return task.newListr(application.tasks['flash'], { ctx });
-      }
     },
+    after: (ctx) => ctx.flashConfigOnly ? [] : [
+      application.tasks['flash'],
+    ],
   });
 
   job('fs:clean', {
