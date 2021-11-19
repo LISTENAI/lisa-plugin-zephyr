@@ -1,13 +1,10 @@
 import LISA from '@listenai/lisa_core';
-import { join, resolve } from 'path';
-import { pathExists } from 'fs-extra';
 
 import { loadBundles, makeEnv } from '../env';
 import { get } from '../config';
 
 import { ParseArgOptions, parseArgs, printHelp } from '../utils/parseArgs';
 import withOutput from '../utils/withOutput';
-import { loadFsConfig } from '../utils/fs';
 
 export default ({ job, application, cmd }: typeof LISA) => {
 

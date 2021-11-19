@@ -113,7 +113,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
       const resourceDir = join(project, 'resource');
       const fsConfigPath = join(resourceDir, 'fs.yaml');
       if (!(await pathExists(fsConfigPath))) {
-        throw new Error(`当前无需要打包的资源配置，可先执行 lisa zep fs:init 进行初始化`)
+        return;
       }
 
       const buildDir = resolve(args['build-dir'] ?? 'build');
