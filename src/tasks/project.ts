@@ -1,9 +1,8 @@
 import LISA from '@listenai/lisa_core';
-import { add, sortBy } from 'lodash';
+import { sortBy } from 'lodash';
 import { stat } from 'fs-extra';
 
-import { loadBundles, getEnv } from '../env';
-import { get } from '../env/config';
+import { getEnv, getFlasher } from '../env';
 
 import { ParseArgOptions, parseArgs, printHelp } from '../utils/parseArgs';
 import withOutput from '../utils/withOutput';
@@ -26,7 +25,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
       const exec = withOutput(cmd, task);
 
       const options: ParseArgOptions = {
-        'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
+        'env': { arg: 'name', help: '指定当次编译有效的环境' },
         'task-help': { short: 'h', help: '打印帮助' },
       };
 
@@ -37,15 +36,9 @@ export default ({ job, application, cmd }: typeof LISA) => {
         ]);
       }
 
-      const env = await get('env');
-      const bundles = await loadBundles(env);
-      if (!env || bundles.length == 0) {
-        throw new Error(`未设置环境，不支持烧录 (lisa zep use-env [name])`);
-      }
-
-      const flasher = bundles[0].flasher;
+      const flasher = await getFlasher(args['env']);
       if (!flasher) {
-        throw new Error(`当前环境 "${env[0]}" 不支持烧录`);
+        throw new Error(`当前环境不支持烧录`);
       }
 
       const flashArgs: Record<number, string> = ctx.flashArgs || {};
