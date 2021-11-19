@@ -5,7 +5,7 @@ import { pathExists } from 'fs-extra';
 
 import { getEnv } from '../env';
 
-import { ParseArgOptions, parseArgs, printHelp } from '../utils/parseArgs';
+import parseArgs from '../utils/parseArgs';
 import withOutput from '../utils/withOutput';
 import { workspace } from '../utils/ux';
 import { getCMakeCache } from '../utils/cmake';
@@ -37,15 +37,14 @@ export default ({ job, application, cmd }: typeof LISA) => {
 
       const exec = withOutput(cmd, task);
 
-      const options: ParseArgOptions = {
+      const { args, printHelp } = parseArgs(application.argv, {
         'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
         'board': { short: 'b', arg: 'name', help: '要构建的板型' },
+        'env': { arg: 'name', help: '指定当次编译有效的环境' },
         'task-help': { short: 'h', help: '打印帮助' },
-      };
-
-      const args = parseArgs(application.argv, options);
+      });
       if (args['task-help']) {
-        return printHelp(options, [
+        return printHelp([
           'menuconfig [options] [project-path]',
         ]);
       }

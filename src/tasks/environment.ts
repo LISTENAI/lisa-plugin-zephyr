@@ -7,7 +7,7 @@ import { isEqual } from 'lodash';
 import { PACKAGE_HOME, loadBundles, getEnv, invalidateEnv } from '../env';
 import { get, set } from '../env/config';
 
-import { ParseArgOptions, parseArgs, printHelp } from '../utils/parseArgs';
+import parseArgs from '../utils/parseArgs';
 import withOutput from '../utils/withOutput';
 import { zephyrVersion } from '../utils/sdk';
 
@@ -17,17 +17,15 @@ export default ({ job, application, cmd }: typeof LISA) => {
     title: '环境设置',
     async task(ctx, task) {
       const exec = withOutput(cmd, task);
+      const argv = application.argv as ParsedArgs;
 
-      const options: ParseArgOptions = {
+      const { args, printHelp } = parseArgs(application.argv, {
         'clear': { help: '清除设置' },
         'update': { help: '更新环境' },
         'task-help': { short: 'h', help: '打印帮助' },
-      };
-
-      const argv = application.argv as ParsedArgs;
-      const args = parseArgs(application.argv, options);
+      });
       if (args['task-help']) {
-        return printHelp(options, [
+        return printHelp([
           'use-env [path] [--update]',
           'uss-env --clear',
         ]);
@@ -73,17 +71,15 @@ export default ({ job, application, cmd }: typeof LISA) => {
     title: 'SDK 设置',
     async task(ctx, task) {
       const exec = withOutput(cmd, task);
+      const argv = application.argv as ParsedArgs;
 
-      const options: ParseArgOptions = {
+      const { args, printHelp } = parseArgs(application.argv, {
         'clear': { help: '清除设置' },
         'update': { help: '更新 SDK' },
         'task-help': { short: 'h', help: '打印帮助' },
-      };
-
-      const argv = application.argv as ParsedArgs;
-      const args = parseArgs(application.argv, options);
+      });
       if (args['task-help']) {
-        return printHelp(options, [
+        return printHelp([
           'use-sdk [path] [--update]',
           'uss-sdk --clear',
         ]);

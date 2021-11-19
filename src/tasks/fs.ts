@@ -5,7 +5,7 @@ import { loadDT } from 'zephyr-dts';
 
 import { getEnv } from '../env';
 
-import { ParseArgOptions, parseArgs, printHelp } from '../utils/parseArgs';
+import parseArgs from '../utils/parseArgs';
 import withOutput from '../utils/withOutput';
 import { workspace } from '../utils/ux';
 import { IPartition, loadFsConfig, writeFsConfig } from '../utils/fs';
@@ -40,14 +40,12 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('fs:init', {
     title: '资源结构初始化',
     async task(ctx, task) {
-      const options: ParseArgOptions = {
+      const { args, printHelp } = parseArgs(application.argv, {
         'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
         'task-help': { short: 'h', help: '打印帮助' },
-      };
-
-      const args = parseArgs(application.argv, options);
+      });
       if (args['task-help']) {
-        return printHelp(options, [
+        return printHelp([
           'fs:init [options] [project-path]',
         ]);
       }
@@ -93,14 +91,12 @@ export default ({ job, application, cmd }: typeof LISA) => {
     async task(ctx, task) {
       const exec = withOutput(cmd, task);
 
-      const options: ParseArgOptions = {
+      const { args, printHelp } = parseArgs(application.argv, {
         'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
         'task-help': { short: 'h', help: '打印帮助' },
-      };
-
-      const args = parseArgs(application.argv, options);
+      });
       if (args['task-help']) {
-        return printHelp(options, [
+        return printHelp([
           'fs:build [options] [project-path]',
         ]);
       }
@@ -138,14 +134,12 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('fs:flash', {
     title: '资源镜像烧录',
     async task(ctx, task) {
-      const options: ParseArgOptions = {
+      const { args, printHelp } = parseArgs(application.argv, {
         'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
         'task-help': { short: 'h', help: '打印帮助' },
-      };
-
-      const args = parseArgs(application.argv, options);
+      });
       if (args['task-help']) {
-        return printHelp(options, [
+        return printHelp([
           'fs:flash [options] [project-path]',
         ]);
       }
@@ -183,14 +177,12 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('fs:clean', {
     title: '资源镜像清理',
     async task(ctx, task) {
-      const options: ParseArgOptions = {
+      const { args, printHelp } = parseArgs(application.argv, {
         'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
         'task-help': { short: 'h', help: '打印帮助' },
-      };
-
-      const args = parseArgs(application.argv, options);
+      });
       if (args['task-help']) {
-        return printHelp(options);
+        return printHelp();
       }
 
       const buildDir = resolve(args['build-dir'] ?? 'build');

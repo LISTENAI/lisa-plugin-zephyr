@@ -4,7 +4,7 @@ import { pathExists, remove } from 'fs-extra';
 
 import { getEnv } from '../env';
 
-import { ParseArgOptions, parseArgs, printHelp } from '../utils/parseArgs';
+import parseArgs from '../utils/parseArgs';
 import withOutput from '../utils/withOutput';
 import { workspace } from '../utils/ux';
 import { getCMakeCache } from '../utils/cmake';
@@ -24,17 +24,15 @@ export default ({ job, application, cmd }: typeof LISA) => {
     async task(ctx, task) {
       const exec = withOutput(cmd, task);
 
-      const options: ParseArgOptions = {
+      const { args, printHelp } = parseArgs(application.argv, {
         'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
         'board': { short: 'b', arg: 'name', help: '要构建的板型' },
         'clean': { short: 'c', help: '构建前清除 (全新构建)' },
         'env': { arg: 'name', help: '指定当次编译有效的环境' },
         'task-help': { short: 'h', help: '打印帮助' },
-      };
-
-      const args = parseArgs(application.argv, options);
+      });
       if (args['task-help']) {
-        return printHelp(options, [
+        return printHelp([
           'app:build [options] [project-path]',
         ]);
       }
@@ -86,14 +84,12 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('app:flash', {
     title: '应用烧录',
     async task(ctx, task) {
-      const options: ParseArgOptions = {
+      const { args, printHelp } = parseArgs(application.argv, {
         'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
         'task-help': { short: 'h', help: '打印帮助' },
-      };
-
-      const args = parseArgs(application.argv, options);
+      });
       if (args['task-help']) {
-        return printHelp(options);
+        return printHelp();
       }
 
       await task.newListr(application.tasks['app:build']).run();
@@ -123,14 +119,12 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('app:clean', {
     title: '应用清理',
     async task(ctx, task) {
-      const options: ParseArgOptions = {
+      const { args, printHelp } = parseArgs(application.argv, {
         'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
         'task-help': { short: 'h', help: '打印帮助' },
-      };
-
-      const args = parseArgs(application.argv, options);
+      });
       if (args['task-help']) {
-        return printHelp(options);
+        return printHelp();
       }
 
       const buildDir = resolve(args['build-dir'] ?? 'build');

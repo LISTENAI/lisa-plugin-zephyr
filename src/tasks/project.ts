@@ -4,7 +4,7 @@ import { stat } from 'fs-extra';
 
 import { getEnv, getFlasher } from '../env';
 
-import { ParseArgOptions, parseArgs, printHelp } from '../utils/parseArgs';
+import parseArgs from '../utils/parseArgs';
 import withOutput from '../utils/withOutput';
 
 export default ({ job, application, cmd }: typeof LISA) => {
@@ -12,6 +12,17 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('build', {
     title: '构建',
     async task(ctx, task) {
+      const { args, printHelp } = parseArgs(application.argv, {
+        'task-help': { short: 'h', help: '打印帮助' },
+      });
+      if (args['task-help']) {
+        return printHelp([
+          '详见:',
+          'app:build -h',
+          'fs:build -h',
+        ]);
+      }
+
       return task.newListr([
         application.tasks['app:build'],
         application.tasks['fs:build'],
@@ -24,15 +35,15 @@ export default ({ job, application, cmd }: typeof LISA) => {
     async task(ctx, task) {
       const exec = withOutput(cmd, task);
 
-      const options: ParseArgOptions = {
+      const { args, printHelp } = parseArgs(application.argv, {
         'env': { arg: 'name', help: '指定当次编译有效的环境' },
         'task-help': { short: 'h', help: '打印帮助' },
-      };
-
-      const args = parseArgs(application.argv, options);
+      });
       if (args['task-help']) {
-        return printHelp(options, [
-          'flash [options] [project-path]',
+        return printHelp([
+          '详见:',
+          'app:flash -h',
+          'fs:flash -h',
         ]);
       }
 
@@ -68,6 +79,17 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('clean', {
     title: '清理',
     async task(ctx, task) {
+      const { args, printHelp } = parseArgs(application.argv, {
+        'task-help': { short: 'h', help: '打印帮助' },
+      });
+      if (args['task-help']) {
+        return printHelp([
+          '详见:',
+          'app:clean -h',
+          'fs:clean -h',
+        ]);
+      }
+
       return task.newListr([
         application.tasks['app:clean'],
         application.tasks['fs:clean'],

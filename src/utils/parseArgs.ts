@@ -1,17 +1,36 @@
 import LISA from '@listenai/lisa_core';
 import { ParsedArgs } from 'minimist';
 
-interface ParseArgField {
+interface ParseArgFieldBase {
   short?: string;
   help?: string;
-  arg?: string;
-  optArg?: string;
 }
 
-export type ParseArgOptions = Record<string, ParseArgField>;
-type ParseArgResult<T> = { [K in keyof T]?: string };
+interface ParseArgFieldWithArg extends ParseArgFieldBase {
+  arg: string;
+}
 
-export function parseArgs<T = ParseArgOptions>(argv: string[] | ParsedArgs, options: T): ParseArgResult<T> {
+interface ParseArgFieldWithOptionalArg extends ParseArgFieldBase {
+  optArg: string;
+}
+
+type ParseArgField = ParseArgFieldBase | ParseArgFieldWithArg | ParseArgFieldWithOptionalArg
+
+export type ParseArgOptions = Record<string, ParseArgField>;
+
+type ParseArgResult<Fields> = {
+  [Key in keyof Fields]?:
+  Fields[Extract<keyof Fields, Key>] extends ParseArgFieldWithOptionalArg
+  ? string | boolean
+  : Fields[Extract<keyof Fields, Key>] extends ParseArgFieldWithArg
+  ? string
+  : boolean;
+};
+
+export default function parseArgs<T = ParseArgOptions>(argv: string[] | ParsedArgs, options: T): {
+  args: ParseArgResult<T>;
+  printHelp: (usages?: string[]) => void;
+} {
   const args = argv as ParsedArgs;
   const result: ParseArgResult<T> = {};
 
@@ -24,10 +43,10 @@ export function parseArgs<T = ParseArgOptions>(argv: string[] | ParsedArgs, opti
     }
   }
 
-  return result;
+  return { args: result, printHelp: (usages) => printHelp(options, usages) };
 }
 
-export function printHelp(options: ParseArgOptions, usages?: string[]): void {
+function printHelp<T = ParseArgOptions>(options: T, usages?: string[]): void {
   process.nextTick(() => {
     if (usages && usages.length) {
       for (const usage of usages) {
