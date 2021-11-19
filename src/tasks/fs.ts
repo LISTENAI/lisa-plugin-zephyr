@@ -113,7 +113,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
   });
 
   job('fs:build', {
-    title: '打包资源镜像',
+    title: '资源镜像构建',
     async task(ctx, task) {
       const exec = withOutput(cmd, task);
 
@@ -160,7 +160,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
   });
 
   job('fs:flash', {
-    title: '烧录资源镜像',
+    title: '资源镜像烧录',
     async task(ctx, task) {
       const exec = withOutput(cmd, task);
 
@@ -216,7 +216,7 @@ export default ({ job, application, cmd }: typeof LISA) => {
   });
 
   job('fs:clean', {
-    title: '清理资源镜像',
+    title: '资源镜像清理',
     async task(ctx, task) {
       const options: ParseArgOptions = {
         'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },

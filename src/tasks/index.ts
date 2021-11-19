@@ -13,7 +13,7 @@ export default (core: typeof LISA) => {
   environment(core);
   project(core);
   app(core);
-  west(core);
   fs(core);
+  west(core);
   term(core);
 }
