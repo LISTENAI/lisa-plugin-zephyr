@@ -1,5 +1,5 @@
 import LISA from '@listenai/lisa_core';
-import { resolve } from 'path';
+import { resolve, join } from 'path';
 import { pathExists, remove } from 'fs-extra';
 import { uniq } from 'lodash';
 
@@ -10,6 +10,14 @@ import { ParseArgOptions, parseArgs, printHelp } from '../utils/parseArgs';
 import withOutput from '../utils/withOutput';
 import { workspace } from '../utils/ux';
 import { getCMakeCache } from '../utils/cmake';
+import { getKconfig } from '../utils/kconfig';
+
+async function getAppFlashAddr(buildDir: string): Promise<number> {
+  const hasLoadOffset = await getKconfig(buildDir, 'CONFIG_HAS_FLASH_LOAD_OFFSET');
+  if (hasLoadOffset != 'y') return 0;
+  const loadOffset = parseInt(await getKconfig(buildDir, 'CONFIG_FLASH_LOAD_OFFSET') ?? '');
+  return isNaN(loadOffset) ? 0 : loadOffset;
+}
 
 export default ({ job, application, cmd }: typeof LISA) => {
 
@@ -90,8 +98,6 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('app:flash', {
     title: '应用烧录',
     async task(ctx, task) {
-      const exec = withOutput(cmd, task);
-
       const options: ParseArgOptions = {
         'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
         'task-help': { short: 'h', help: '打印帮助' },
@@ -102,25 +108,23 @@ export default ({ job, application, cmd }: typeof LISA) => {
         return printHelp(options);
       }
 
-      const env = await get('env');
-      const bundles = await loadBundles(env);
+      await task.newListr(application.tasks['app:build']).run();
 
-      const sdk = await get('sdk');
-      if (!sdk) {
-        throw new Error(`需要设置 SDK (lisa zep use-sdk [path])`);
-      }
-      if (!(await pathExists(sdk))) {
-        throw new Error(`SDK 不存在: ${sdk}`);
-      }
-
-      const westArgs = ['flash'];
+      const flashArgs: Record<number, string> = ctx.flashArgs || {};
+      ctx.flashArgs = flashArgs;
 
       const buildDir = resolve(args['build-dir'] ?? 'build');
-      westArgs.push('--build-dir', buildDir);
 
-      await exec('python', ['-m', 'west', ...westArgs], {
-        env: await makeEnv({ bundles, sdk }),
-      });
+      const appAddr = await getAppFlashAddr(buildDir);
+      const appFile = join(buildDir, 'zephyr', 'zephyr.bin');
+      flashArgs[appAddr] = appFile;
+
+      application.debug('app:flash configured', ctx);
+
+      if (!ctx.flashConfigOnly) {
+        ctx.flashConfigured = true;
+        return task.newListr(application.tasks['flash'], { ctx });
+      }
     },
     options: {
       persistentOutput: true,

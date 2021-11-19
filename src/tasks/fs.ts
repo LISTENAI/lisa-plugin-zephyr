@@ -1,24 +1,16 @@
 import LISA from '@listenai/lisa_core';
 import { join, resolve } from 'path';
-import { readFile, pathExists, mkdirs, writeFile, remove } from 'fs-extra';
-import * as YAML from 'js-yaml';
+import { pathExists, mkdirs, remove } from 'fs-extra';
 import { loadDT } from 'zephyr-dts';
 
-import { loadBundles, makeEnv } from '../env';
-import { get } from '../config';
+import { makeEnv } from '../env';
 
 import { ParseArgOptions, parseArgs, printHelp } from '../utils/parseArgs';
 import withOutput from '../utils/withOutput';
 import { workspace } from '../utils/ux';
+import { IPartition, loadFsConfig, writeFsConfig } from '../utils/fs';
 
 const FS_DEFAULT = 'LFS';
-
-interface IPartition {
-  label: string;
-  addr: number;
-  size: number;
-  fs?: string;
-}
 
 async function loadPartitions(buildDir: string): Promise<IPartition[]> {
   const partitions: IPartition[] = [];
@@ -41,22 +33,6 @@ async function loadPartitions(buildDir: string): Promise<IPartition[]> {
   } catch (e) {
   }
   return partitions;
-}
-
-async function loadFsConfig(path: string): Promise<IPartition[]> {
-  try {
-    return YAML.load(await readFile(path, { encoding: 'utf-8' })) as IPartition[];
-  } catch (e) {
-    return [];
-  }
-}
-
-async function writeFsConfig(path: string, partitions: IPartition[]): Promise<void> {
-  await writeFile(path, YAML.dump(partitions, {
-    styles: {
-      '!!int': 'hexadecimal',
-    },
-  }));
 }
 
 export default ({ job, application, cmd }: typeof LISA) => {
@@ -162,8 +138,6 @@ export default ({ job, application, cmd }: typeof LISA) => {
   job('fs:flash', {
     title: '资源镜像烧录',
     async task(ctx, task) {
-      const exec = withOutput(cmd, task);
-
       const options: ParseArgOptions = {
         'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
         'task-help': { short: 'h', help: '打印帮助' },
@@ -176,42 +150,33 @@ export default ({ job, application, cmd }: typeof LISA) => {
         ]);
       }
 
-      const env = await get('env');
-      const bundles = await loadBundles(env);
-      if (!env || bundles.length == 0) {
-        throw new Error(`未设置环境，不支持烧录 (lisa zep use-env [name])`);
-      }
+      await task.newListr(application.tasks['fs:build']).run();
 
-      const flasher = bundles[0].flasher;
-      if (!flasher) {
-        throw new Error(`当前环境 "${env[0]}" 不支持烧录`);
-      }
+      const flashArgs: Record<number, string> = ctx.flashArgs || {};
+      ctx.flashArgs = flashArgs;
 
       const buildDir = resolve(args['build-dir'] ?? 'build');
       const resourceBuildDir = join(buildDir, 'resource');
 
       const fsConfigPath = join(resourceBuildDir, 'fs.yaml');
       if (!(await pathExists(fsConfigPath))) {
-        await task.newListr(application.tasks['fs:build']).run();
+        return;
       }
 
-      const flashArgs: Record<number, string> = {};
       const partitions = await loadFsConfig(fsConfigPath);
       for (const part of partitions) {
         const partFile = join(resourceBuildDir, `${part.label}.bin`);
         if (await pathExists(partFile)) {
           flashArgs[part.addr] = partFile;
-        } else {
-          throw new Error(`分区 "${part.label}.bin" 不存在，请先执行 lisa zep fs:build 构建`);
         }
       }
 
-      const { command, args: execArgs } = flasher.makeFlashExecArgs(flashArgs);
-      application.debug({ command, args });
+      application.debug('fs:flash configured', ctx);
 
-      await exec(command, execArgs, {
-        env: await makeEnv({ bundles }),
-      });
+      if (!ctx.flashConfigOnly) {
+        ctx.flashConfigured = true;
+        return task.newListr(application.tasks['flash'], { ctx });
+      }
     },
   });
 
