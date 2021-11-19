@@ -3,6 +3,9 @@
   "version": "1.0.0-beta.9",
   "description": "LISA plugin for Zephyr",
   "main": "./lib/main.js",
+  "engines": {
+    "node": ">=14"
+  },
   "scripts": {
     "build": "tsc -p .",
     "watch": "nodemon --exec npm run build -w ./src -e ts",
