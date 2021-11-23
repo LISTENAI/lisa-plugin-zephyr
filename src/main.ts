@@ -4,6 +4,7 @@ import { defaults } from 'lodash';
 import { loadBundles, loadBinaries, getEnv } from './env';
 import { PLUGIN_HOME, get } from './env/config';
 import { zephyrVersion } from './utils/sdk';
+import Lisa from '@listenai/lisa_core';
 
 const execFile = promisify(_execFile);
 
@@ -52,4 +53,13 @@ async function getWestVersion(): Promise<string | null> {
   } catch (e) {
     return null;
   }
+}
+
+export async function undertake(argv?: string[] | undefined): Promise<void> {
+  argv = argv ?? process.argv.slice(3)
+  const {cmd} = Lisa
+  await cmd('python', ['-m', 'west', ...argv], {
+    stdio: 'inherit',
+    env: await getEnv(),
+  })
 }
