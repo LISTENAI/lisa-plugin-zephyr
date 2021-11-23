@@ -17,7 +17,7 @@ const WEST_CONFIG_GLOBAL = join(CONFIG_DIR, 'westconfig');
 
 const ENV_CACHE_DIR = join(PLUGIN_HOME, 'envs');
 
-const PIP_INDEX_URL = 'https://pypi.tuna.tsinghua.edu.cn/simple';
+const PIP_INDEX_URL = process.env.PIP_INDEX_URL || 'https://pypi.tuna.tsinghua.edu.cn/simple';
 
 const BUILTIN_BINARIES = [
   '../venv',
