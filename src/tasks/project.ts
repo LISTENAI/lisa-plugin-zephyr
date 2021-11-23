@@ -5,7 +5,7 @@ import { stat } from 'fs-extra';
 import { getEnv, getFlasher } from '../env';
 
 import parseArgs from '../utils/parseArgs';
-import withOutput from '../utils/withOutput';
+import extendExec from '../utils/extendExec';
 
 export default ({ application, cmd }: LisaType) => {
 
@@ -41,8 +41,6 @@ export default ({ application, cmd }: LisaType) => {
       ];
     },
     async task(ctx, task) {
-      const exec = withOutput(cmd, task);
-
       const { args, printHelp } = parseArgs(application.argv, {
         'env': { arg: 'name', help: '指定当次编译有效的环境' },
         'task-help': { short: 'h', help: '打印帮助' },
@@ -70,9 +68,8 @@ export default ({ application, cmd }: LisaType) => {
       const { command, args: execArgs } = flasher.makeFlashExecArgs(flashArgs);
       application.debug({ command, execArgs });
 
-      await exec(command, execArgs, {
-        env: await getEnv(),
-      });
+      const exec = extendExec(cmd, { task, env: await getEnv(args['env']) });
+      await exec(command, execArgs);
     },
   });
 

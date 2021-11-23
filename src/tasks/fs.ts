@@ -6,7 +6,7 @@ import { loadDT } from 'zephyr-dts';
 import { getEnv } from '../env';
 
 import parseArgs from '../utils/parseArgs';
-import withOutput from '../utils/withOutput';
+import extendExec from '../utils/extendExec';
 import { workspace } from '../utils/ux';
 import { IPartition, loadFsConfig, writeFsConfig } from '../utils/fs';
 
@@ -89,8 +89,6 @@ export default ({ application, cmd }: LisaType) => {
   job('fs:build', {
     title: '资源镜像构建',
     async task(ctx, task) {
-      const exec = withOutput(cmd, task);
-
       const { args, printHelp } = parseArgs(application.argv, {
         'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
         'task-help': { short: 'h', help: '打印帮助' },
@@ -117,12 +115,11 @@ export default ({ application, cmd }: LisaType) => {
 
       await mkdirs(resourceBuildDir);
 
-      const env = await getEnv();
+      const exec = extendExec(cmd, { task, env: await getEnv() })
       const partitions = await loadFsConfig(fsConfigPath);
       for (const part of partitions) {
         await mkdirs(join(resourceDir, part.label));
         await exec('mklfs', ['.', join(resourceBuildDir, `${part.label}.bin`), `${part.size}`], {
-          env,
           cwd: join(resourceDir, part.label),
         });
       }

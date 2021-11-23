@@ -2,7 +2,7 @@ import { LisaType, job } from '../utils/lisa_ex';
 import { join } from 'path';
 import { mkdirs, remove } from 'fs-extra';
 
-import withOutput from '../utils/withOutput';
+import extendExec from '../utils/extendExec';
 import { getEnv, invalidateEnv } from '../env';
 import { PLUGIN_HOME } from '../env/config';
 
@@ -14,7 +14,7 @@ export default ({ cmd }: LisaType) => {
   job('install', {
     title: '环境安装',
     async task(ctx, task) {
-      const exec = withOutput(cmd, task);
+      const exec = extendExec(cmd, { task });
 
       await mkdirs(PLUGIN_HOME);
 

@@ -5,7 +5,7 @@ import { pathExists, remove } from 'fs-extra';
 import { getEnv } from '../env';
 
 import parseArgs from '../utils/parseArgs';
-import withOutput from '../utils/withOutput';
+import extendExec from '../utils/extendExec';
 import { workspace } from '../utils/ux';
 import { getCMakeCache } from '../utils/cmake';
 import { getKconfig } from '../utils/kconfig';
@@ -22,8 +22,6 @@ export default ({ application, cmd }: LisaType) => {
   job('app:build', {
     title: '应用构建',
     async task(ctx, task) {
-      const exec = withOutput(cmd, task);
-
       const { args, printHelp } = parseArgs(application.argv, {
         'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
         'board': { short: 'b', arg: 'name', help: '要构建的板型' },
@@ -68,9 +66,9 @@ export default ({ application, cmd }: LisaType) => {
         westArgs.push(project);
       }
 
+      const exec = extendExec(cmd, { task, env });
       await exec('python', ['-m', 'west', ...westArgs], {
         env: {
-          ...env,
           CMAKE_EXPORT_COMPILE_COMMANDS: '1',
         },
       });

@@ -6,7 +6,7 @@ import { pathExists } from 'fs-extra';
 import { getEnv } from '../env';
 
 import parseArgs from '../utils/parseArgs';
-import withOutput from '../utils/withOutput';
+import extendExec from '../utils/extendExec';
 import { workspace } from '../utils/ux';
 import { getCMakeCache } from '../utils/cmake';
 
@@ -16,13 +16,11 @@ export default ({ application, cmd }: LisaType) => {
     title: 'west',
     async task(ctx, task) {
       const argv = application.argv as ParsedArgs;
-      const exec = withOutput(cmd, task);
+      const exec = extendExec(cmd, { task, env: await getEnv() });
 
       const westArgs = argv._.slice(1);
 
-      await exec('python', ['-m', 'west', ...westArgs], {
-        env: await getEnv(),
-      });
+      await exec('python', ['-m', 'west', ...westArgs]);
     },
     options: {
       persistentOutput: true,
@@ -34,8 +32,6 @@ export default ({ application, cmd }: LisaType) => {
     title: '构建选项',
     hideTitle: true,
     async task(ctx, task) {
-      const exec = withOutput(cmd, task);
-
       const { args, printHelp } = parseArgs(application.argv, {
         'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
         'board': { short: 'b', arg: 'name', help: '要构建的板型' },
@@ -75,8 +71,8 @@ export default ({ application, cmd }: LisaType) => {
         westArgs.push(project);
       }
 
+      const exec = extendExec(cmd, { task, env });
       await exec('python', ['-m', 'west', ...westArgs], {
-        env,
         stdio: 'inherit',
       });
     },

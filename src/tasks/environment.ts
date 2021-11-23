@@ -8,7 +8,7 @@ import { PACKAGE_HOME, loadBundles, getEnv, invalidateEnv } from '../env';
 import { get, set } from '../env/config';
 
 import parseArgs from '../utils/parseArgs';
-import withOutput from '../utils/withOutput';
+import extendExec from '../utils/extendExec';
 import { zephyrVersion } from '../utils/sdk';
 
 export default ({ application, cmd }: LisaType) => {
@@ -16,7 +16,7 @@ export default ({ application, cmd }: LisaType) => {
   job('use-env', {
     title: '环境设置',
     async task(ctx, task) {
-      const exec = withOutput(cmd, task);
+      const exec = extendExec(cmd, { task });
       const argv = application.argv as ParsedArgs;
 
       const { args, printHelp } = parseArgs(application.argv, {
@@ -70,7 +70,7 @@ export default ({ application, cmd }: LisaType) => {
   job('use-sdk', {
     title: 'SDK 设置',
     async task(ctx, task) {
-      const exec = withOutput(cmd, task);
+      const exec = extendExec(cmd, { task });
       const argv = application.argv as ParsedArgs;
 
       const { args, printHelp } = parseArgs(application.argv, {
