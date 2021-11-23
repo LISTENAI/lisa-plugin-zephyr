@@ -1,0 +1,104 @@
+name: nightly
+
+on:
+  schedule:
+    - cron: "0 16 * * *"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    outputs:
+      tarball: ${{ steps.build.outputs.tarball }}
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '16'
+
+      - name: NPM config
+        run: |
+          npm config set //registry-lpm.listenai.com/:_password ${{ secrets.LPM_ADMIN_TOKEN }}
+          npm config set //registry-lpm.listenai.com/:username lpmadmin
+          npm config set //registry-lpm.listenai.com/:email lpm.admin@listenai.com
+          npm config set //registry-lpm.listenai.com/:always-auth true
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts --registry=https://registry-lpm.listenai.com
+
+      - name: Build
+        id: build
+        run: |
+          npm run build
+          echo "::set-output name=tarball::$(npm pack)"
+
+      - name: Upload tarball
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ steps.build.outputs.tarball }}
+          path: ${{ steps.build.outputs.tarball }}
+
+  test:
+    needs: build
+    runs-on: ${{ matrix.os }}
+
+    env:
+      PIP_INDEX_URL: https://pypi.org/simple
+
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        node: ['14', '16']
+
+    steps:
+      - name: Use Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Download tarball
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ needs.build.outputs.tarball }}
+
+      - name: Install lisa@beta (POSIX)
+        if: ${{ runner.os != 'Windows' }}
+        run: |
+          npm install -g @listenai/lisa@beta
+          mkdir -p $HOME/.config/configstore
+          echo "$LISA_CREDIT" > $HOME/.config/configstore/lisa.json
+        env:
+          LISA_CREDIT: ${{ secrets.LISA_CREDIT }}
+
+      - name: Install lisa@beta (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        run: |
+          npm install -g @listenai/lisa@beta
+          mkdir ${env:USERPROFILE}/.config/configstore
+          echo "${env:LISA_CREDIT}" > ${env:USERPROFILE}/.config/configstore/lisa.json
+        env:
+          LISA_CREDIT: ${{ secrets.LISA_CREDIT }}
+
+      - name: Install @lisa-plugin/zephyr
+        run: |
+          lisa install -g ${{ needs.build.outputs.tarball }}
+          lisa info zephyr
+
+      - name: Set up Zephyr SDK
+        run: |
+          lisa zep west init zephyr-sdk
+          cd zephyr-sdk/zephyr && lisa zep west update && cd ../..
+          lisa zep use-sdk zephyr-sdk/zephyr
+          lisa info zephyr
+
+      - name: Set up ESP32-C3 toolset
+        run: |
+          lisa zep west espressif update
+          lisa zep use-env esp32-c3
+          lisa info zephyr
+
+      - name: Build samples/hello_world
+        run:
+          lisa zep build -b esp32c3_devkitm zephyr-sdk/zephyr/samples/hello_world
