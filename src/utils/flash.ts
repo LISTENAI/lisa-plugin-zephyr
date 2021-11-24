@@ -46,6 +46,6 @@ export async function getFlashArgs(ctx: any, tag?: string): Promise<Record<numbe
   return flashArgs;
 }
 
-function toHex(addr: number): string {
+export function toHex(addr: number): string {
   return `0x${addr.toString(16).padStart(8, '0')}`;
 }

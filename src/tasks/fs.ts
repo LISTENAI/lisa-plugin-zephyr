@@ -147,6 +147,9 @@ export default ({ application, cmd }: LisaType) => {
 
       const exec = extendExec(cmd, { task, env: await getEnv(args['env']) });
       const flashArgs = await getFlashArgs(ctx, 'fs');
+      if (Object.keys(flashArgs).length == 0) {
+        return;
+      }
 
       const flasher = await getFlasher(args['env']);
       if (flasher) {

@@ -4,7 +4,7 @@ import { getEnv, getFlasher } from '../env';
 
 import parseArgs from '../utils/parseArgs';
 import extendExec from '../utils/extendExec';
-import { getFlashArgs } from '../utils/flash';
+import { getFlashArgs, toHex } from '../utils/flash';
 
 export default ({ application, cmd }: LisaType) => {
 
@@ -56,7 +56,24 @@ export default ({ application, cmd }: LisaType) => {
         const { command, args: execArgs } = flasher.makeFlashExecArgs(flashArgs);
         await exec(command, execArgs);
       } else {
-        throw new Error('当前环境不支持烧录资源镜像 (可使用 lisa zep app:flash 仅烧录应用)');
+        await exec('python', ['-m', 'west', 'flash']);
+        const appFlashArgs = await getFlashArgs(ctx, 'app');
+        const manualFlash: { addr: string, file: string }[] = [];
+        for (const addr in flashArgs) {
+          if (!appFlashArgs[addr]) {
+            manualFlash.push({ addr: toHex(parseInt(addr)), file: flashArgs[addr] });
+          }
+        }
+        application.debug({ manualFlash });
+        if (manualFlash.length > 0) {
+          process.nextTick(() => {
+            console.log('');
+            console.log('当前环境只支持应用烧录。你还需要手动烧录如下分区:');
+            for (const { addr, file } of manualFlash) {
+              console.log(`* 地址: ${addr}, 文件: ${file}`);
+            }
+          });
+        }
       }
     },
   });
