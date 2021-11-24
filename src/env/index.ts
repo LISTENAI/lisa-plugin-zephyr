@@ -53,11 +53,7 @@ export async function getFlasher(override?: string): Promise<Flasher | undefined
   const envs = await get('env') || [];
   if (override) envs.unshift(override);
   const bundles = await loadBundles(uniq(envs));
-
-  if (bundles.length == 0) {
-    throw new Error(`未设置环境，不支持烧录 (lisa zep use-env [name])`);
-  }
-
+  if (bundles.length == 0) return undefined;
   return bundles[0].flasher;
 }
 

@@ -2,13 +2,14 @@ import { LisaType, job } from '../utils/lisa_ex';
 import { resolve, join } from 'path';
 import { pathExists, remove } from 'fs-extra';
 
-import { getEnv } from '../env';
+import { getEnv, getFlasher } from '../env';
 
 import parseArgs from '../utils/parseArgs';
 import extendExec from '../utils/extendExec';
 import { workspace } from '../utils/ux';
 import { getCMakeCache } from '../utils/cmake';
 import { getKconfig } from '../utils/kconfig';
+import { appendFlashConfig, getFlashArgs } from '../utils/flash';
 
 async function getAppFlashAddr(buildDir: string): Promise<number> {
   const hasLoadOffset = await getKconfig(buildDir, 'CONFIG_HAS_FLASH_LOAD_OFFSET');
@@ -72,6 +73,10 @@ export default ({ application, cmd }: LisaType) => {
           CMAKE_EXPORT_COMPILE_COMMANDS: '1',
         },
       });
+
+      const appAddr = await getAppFlashAddr(buildDir);
+      const appFile = join(buildDir, 'zephyr', 'zephyr.bin');
+      appendFlashConfig(ctx, 'app', appAddr, appFile);
     },
     options: {
       persistentOutput: true,
@@ -86,31 +91,23 @@ export default ({ application, cmd }: LisaType) => {
     ],
     async task(ctx, task) {
       const { args, printHelp } = parseArgs(application.argv, {
-        'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
+        'env': { arg: 'name', help: '指定当次编译有效的环境' },
         'task-help': { short: 'h', help: '打印帮助' },
       });
       if (args['task-help']) {
         return printHelp();
       }
 
-      const buildDir = resolve(args['build-dir'] ?? 'build');
+      const exec = extendExec(cmd, { task, env: await getEnv(args['env']) });
+      const flashArgs = await getFlashArgs(ctx, 'app');
 
-      const flashArgs: Record<number, string> = ctx.flashArgs || {};
-      ctx.flashArgs = flashArgs;
-
-      const appAddr = await getAppFlashAddr(buildDir);
-      const appFile = join(buildDir, 'zephyr', 'zephyr.bin');
-      flashArgs[appAddr] = appFile;
-
-      ctx.flashConfigured = true;
-      application.debug('app:flash configured', ctx);
-    },
-    after: (ctx) => ctx.flashConfigOnly ? [] : [
-      application.tasks['flash'],
-    ],
-    options: {
-      persistentOutput: true,
-      bottomBar: 10,
+      const flasher = await getFlasher(args['env']);
+      if (flasher) {
+        const { command, args: execArgs } = flasher.makeFlashExecArgs(flashArgs);
+        await exec(command, execArgs);
+      } else {
+        await exec('python', ['-m', 'west', 'flash']);
+      }
     },
   });
 

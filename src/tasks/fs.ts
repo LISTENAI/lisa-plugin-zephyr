@@ -3,12 +3,13 @@ import { join, resolve } from 'path';
 import { pathExists, mkdirs, remove } from 'fs-extra';
 import { loadDT } from 'zephyr-dts';
 
-import { getEnv } from '../env';
+import { getEnv, getFlasher } from '../env';
 
 import parseArgs from '../utils/parseArgs';
 import extendExec from '../utils/extendExec';
 import { workspace } from '../utils/ux';
 import { IPartition, loadFsConfig, writeFsConfig } from '../utils/fs';
+import { appendFlashConfig, getFlashArgs } from '../utils/flash';
 
 const FS_DEFAULT = 'LFS';
 
@@ -119,9 +120,11 @@ export default ({ application, cmd }: LisaType) => {
       const partitions = await loadFsConfig(fsConfigPath);
       for (const part of partitions) {
         await mkdirs(join(resourceDir, part.label));
-        await exec('mklfs', ['.', join(resourceBuildDir, `${part.label}.bin`), `${part.size}`], {
+        const partFile = join(resourceBuildDir, `${part.label}.bin`);
+        await exec('mklfs', ['.', partFile, `${part.size}`], {
           cwd: join(resourceDir, part.label),
         });
+        appendFlashConfig(ctx, 'fs', part.addr, partFile);
       }
 
       await writeFsConfig(join(resourceBuildDir, 'fs.yaml'), partitions);
@@ -135,38 +138,24 @@ export default ({ application, cmd }: LisaType) => {
     ],
     async task(ctx, task) {
       const { args, printHelp } = parseArgs(application.argv, {
-        'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
+        'env': { arg: 'name', help: '指定当次编译有效的环境' },
         'task-help': { short: 'h', help: '打印帮助' },
       });
       if (args['task-help']) {
-        return printHelp([
-          'fs:flash [options] [project-path]',
-        ]);
+        return printHelp();
       }
 
-      const buildDir = resolve(args['build-dir'] ?? 'build');
-      const resourceBuildDir = join(buildDir, 'resource');
+      const exec = extendExec(cmd, { task, env: await getEnv(args['env']) });
+      const flashArgs = await getFlashArgs(ctx, 'fs');
 
-      const fsConfigPath = join(resourceBuildDir, 'fs.yaml');
-      if (await pathExists(fsConfigPath)) {
-        const flashArgs: Record<number, string> = ctx.flashArgs || {};
-        ctx.flashArgs = flashArgs;
-
-        const partitions = await loadFsConfig(fsConfigPath);
-        for (const part of partitions) {
-          const partFile = join(resourceBuildDir, `${part.label}.bin`);
-          if (await pathExists(partFile)) {
-            flashArgs[part.addr] = partFile;
-          }
-        }
+      const flasher = await getFlasher(args['env']);
+      if (flasher) {
+        const { command, args: execArgs } = flasher.makeFlashExecArgs(flashArgs);
+        await exec(command, execArgs);
+      } else {
+        throw new Error('当前环境不支持烧录资源镜像');
       }
-
-      ctx.flashConfigured = true;
-      application.debug('fs:flash configured', ctx);
     },
-    after: (ctx) => ctx.flashConfigOnly ? [] : [
-      application.tasks['flash'],
-    ],
   });
 
   job('fs:clean', {
