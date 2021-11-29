@@ -82,7 +82,7 @@ export default ({ application, cmd }: LisaType) => {
       if (args['task-help']) {
         return printHelp([
           'use-sdk [path] [--install]',
-          'uss-sdk --clear',
+          'use-sdk --clear',
         ]);
       }
 
