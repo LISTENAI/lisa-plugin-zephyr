@@ -59,10 +59,11 @@ export default ({ application, cmd }: LisaType) => {
 
       const env = await get('env');
       const mod = await loadBundles(env);
-      task.output = `当前环境: ${env && mod.length > 0 ? env.join(', ') : '(未设置)'}`;
+      process.nextTick(() => {
+        console.log(`当前环境: ${env && mod.length > 0 ? env.join(', ') : '(未设置)'}`);
+      });
     },
     options: {
-      persistentOutput: true,
       bottomBar: 5,
     },
   });
@@ -75,7 +76,7 @@ export default ({ application, cmd }: LisaType) => {
 
       const { args, printHelp } = parseArgs(application.argv, {
         'clear': { help: '清除设置' },
-        'update': { help: '更新 SDK' },
+        'update': { help: '更新 SDK 设置' },
         'task-help': { short: 'h', help: '打印帮助' },
       });
       if (args['task-help']) {
@@ -113,10 +114,11 @@ export default ({ application, cmd }: LisaType) => {
 
       const sdk = await get('sdk');
       const version = sdk ? await zephyrVersion(sdk) : null;
-      task.output = `当前 SDK: ${sdk && version ? `Zephyr ${version} (${sdk})` : '(未设置)'}`;
+      process.nextTick(() => {
+        console.log(`当前 SDK: ${sdk && version ? `Zephyr ${version} (${sdk})` : '(未设置)'}`);
+      });
     },
     options: {
-      persistentOutput: true,
       bottomBar: 5,
     },
   });
