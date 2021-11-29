@@ -1,3 +1,4 @@
+import LISA from '@listenai/lisa_core';
 import { Bundle, Flasher } from '@lisa-env/type';
 import { Binary } from '@binary/type';
 import { delimiter, join } from 'path';
@@ -125,6 +126,22 @@ async function makeEnv(override?: string): Promise<Record<string, string>> {
       ...libraries,
       ...LD_LIBRARY_PATH ? LD_LIBRARY_PATH.split(delimiter) : [],
     ].join(delimiter);
+  }
+
+  if (process.platform == 'linux') {
+    try {
+      const dirs: string[] = [];
+      const { stdout } = await LISA.cmd('infocmp', ['-D'], { shell: true });
+      LISA.application.debug('infocmp -D', stdout);
+      for (const dir of stdout.split('\n')) {
+        if (dir && await pathExists(dir)) {
+          dirs.push(dir);
+        }
+      }
+      env['TERMINFO_DIRS'] = dirs.join(delimiter);
+      LISA.application.debug('TERMINFO_DIRS', env['TERMINFO_DIRS']);
+    } catch (e) {
+    }
   }
 
   return env;
