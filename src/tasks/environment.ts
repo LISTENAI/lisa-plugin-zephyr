@@ -76,12 +76,12 @@ export default ({ application, cmd }: LisaType) => {
 
       const { args, printHelp } = parseArgs(application.argv, {
         'clear': { help: '清除设置' },
-        'update': { help: '更新 SDK 设置' },
+        'install': { help: '安装 SDK 中的组件' },
         'task-help': { short: 'h', help: '打印帮助' },
       });
       if (args['task-help']) {
         return printHelp([
-          'use-sdk [path] [--update]',
+          'use-sdk [path] [--install]',
           'uss-sdk --clear',
         ]);
       }
@@ -95,7 +95,7 @@ export default ({ application, cmd }: LisaType) => {
         let target: string | undefined;
         if (path && path != current) {
           target = path;
-        } else if (args['update']) {
+        } else if (args['install']) {
           target = path || current;
         }
         if (target) {
