@@ -99,15 +99,18 @@ export default ({ application, cmd }: LisaType) => {
           target = path || current;
         }
         if (target) {
-          const fullPath = resolve(target);
-          if (!(await zephyrVersion(fullPath))) {
-            throw new Error(`该路径不是一个 Zephyr base: ${fullPath}`);
+          let zephyrPath = resolve(target);
+          if (!(await zephyrVersion(zephyrPath))) {
+            zephyrPath = join(zephyrPath, 'zephyr');
+            if (!(await zephyrVersion(zephyrPath))) {
+              throw new Error(`该路径不是一个 Zephyr base: ${zephyrPath}`);
+            }
           }
           await exec('python', [
             '-m', 'pip',
-            'install', '-r', join(fullPath, 'scripts', 'requirements.txt'),
+            'install', '-r', join(zephyrPath, 'scripts', 'requirements.txt'),
           ], { env: await getEnv() });
-          await set('sdk', fullPath);
+          await set('sdk', zephyrPath);
           await invalidateEnv();
         }
       }
