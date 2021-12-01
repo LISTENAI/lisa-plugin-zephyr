@@ -56,7 +56,7 @@ export default ({ application, cmd }: LisaType) => {
       westArgs.push('--board', board);
 
       if (args['clean']) {
-        westArgs.push('--pristine', 'always');
+        await remove(buildDir);
       }
 
       const project = workspace();
