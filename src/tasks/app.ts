@@ -77,6 +77,8 @@ export default ({ application, cmd }: LisaType) => {
       const appAddr = await getAppFlashAddr(buildDir);
       const appFile = join(buildDir, 'zephyr', 'zephyr.bin');
       appendFlashConfig(ctx, 'app', appAddr, appFile);
+
+      ctx.appBuilt = true;
     },
     options: {
       persistentOutput: true,
