@@ -1,6 +1,6 @@
 import { LisaType, job } from '../utils/lisa_ex';
 import { join, resolve } from 'path';
-import { pathExists, mkdirs, remove } from 'fs-extra';
+import { pathExists, mkdirs, remove, readJson } from 'fs-extra';
 
 import { getEnv, getFlasher } from '../env';
 
@@ -55,10 +55,49 @@ export default ({ application, cmd }: LisaType) => {
     }
   });
 
+  job('fs:check', {
+    title: '资源镜像固定资源检查',
+    async task(ctx, task) {
+      const { args } = parseArgs(application.argv, {
+        'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
+      });
+
+      const project = workspace() ?? process.cwd();
+      if (!(await pathExists(project))) {
+        throw new Error(`项目不存在: ${project}`);
+      }
+
+      const buildDir = resolve(args['build-dir'] ?? 'build');
+
+      const dt = await loadDT(buildDir, await getEnv());
+      const partitions = parsePartitions(dt);
+      ctx.partitions = partitions;
+      application.debug({ partitions });
+      if (!partitions.length) {
+        return task.skip('当前无文件系统分区');
+      }
+
+      const systemFile = join(project, 'systemfile.json');
+      if (!(await pathExists(systemFile))) {
+        return task.skip('当前无需要检查的固定资源');
+      }
+
+      let resourceFixed = {};
+      try {
+        resourceFixed = await readJson(systemFile);
+      } catch (error) {
+        return task.skip('systemfile.json文件损坏');
+      }
+    },
+  });
+
   job('fs:build', {
     title: '资源镜像构建',
-    before: (ctx) => ctx.appBuilt ? [] : [
+    before: (ctx) => ctx.appBuilt ? [
+      application.tasks['fs:check'],
+    ] : [
       application.tasks['app:build'],
+      application.tasks['fs:check'],
     ],
     async task(ctx, task) {
       const { args, printHelp } = parseArgs(application.argv, {
@@ -78,8 +117,7 @@ export default ({ application, cmd }: LisaType) => {
 
       const buildDir = resolve(args['build-dir'] ?? 'build');
 
-      const dt = await loadDT(buildDir, await getEnv());
-      const partitions = parsePartitions(dt);
+      const partitions = ctx.partitions || [];
       application.debug({ partitions });
       if (!partitions.length) {
         return;
