@@ -8,7 +8,7 @@ import parseArgs from '../utils/parseArgs';
 import extendExec from '../utils/extendExec';
 import { workspace } from '../utils/ux';
 import { loadDT } from '../utils/dt';
-import { parsePartitions } from '../utils/fs';
+import { parsePartitions, checkFsFilter, IFsFilter } from '../utils/fs';
 import { appendFlashConfig, getFlashArgs } from '../utils/flash';
 
 export default ({ application, cmd }: LisaType) => {
@@ -77,16 +77,24 @@ export default ({ application, cmd }: LisaType) => {
         return task.skip('当前无文件系统分区');
       }
 
-      const systemFile = join(project, 'systemfile.json');
-      if (!(await pathExists(systemFile))) {
+      const fsFilterFile = join(project, 'fs_filter.json');
+      if (!(await pathExists(fsFilterFile))) {
         return task.skip('当前无需要检查的固定资源');
       }
 
-      let resourceFixed = {};
+      let fsFilter: IFsFilter = {};
       try {
-        resourceFixed = await readJson(systemFile);
+        fsFilter = await readJson(fsFilterFile);
       } catch (error) {
-        return task.skip('systemfile.json文件损坏');
+        return task.skip('fs_filter.json文件损坏');
+      }
+
+      const resourceDir = join(project, 'resource');
+      for (const part of partitions) {
+        if (part.type == 'littlefs') {
+          await mkdirs(join(resourceDir, part.label));
+          await checkFsFilter(part.label, fsFilter, resourceDir);
+        }
       }
     },
   });

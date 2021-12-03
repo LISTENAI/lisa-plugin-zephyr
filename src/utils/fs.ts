@@ -1,4 +1,6 @@
-import { DeviceTree, IDeviceTreeParser } from "./dt";
+import { DeviceTree, IDeviceTreeParser } from './dt';
+import { join } from 'path';
+import { pathExists } from 'fs-extra';
 
 export interface IPartition {
   label: string;
@@ -29,4 +31,23 @@ export function parsePartitions(dt: DeviceTree & IDeviceTreeParser): IPartition[
     }
   }
   return partitions;
+}
+
+export interface IFsFilter {
+  [key: string]: string | IFsFilter;
+}
+
+export async function checkFsFilter(label: string, fsFilter: IFsFilter, prePath: string): Promise<void> {
+  const filter = fsFilter[label];
+  if (!filter) return;
+
+  if (typeof filter === 'string') {
+    if (!(await pathExists(join(prePath, filter)))) {
+      throw new Error(`文件系统检测缺失${label}资源：${join(prePath, filter)}`);
+    }
+  } else {
+    for (const part of Object.keys(filter)) {
+      await checkFsFilter(part, filter, join(prePath, label));
+    }
+  }
 }
