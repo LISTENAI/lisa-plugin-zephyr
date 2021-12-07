@@ -10,25 +10,25 @@ import { promptDir } from '../utils/ux';
 
 export default ({ application, cmd }: LisaType) => {
   job('create', {
-    title: '创建sample',
+    title: '创建 sample',
     async task(ctx, task) {
       const sdk = await get('sdk') || '';
       // Feature: sample.list的位置获取方式
-      const sampleListFile = join(sdk || '', './samples/boards/csk6001/sample.list');      
+      const sampleListFile = resolve(sdk, './samples/boards/csk6001/sample.list');      
       application.debug(sampleListFile);
       if (!(await pathExists(sampleListFile))) {
         throw new Error('当前sdk暂不支持create项目');
       }
 
       // 解析sampleListFile 按文件夹的json结构
-      let sampleList: Array<string> =  [];
+      let sampleList: string[] =  [];
       const rl = createInterface({ 
         input: createReadStream(sampleListFile)
       })
       rl.on('line', async (line) => {
         line = line.trim();
         if (line && !line.startsWith('#')) {
-          line = !line.endsWith('*') ? join(sdk, line, './**/CMakeLists.txt') : join(sdk, `${line}*`, './CMakeLists.txt');
+          line = !line.endsWith('*') ? resolve(sdk, line, './**/CMakeLists.txt') : resolve(sdk, `${line}*`, './CMakeLists.txt');
           sampleList.push(resolve(line));
         }
       });
