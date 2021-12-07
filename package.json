@@ -29,7 +29,8 @@
   ],
   "license": "UNLICENSED",
   "files": [
-    "lib"
+    "lib",
+    "scripts"
   ],
   "bugs": {
     "url": "https://github.com/LISTENAI/lisa-plugin-zephyr/issues"
