@@ -51,3 +51,21 @@ export async function checkFsFilter(label: string, fsFilter: IFsFilter, prePath:
     }
   }
 }
+
+export interface ISampleList {
+  [key: string]: string | ISampleList;
+}
+
+export async function path2json(dirParse: Array<string>, json: ISampleList): Promise<ISampleList> {
+  if (!dirParse.length) return json;
+  const dir = dirParse.shift();
+  if (dir) {
+    if (typeof json[dir] === 'string') {
+      return json
+    }
+    json[dir] = dirParse.length ? await path2json(dirParse, (json[dir] || {}) as ISampleList) : dir;
+  } else {
+    return await path2json(dirParse, json);
+  }
+  return json;
+}
