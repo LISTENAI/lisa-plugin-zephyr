@@ -4,6 +4,7 @@ import { defaults } from 'lodash';
 import { loadBundles, loadBinaries, getEnv } from './env';
 import { PLUGIN_HOME, get } from './env/config';
 import { zephyrVersion } from './utils/sdk';
+import { getRepoStatus } from './utils/repo';
 import Lisa from '@listenai/lisa_core';
 
 const execFile = promisify(_execFile);
@@ -32,13 +33,11 @@ export async function env(): Promise<Record<string, string>> {
     }
   }
 
-  const sdk = await get('sdk');
-
   return {
     env: env && env.length > 0 ? env.join(', ') : '(未设置)',
     west: await getWestVersion() || '(未安装)',
     ...versions,
-    ZEPHYR_BASE: sdk ? `${sdk} (版本: ${await zephyrVersion(sdk)})` : '(未设置)',
+    ZEPHYR_BASE: await getZephyrInfo() || '(未设置)',
     PLUGIN_HOME,
     ...variables,
   };
@@ -55,9 +54,21 @@ async function getWestVersion(): Promise<string | null> {
   }
 }
 
+async function getZephyrInfo(): Promise<string | null> {
+  const sdk = await get('sdk');
+  if (!sdk) return null;
+  const version = await zephyrVersion(sdk);
+  const branch = await getRepoStatus(sdk);
+  if (branch) {
+    return `${sdk} (版本: ${version}, 分支: ${branch})`;
+  } else {
+    return `${sdk} (版本: ${version})`
+  }
+}
+
 export async function undertake(argv?: string[] | undefined): Promise<void> {
   argv = argv ?? process.argv.slice(3)
-  const {cmd} = Lisa
+  const { cmd } = Lisa
   await cmd('python', ['-m', 'west', ...argv], {
     stdio: 'inherit',
     env: await getEnv(),
