@@ -48,7 +48,8 @@
     "@lisa-env/type": "^1.2.0",
     "@listenai/lisa_core": "^2.0.5",
     "glob": "^7.2.0",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "simple-git": "^2.48.0"
   },
   "devDependencies": {
     "@types/glob": "^7.2.0",

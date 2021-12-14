@@ -10,6 +10,7 @@ import { get, set } from '../env/config';
 import parseArgs from '../utils/parseArgs';
 import extendExec from '../utils/extendExec';
 import { zephyrVersion } from '../utils/sdk';
+import { getRepoStatus } from '../utils/repo';
 
 export default ({ application, cmd }: LisaType) => {
 
@@ -139,8 +140,17 @@ export default ({ application, cmd }: LisaType) => {
 
       const sdk = await get('sdk');
       const version = sdk ? await zephyrVersion(sdk) : null;
+      const branch = sdk ? await getRepoStatus(sdk) : null;
       process.nextTick(() => {
-        console.log(`当前 SDK: ${sdk && version ? `Zephyr ${version} (${sdk})` : '(未设置)'}`);
+        if (sdk && version) {
+          if (branch) {
+            console.log(`当前 SDK: Zephyr ${version} (分支 ${branch}, 位于 ${sdk})`);
+          } else {
+            console.log(`当前 SDK: Zephyr ${version} (位于 ${sdk})`);
+          }
+        } else {
+          console.log('当前 SDK: (未设置)');
+        }
       });
     },
     options: {
