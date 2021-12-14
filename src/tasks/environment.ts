@@ -60,9 +60,7 @@ export default ({ application, cmd }: LisaType) => {
 
       const env = await get('env');
       const mod = await loadBundles(env);
-      process.nextTick(() => {
-        console.log(`当前环境: ${env && mod.length > 0 ? env.join(', ') : '(未设置)'}`);
-      });
+      task.title = `当前环境: ${env && mod.length > 0 ? env.join(', ') : '(未设置)'}`;
     },
     options: {
       bottomBar: 5,
@@ -141,17 +139,15 @@ export default ({ application, cmd }: LisaType) => {
       const sdk = await get('sdk');
       const version = sdk ? await zephyrVersion(sdk) : null;
       const branch = sdk ? await getRepoStatus(sdk) : null;
-      process.nextTick(() => {
-        if (sdk && version) {
-          if (branch) {
-            console.log(`当前 SDK: Zephyr ${version} (分支 ${branch}, 位于 ${sdk})`);
-          } else {
-            console.log(`当前 SDK: Zephyr ${version} (位于 ${sdk})`);
-          }
+      if (sdk && version) {
+        if (branch) {
+          task.title = `当前 SDK: Zephyr ${version} (分支 ${branch}, 位于 ${sdk})`;
         } else {
-          console.log('当前 SDK: (未设置)');
+          task.title = `当前 SDK: Zephyr ${version} (位于 ${sdk})`;
         }
-      });
+      } else {
+        task.title = '当前 SDK: (未设置)';
+      }
     },
     options: {
       bottomBar: 5,
