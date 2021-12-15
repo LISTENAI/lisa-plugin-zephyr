@@ -89,9 +89,7 @@ jobs:
 
       - name: Set up Zephyr SDK
         run: |
-          lisa zep west init zephyr-sdk
-          cd zephyr-sdk/zephyr && lisa zep west update && cd ../..
-          lisa zep use-sdk zephyr-sdk/zephyr
+          lisa zep use-sdk zephyr-sdk --from-git https://github.com/zephyrproject-rtos/zephyr.git
           lisa info zephyr
 
       - name: Set up ESP32-C3 toolset
