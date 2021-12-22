@@ -13,11 +13,41 @@ export default ({ application, cmd }: LisaType) => {
     title: '创建 sample',
     async task(ctx, task) {
       const sdk = await get('sdk') || '';
+      // 查看含有 sample.list 的 board
+      const samplePathGlob = join(sdk, 'samples', 'boards', '*', 'sample.list');
+      const sampleFiles = glob.sync(samplePathGlob, {});
+      const boardsSampleList: ISampleList = {}; 
+      for (const file of sampleFiles) {
+        const board = resolve(parse(file).dir).split(sep).pop();
+        if (board) {
+          boardsSampleList[board] = file;
+        }
+      }
+      
+      // 选择 board (当board仅一个时，跳过选择)
+      const boards = Object.keys(boardsSampleList);
+      if (boards.length === 0) {
+        throw new Error('当前 SDK 暂不支持 create 项目');
+      }
+
+      let board = boards[0];
+      if (Object.keys(boardsSampleList).length > 1) {
+        board = await task.prompt<string>([
+          {
+            type: 'Select',
+            name: 'value',
+            message: 'Please select a board. (Arrow keys to select and enter key to confirm.)',
+            choices: Object.keys(boardsSampleList),
+            result: (value) => value.replace('/', '')
+          }
+        ])
+      }
+
       // Feature: sample.list的位置获取方式
-      const sampleListFile = resolve(sdk, './samples/boards/csk6001/sample.list');      
+      const sampleListFile = resolve(boardsSampleList[board] as string);      
       application.debug(sampleListFile);
       if (!(await pathExists(sampleListFile))) {
-        throw new Error('当前sdk暂不支持create项目');
+        throw new Error(`当前 SDK 的 ${board} 暂不支持 create 项目`);
       }
 
       // 解析sampleListFile 按文件夹的json结构
@@ -38,9 +68,9 @@ export default ({ application, cmd }: LisaType) => {
       let sampleListJson: ISampleList = {};
 
       for (const samplePath of sampleList) {
-        const files = glob.sync(samplePath, {})
+        const files = glob.sync(samplePath, {});
         for (const file of files) {
-          const dirParse = resolve(parse(file).dir).replace(sdk, '').split(sep);
+          const dirParse = resolve(parse(file).dir).replace(join(sdk, 'samples'), '').split(sep);
           sampleListJson = await path2json(dirParse, sampleListJson);
         }
       }
@@ -48,7 +78,7 @@ export default ({ application, cmd }: LisaType) => {
       // 根据sampleListJson ux.select 嵌套
       application.debug(sampleListJson);
       const selected = await promptDir([], sampleListJson, task)
-      const selectedSample = join(sdk, ...selected);
+      const selectedSample = join(sdk, 'samples', ...selected);
       
       const targetDir = join(process.cwd(), await task.prompt({
         type: 'Input',
