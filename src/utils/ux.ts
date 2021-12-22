@@ -19,7 +19,7 @@ export async function promptDir(selected: Array<string>, dirJson: ISampleList, t
     {
       type: 'Select',
       name: 'value',
-      message: 'Please select dir',
+      message: 'Please select dir. (Arrow keys to select and enter key to confirm.)',
       choices: choices,
       result: (value) => value.replace('/', '')
     }
