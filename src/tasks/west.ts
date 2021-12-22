@@ -78,4 +78,24 @@ export default ({ application, cmd }: LisaType) => {
     },
   });
 
+  if (process.env.LISA_ZEP_EXEC) {
+    job('exec', {
+      title: 'exec',
+      async task(ctx, task) {
+        const exec = extendExec(cmd, { task, env: await getEnv() });
+
+        const execArgsIndex = process.argv.indexOf('exec');
+        const execArgs = process.argv.slice(execArgsIndex + 1);
+        const command = execArgs.shift();
+        if (!command) return;
+
+        await exec(command, execArgs);
+      },
+      options: {
+        persistentOutput: true,
+        bottomBar: Infinity,
+      },
+    });
+  }
+
 }
