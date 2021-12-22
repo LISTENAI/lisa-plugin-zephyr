@@ -31,9 +31,7 @@ jobs:
 
       - name: Build
         id: build
-        run: |
-          npm run build
-          echo "::set-output name=tarball::$(npm pack)"
+        run: npm run build && echo "::set-output name=tarball::$(npm pack)"
 
       - name: Upload tarball
         uses: actions/upload-artifact@v2
@@ -65,26 +63,19 @@ jobs:
           name: ${{ needs.build.outputs.tarball }}
 
       - name: Install @listenai/lisa
-        run: |
-          npm install -g @listenai/lisa
-          lisa login --token ${{ secrets.LPM_ZHUOBIN_TOKEN }}
+        run: npm install -g @listenai/lisa && lisa login --token ${{ secrets.LPM_ZHUOBIN_TOKEN }}
 
       - name: Install @lisa-plugin/zephyr
-        run: |
-          lisa install -g ${{ needs.build.outputs.tarball }}
-          lisa info zephyr
+        run: lisa install -g ${{ needs.build.outputs.tarball }}
 
       - name: Set up Zephyr SDK
-        run: |
-          lisa zep use-sdk zephyr-sdk --from-git https://github.com/zephyrproject-rtos/zephyr.git
-          lisa info zephyr
+        run: lisa zep use-sdk zephyr-sdk --from-git https://github.com/zephyrproject-rtos/zephyr.git
 
       - name: Set up ESP32-C3 toolset
-        run: |
-          lisa zep west espressif update
-          lisa zep use-env esp32-c3
-          lisa info zephyr
+        run: lisa zep west espressif update && lisa zep use-env esp32-c3
+
+      - name: Inspect
+        run: lisa info zephyr
 
       - name: Build samples/hello_world
-        run:
-          lisa zep build -b esp32c3_devkitm zephyr-sdk/zephyr/samples/hello_world
+        run: lisa zep build -b esp32c3_devkitm zephyr-sdk/zephyr/samples/hello_world
