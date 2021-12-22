@@ -64,23 +64,10 @@ jobs:
         with:
           name: ${{ needs.build.outputs.tarball }}
 
-      - name: Install @listenai/lisa (POSIX)
-        if: ${{ runner.os != 'Windows' }}
+      - name: Install @listenai/lisa
         run: |
           npm install -g @listenai/lisa
-          mkdir -p $HOME/.config/configstore
-          echo "$LISA_CREDIT" > $HOME/.config/configstore/lisa.json
-        env:
-          LISA_CREDIT: ${{ secrets.LISA_CREDIT }}
-
-      - name: Install @listenai/lisa (Windows)
-        if: ${{ runner.os == 'Windows' }}
-        run: |
-          npm install -g @listenai/lisa
-          mkdir ${env:USERPROFILE}/.config/configstore
-          echo "${env:LISA_CREDIT}" > ${env:USERPROFILE}/.config/configstore/lisa.json
-        env:
-          LISA_CREDIT: ${{ secrets.LISA_CREDIT }}
+          lisa login --token ${{ secrets.LPM_ZHUOBIN_TOKEN }}
 
       - name: Install @lisa-plugin/zephyr
         run: |
