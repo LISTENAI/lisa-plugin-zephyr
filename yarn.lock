@@ -42,6 +42,14 @@
     "@binary/type" "^1.0.4"
     "@xingrz/download2" "^9.0.0-alpha.4"
 
+"@binary/protoc@^1.0.0-3.19.1":
+  version "1.0.0-3.19.1"
+  resolved "https://registry-lpm.listenai.com/@binary/protoc/download/@binary/protoc-1.0.0-3.19.1.tgz#ffcfaa39f7137b6b3d8f6483e701179e93b582b7"
+  integrity sha1-/8+qOfcTe2s9j2SD5wEXnpO1grc=
+  dependencies:
+    "@binary/type" "^1.0.4"
+    "@xingrz/download2" "^9.0.0-alpha.4"
+
 "@binary/python-3.9@^2.0.2-3.9.7":
   version "2.0.2-3.9.7"
   resolved "https://registry-lpm.listenai.com/@binary/python-3.9/download/@binary/python-3.9-2.0.2-3.9.7.tgz#7b7fd7bf3d7c24d7846eccb5e6a7edd58a9031fe"

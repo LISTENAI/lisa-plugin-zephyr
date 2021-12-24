@@ -27,6 +27,7 @@ const BUILTIN_BINARIES = [
   '@binary/gperf',
   '@binary/mklfs',
   '@binary/ninja',
+  '@binary/protoc',
   '@binary/xz',
 ];
 
