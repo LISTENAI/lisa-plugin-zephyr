@@ -80,6 +80,10 @@ def main():
                     json_node["properties"][item] = handles
                     continue
 
+                if prop.type == "uint8-array":
+                    # TODO
+                    continue
+
                 if item in ["compatible", "label", "status", "interrupts"]:
                     json_node[item] = prop.val
                     continue
