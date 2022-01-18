@@ -108,7 +108,8 @@ export default ({ application, cmd }: LisaType) => {
         const { command, args: execArgs } = flasher.makeFlashExecArgs(flashArgs);
         await exec(command, execArgs);
       } else {
-        await exec('python', ['-m', 'west', 'flash']);
+        await exec('west', ['flash']);
+        // await exec('python', ['-m', 'west', 'flash']);
       }
     },
   });
