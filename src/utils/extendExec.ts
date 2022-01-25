@@ -15,6 +15,7 @@ export interface ExecOptions extends Options<string> {
 export default function extendExec(cmd: CmdFunc, extend: ExecOptions = {}): Executor {
   return (file, args?, opts?) => {
     opts = {
+      stdio: 'inherit',
       ...extend,
       ...opts,
       env: {
@@ -28,13 +29,13 @@ export default function extendExec(cmd: CmdFunc, extend: ExecOptions = {}): Exec
 
     const { task } = extend;
     if (task) {
-      const muxer = new PassThrough();
-      exec.stdout?.pipe(muxer);
-      exec.stderr?.pipe(muxer);
-
-      const rl = createInterface({ input: muxer, crlfDelay: Infinity });
-      rl.on('line', (line) => {
-        task.output = line;
+      let title: string | null = null;
+      exec.once('spawn', () => {
+        title = task.title;
+        task.title = '';
+      });
+      exec.once('close', () => {
+        if (title) task.title = title;
       });
     }
 
