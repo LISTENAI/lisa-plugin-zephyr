@@ -1,6 +1,7 @@
 import { promisify } from 'util';
 import { execFile as _execFile } from 'child_process';
 import { defaults } from 'lodash';
+import { pathExists } from 'fs-extra';
 import { loadBundles, loadBinaries, getEnv } from './env';
 import { PLUGIN_HOME, get } from './env/config';
 import { zephyrVersion } from './utils/sdk';
@@ -57,6 +58,7 @@ async function getWestVersion(): Promise<string | null> {
 async function getZephyrInfo(): Promise<string | null> {
   const sdk = await get('sdk');
   if (!sdk) return null;
+  if (!(await pathExists(sdk))) return null;
   const version = await zephyrVersion(sdk);
   const branch = await getRepoStatus(sdk);
   if (branch) {
