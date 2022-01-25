@@ -77,6 +77,7 @@ export default ({ application, cmd }: LisaType) => {
         'clear': { help: '清除设置' },
         'install': { help: '安装 SDK 中的组件' },
         'from-git': { arg: 'url#ref', help: '从指定仓库及分支初始化 SDK' },
+        'manifest': { arg: 'file', help: '指定仓库中的 manifest 文件' },
         'task-help': { short: 'h', help: '打印帮助' },
       });
       if (args['task-help']) {
@@ -111,6 +112,7 @@ export default ({ application, cmd }: LisaType) => {
           const initArgs = ['init'];
           initArgs.push('--manifest-url', url);
           if (rev) initArgs.push('--manifest-rev', rev);
+          if (args['manifest']) initArgs.push('--manifest-file', args['manifest']);
           initArgs.push(workspacePath);
           await exec('python', ['-m', 'west', ...initArgs], { env });
 
