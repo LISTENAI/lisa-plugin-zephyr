@@ -30,7 +30,6 @@ export default ({ application, cmd }: LisaType) => {
 
   job('menuconfig', {
     title: '构建选项',
-    hideTitle: true,
     async task(ctx, task) {
       const { args, printHelp } = parseArgs(application.argv, {
         'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
