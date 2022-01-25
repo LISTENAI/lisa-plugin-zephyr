@@ -52,6 +52,8 @@ export default ({ application, cmd }: LisaType) => {
       for (const part of partitions) {
         await mkdirs(join(resourceDir, part.label));
       }
+
+      task.title = '资源已初始化';
     }
   });
 
@@ -147,6 +149,8 @@ export default ({ application, cmd }: LisaType) => {
           appendFlashConfig(ctx, 'fs', part.addr, partFile);
         }
       }
+
+      task.title = '资源镜像构建成功';
     },
   });
 
@@ -177,6 +181,8 @@ export default ({ application, cmd }: LisaType) => {
       } else {
         throw new Error('当前环境不支持烧录资源镜像');
       }
+
+      task.title = '资源镜像烧录成功';
     },
   });
 
@@ -193,6 +199,8 @@ export default ({ application, cmd }: LisaType) => {
 
       const buildDir = resolve(args['build-dir'] ?? 'build');
       await remove(join(buildDir, 'resource'));
+
+      task.title = '资源镜像已清理';
     },
   });
 

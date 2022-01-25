@@ -79,10 +79,8 @@ export default ({ application, cmd }: LisaType) => {
       appendFlashConfig(ctx, 'app', appAddr, appFile);
 
       ctx.appBuilt = true;
-    },
-    options: {
-      persistentOutput: true,
-      bottomBar: 10,
+
+      task.title = '应用构建成功';
     },
   });
 
@@ -111,6 +109,8 @@ export default ({ application, cmd }: LisaType) => {
         await exec('west', ['flash']);
         // await exec('python', ['-m', 'west', 'flash']);
       }
+
+      task.title = '应用烧录成功';
     },
   });
 
@@ -127,6 +127,8 @@ export default ({ application, cmd }: LisaType) => {
 
       const buildDir = resolve(args['build-dir'] ?? 'build');
       await remove(buildDir);
+
+      task.title = '应用已清理';
     },
   });
 
