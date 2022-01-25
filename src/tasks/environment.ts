@@ -78,7 +78,6 @@ export default ({ application, cmd }: LisaType) => {
         'install': { help: '安装 SDK 中的组件' },
         'from-git': { arg: 'url#ref', help: '从指定仓库及分支初始化 SDK' },
         'task-help': { short: 'h', help: '打印帮助' },
-        'manifest': { arg: 'file', help: '配置 manifest 文件' }
       });
       if (args['task-help']) {
         return printHelp([
@@ -99,7 +98,6 @@ export default ({ application, cmd }: LisaType) => {
         let install = args['install'] || (path && path != current);
 
         const fromGit = args['from-git'];
-        const manifest = args['manifest'];
         if (fromGit && fromGit.match(/(.+?)(?:#(.+))?$/)) {
           const { $1: url, $2: rev } = RegExp;
           if (!path) {
@@ -110,25 +108,18 @@ export default ({ application, cmd }: LisaType) => {
           const env = await getEnv();
           delete env.ZEPHYR_BASE;
 
-          task.title = '';
-          if (manifest) {
-            await mkdirs(workspacePath);
-            await cmd('git', ['clone', fromGit], { env, cwd: workspacePath, stdio: 'inherit'});
-            await cmd('west', ['init', '-l', './zephyr/', '--mf', manifest ], { env, cwd: workspacePath, stdio: 'inherit'});
-            await cmd('west', ['update'], { env, cwd: workspacePath, stdio: 'inherit'});
-          } else {
-            const initArgs = ['init'];
-            initArgs.push('--manifest-url', url);
-            if (rev) initArgs.push('--manifest-rev', rev);
-            initArgs.push(workspacePath);
-            await cmd('west', initArgs, { env, stdio: 'inherit' });
-            await cmd('west', ['update'], { env, cwd: workspacePath, stdio: 'inherit' });
-          }
+          const initArgs = ['init'];
+          initArgs.push('--manifest-url', url);
+          if (rev) initArgs.push('--manifest-rev', rev);
+          initArgs.push(workspacePath);
+          await exec('python', ['-m', 'west', ...initArgs], { env });
+
+          await exec('python', ['-m', 'west', 'update'], { env, cwd: workspacePath });
+
           install = true;
         }
 
         if (target && install) {
-          task.title = 'SDK ready ...';
           let zephyrPath = resolve(target);
           if (!(await zephyrVersion(zephyrPath))) {
             zephyrPath = join(zephyrPath, 'zephyr');

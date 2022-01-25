@@ -57,7 +57,6 @@ async function getWestVersion(): Promise<string | null> {
 async function getZephyrInfo(): Promise<string | null> {
   const sdk = await get('sdk');
   if (!sdk) return null;
-  if (!await Lisa.fs.pathExists(sdk)) return null;
   const version = await zephyrVersion(sdk);
   const branch = await getRepoStatus(sdk);
   if (branch) {
