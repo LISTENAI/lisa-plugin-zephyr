@@ -1,6 +1,6 @@
 import { LisaType, job } from '../utils/lisa_ex';
 import { ParsedArgs } from 'minimist';
-import { resolve } from 'path';
+import { resolve, join } from 'path';
 import { pathExists } from 'fs-extra';
 
 import { getEnv } from '../env';
@@ -9,6 +9,8 @@ import parseArgs from '../utils/parseArgs';
 import extendExec from '../utils/extendExec';
 import { workspace } from '../utils/ux';
 import { getCMakeCache } from '../utils/cmake';
+import { get } from '../env/config';
+import { platform } from 'os';
 
 export default ({ application, cmd }: LisaType) => {
 
@@ -76,6 +78,27 @@ export default ({ application, cmd }: LisaType) => {
       });
     },
   });
+
+  job('test', {
+    async task(ctx, task) {
+      if (platform() === 'win32') {
+        throw new Error('该命令暂不支持在 windows 下执行');
+      }
+      const current = await get('sdk');
+      if (!current) {
+        throw new Error('当前 SDK 未设置，请使用 use-sdk 命令进行设置');
+      }
+      const twister = join(current, 'scripts/twister');
+      if (!await pathExists(twister)) {
+        throw new Error('当前 SDK 中缺失 twister 测试Runner，请检查 SDK');
+      }
+      const argv = process.argv.slice(4);
+      await cmd(twister, [...argv], {
+        stdio: 'inherit',
+        env: await getEnv(),
+      });
+    }
+  })
 
   if (process.env.LISA_ZEP_EXEC) {
     job('exec', {
