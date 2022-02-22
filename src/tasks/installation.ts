@@ -29,7 +29,8 @@ export default ({ cmd }: LisaType) => {
         'install', 'west',
       ], { env: await getEnv() });
 
-      await exec('west', [
+      await exec('python', [
+        '-m', 'west',
         'config', '--global',
         'zephyr.base-prefer', 'env',
       ], { env: await getEnv() });

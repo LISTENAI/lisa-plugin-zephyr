@@ -14,21 +14,21 @@ import { platform } from 'os';
 
 export default ({ application, cmd }: LisaType) => {
 
-  job('west', {
-    title: 'west',
-    async task(ctx, task) {
-      const argv = application.argv as ParsedArgs;
-      const exec = extendExec(cmd, { task, env: await getEnv() });
+  // job('west', {
+  //   title: 'west',
+  //   async task(ctx, task) {
+  //     const argv = application.argv as ParsedArgs;
+  //     const exec = extendExec(cmd, { task, env: await getEnv() });
 
-      const westArgs = argv._.slice(1);
+  //     const westArgs = argv._.slice(1);
 
-      await exec('python', ['-m', 'west', ...westArgs]);
-    },
-    options: {
-      persistentOutput: true,
-      bottomBar: Infinity,
-    },
-  });
+  //     await exec('python', ['-m', 'west', ...westArgs]);
+  //   },
+  //   options: {
+  //     persistentOutput: true,
+  //     bottomBar: Infinity,
+  //   },
+  // });
 
   job('menuconfig', {
     title: '构建选项',

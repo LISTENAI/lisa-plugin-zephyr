@@ -1,8 +1,9 @@
 import { LisaType, job } from '../utils/lisa_ex';
 import { ParsedArgs } from 'minimist';
 import { resolve, join } from 'path';
-import { mkdirs } from 'fs-extra';
+import { mkdirs, pathExists, readFile } from 'fs-extra';
 import { isEqual } from 'lodash';
+import { parse } from 'ini';
 
 import { PACKAGE_HOME, loadBundles, getEnv, invalidateEnv } from '../env';
 import { get, set } from '../env/config';
@@ -124,7 +125,12 @@ export default ({ application, cmd }: LisaType) => {
         if (target && install) {
           let zephyrPath = resolve(target);
           if (!(await zephyrVersion(zephyrPath))) {
-            zephyrPath = join(zephyrPath, 'zephyr');
+            const westConfigPath = join(zephyrPath, '.west', 'config')
+            if (!(await pathExists(westConfigPath))) {
+              throw new Error(`该路径不是一个 Zephyr base: ${zephyrPath}`);
+            }
+            const westConfig = parse((await readFile(westConfigPath)).toString());
+            zephyrPath = join(zephyrPath, westConfig?.manifest?.path);
             if (!(await zephyrVersion(zephyrPath))) {
               throw new Error(`该路径不是一个 Zephyr base: ${zephyrPath}`);
             }
