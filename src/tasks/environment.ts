@@ -124,16 +124,18 @@ export default ({ application, cmd }: LisaType) => {
 
         if (target && install) {
           let zephyrPath = resolve(target);
-          if (!(await zephyrVersion(zephyrPath))) {
-            const westConfigPath = join(zephyrPath, '.west', 'config')
-            if (!(await pathExists(westConfigPath))) {
-              throw new Error(`该路径不是一个 Zephyr base: ${zephyrPath}`);
+          // 可能存在zephyr或zephyr.git两个命名的文件夹
+          let pathNested = ['', 'zephyr', 'zephyr.git'];
+          let isZephyrBase = false;
+          for (const nested of pathNested) {
+            if (await zephyrVersion(join(zephyrPath, nested))) {
+              zephyrPath = join(zephyrPath, nested);
+              isZephyrBase = true;
+              break;
             }
-            const westConfig = parse((await readFile(westConfigPath)).toString());
-            zephyrPath = join(zephyrPath, westConfig?.manifest?.path);
-            if (!(await zephyrVersion(zephyrPath))) {
-              throw new Error(`该路径不是一个 Zephyr base: ${zephyrPath}`);
-            }
+          }
+          if (!isZephyrBase) {
+            throw new Error(`该路径不是一个 Zephyr base: ${zephyrPath}`);
           }
           await exec('python', [
             '-m', 'pip',
