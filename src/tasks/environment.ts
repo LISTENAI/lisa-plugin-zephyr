@@ -1,9 +1,8 @@
 import { LisaType, job } from '../utils/lisa_ex';
 import { ParsedArgs } from 'minimist';
 import { resolve, join } from 'path';
-import { mkdirs, pathExists, readFile } from 'fs-extra';
+import { mkdirs } from 'fs-extra';
 import { isEqual } from 'lodash';
-import { parse } from 'ini';
 
 import { PACKAGE_HOME, loadBundles, getEnv, invalidateEnv } from '../env';
 import { get, set } from '../env/config';
@@ -99,6 +98,10 @@ export default ({ application, cmd }: LisaType) => {
 
         let install = args['install'] || (path && path != current);
 
+        if (target && /.*[\u4e00-\u9fa5]+.*$/.test(target)) {
+          throw new Error(`SDK 路径不能包含中文: ${target}`);
+        }
+
         const fromGit = args['from-git'];
         if (fromGit && fromGit.match(/(.+?)(?:#(.+))?$/)) {
           const { $1: url, $2: rev } = RegExp;
@@ -124,16 +127,18 @@ export default ({ application, cmd }: LisaType) => {
 
         if (target && install) {
           let zephyrPath = resolve(target);
-          if (!(await zephyrVersion(zephyrPath))) {
-            const westConfigPath = join(zephyrPath, '.west', 'config')
-            if (!(await pathExists(westConfigPath))) {
-              throw new Error(`该路径不是一个 Zephyr base: ${zephyrPath}`);
+          // 可能存在zephyr或zephyr.git两个命名的文件夹
+          let pathNested = ['', 'zephyr', 'zephyr.git'];
+          let isZephyrBase = false;
+          for (const nested of pathNested) {
+            if (await zephyrVersion(join(zephyrPath, nested))) {
+              zephyrPath = join(zephyrPath, nested);
+              isZephyrBase = true;
+              break;
             }
-            const westConfig = parse((await readFile(westConfigPath)).toString());
-            zephyrPath = join(zephyrPath, westConfig?.manifest?.path);
-            if (!(await zephyrVersion(zephyrPath))) {
-              throw new Error(`该路径不是一个 Zephyr base: ${zephyrPath}`);
-            }
+          }
+          if (!isZephyrBase) {
+            throw new Error(`该路径不是一个 Zephyr base: ${zephyrPath}`);
           }
           await exec('python', [
             '-m', 'pip',
