@@ -68,11 +68,15 @@ async function getZephyrInfo(): Promise<string | null> {
   }
 }
 
+export const exportEnv = getEnv
+
 export async function undertake(argv?: string[] | undefined): Promise<void> {
   argv = argv ?? process.argv.slice(3)
   const { cmd } = Lisa
-  await cmd('python', ['-m', 'west', ...argv], {
-    stdio: 'inherit',
-    env: await getEnv(),
-  })
+  try {
+    await cmd('python', ['-m', 'west', ...argv], {
+      stdio: 'inherit',
+      env: await getEnv(),
+    })  
+  } catch (error) {}
 }
