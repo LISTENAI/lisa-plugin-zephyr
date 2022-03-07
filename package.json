@@ -1,6 +1,6 @@
 {
   "name": "@lisa-plugin/zephyr",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "LISA plugin for Zephyr",
   "main": "./lib/main.js",
   "engines": {
