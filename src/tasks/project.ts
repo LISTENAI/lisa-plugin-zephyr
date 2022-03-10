@@ -12,8 +12,9 @@ export default ({ application, cmd }: LisaType) => {
   job('build', {
     title: '构建',
     async task(ctx, task) {
-      task.title = ''
-      await undertake()
+      task.title = '';
+      await undertake();
+      task.title = '构建成功';
       // await cmd('python', ['-m', 'west', ...argv], {
       //   stdio: 'inherit',
       //   env: await getEnv(),
@@ -45,6 +46,7 @@ export default ({ application, cmd }: LisaType) => {
     async task(ctx, task) {
       task.title = ''
       await undertake()
+      task.title = '烧录成功';
       // const { args, printHelp } = parseArgs(application.argv, {
       //   'env': { arg: 'name', help: '指定当次编译有效的环境' },
       //   'task-help': { short: 'h', help: '打印帮助' },

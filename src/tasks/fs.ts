@@ -111,6 +111,8 @@ export default ({ application, cmd }: LisaType) => {
         'build-dir': { short: 'd', arg: 'path', help: '构建产物目录' },
         'task-help': { short: 'h', help: '打印帮助' },
         'pristine': { short: 'p', help: '重新构建，不依赖原打包路径'},
+        'node-label': { arg: 'label', help: '指定打包的分区节点'},
+        'type': { arg: 'type', help: '指定打包的文件系统类型'},
       });
       if (args['task-help']) {
         return printHelp([
@@ -118,8 +120,14 @@ export default ({ application, cmd }: LisaType) => {
         ]);
       }
 
-      const pristine = !!args['pristine'];
+      const nodeLabel = args['node-label'];
+      const fsSourceDir = workspace();
+      const custom = !!nodeLabel && !!fsSourceDir;
+      if (!(custom || (!fsSourceDir && !nodeLabel))) {
+        throw new Error(`需要同时指定打包目标目录和分区节点，详情请查看开发文档的文件系统章节`)
+      }
 
+      const pristine = !!args['pristine'];
       const buildDir = resolve(args['build-dir'] ?? 'build');
 
       const project = await getCMakeCache(buildDir, 'APPLICATION_SOURCE_DIR', 'PATH') || '';
@@ -141,7 +149,7 @@ export default ({ application, cmd }: LisaType) => {
       const exec = extendExec(cmd, { task, env: await getEnv() });
       
       // 获取原有的文件系统打包缓存信息
-      let fsCache = [];
+      let fsCache: IPartition[] = [];
       if (await pathExists(resourceBuildCacheFile)) {
         try {
           fsCache = await readJson(resourceBuildCacheFile);
@@ -151,30 +159,49 @@ export default ({ application, cmd }: LisaType) => {
       }
       if (pristine) fsCache = [];
 
-      const newFsCache = [];
-      for (const part of partitions) {
+      let newFsCache: IPartition[] = [];
+
+      if (custom) {
+        if (!await pathExists(fsSourceDir)) {
+          throw new Error(`不存在该文件夹： ${fsSourceDir}`);
+        }
+        const part = partitions.find((partition: IPartition) => partition.label === nodeLabel);
+        if (!part) {
+          throw new Error(`当前固件没有 ${nodeLabel} 该node-label的分区`);
+        }
         if (part.type == 'littlefs') {
-          let partSourceDir = join(resourceDir, part.label);
-
-          const fsCachePart: IPartition | undefined = fsCache.find((item: IPartition) => {
-            return item.label === part.label && item.addr === part.addr && item.size === part.size && item.type === part.type
-          });
-          if (fsCachePart) {
-            if (fsCachePart.source && !(await pathExists(fsCachePart.source))) {
-              throw new Error(`node-label: ${part.label} 的缓存文件夹来源: ${fsCachePart.source} 不存在，更多用法请查看开发文档文件系统相关章节`);
-            }
-            partSourceDir = fsCachePart.source || partSourceDir;
-          }
-
-          await mkdirs(partSourceDir);
           const partFile = join(resourceBuildDir, `${part.label}.bin`);
           await exec('mklfs', ['.', partFile, `${part.size}`], {
-            cwd: partSourceDir,
+            cwd: fsSourceDir,
           });
-          
-          part.source = partSourceDir;
-          newFsCache.push(part);
-          appendFlashConfig(ctx, 'fs', part.addr, partFile);
+          part.source = fsSourceDir;
+          newFsCache = newFsCache.concat(fsCache.filter((partition: IPartition) => partition.label !== nodeLabel)).concat([part]);
+        }
+      } else {
+        for (const part of partitions) {
+          if (part.type == 'littlefs') {
+            let partSourceDir = join(resourceDir, part.label);
+  
+            const fsCachePart: IPartition | undefined = fsCache.find((item: IPartition) => {
+              return item.label === part.label && item.addr === part.addr && item.size === part.size && item.type === part.type
+            });
+            if (fsCachePart) {
+              if (fsCachePart.source && !(await pathExists(fsCachePart.source))) {
+                throw new Error(`node-label: ${part.label} 的缓存文件夹来源: ${fsCachePart.source} 不存在，更多用法请查看开发文档文件系统相关章节`);
+              }
+              partSourceDir = fsCachePart.source || partSourceDir;
+            }
+  
+            await mkdirs(partSourceDir);
+            const partFile = join(resourceBuildDir, `${part.label}.bin`);
+            await exec('mklfs', ['.', partFile, `${part.size}`], {
+              cwd: partSourceDir,
+            });
+            
+            part.source = partSourceDir;
+            newFsCache.push(part);
+            appendFlashConfig(ctx, 'fs', part.addr, partFile);
+          }
         }
       }
       await writeJson(join(resourceBuildDir, 'fsCache.json'), newFsCache);
@@ -190,13 +217,15 @@ export default ({ application, cmd }: LisaType) => {
       const { args, printHelp } = parseArgs(application.argv, {
         'env': { arg: 'name', help: '指定当次编译有效的环境' },
         'task-help': { short: 'h', help: '打印帮助' },
-        'runner': { arg: 'string', help: '指定当次的烧录类型' }
+        'runner': { arg: 'string', help: '指定当次的烧录类型' },
+        // 'node-label': { arg: 'label', help: '指定烧录的分区节点'},
       });
       if (args['task-help']) {
         return printHelp();
       }
 
       const runner = args['runner'] || null;
+      // const nodeLabel = args['node-label'];
 
       const exec = extendExec(cmd, { task, env: await getEnv(args['env']) });
       const flashArgs = await getFlashArgs(ctx, 'fs');
@@ -208,8 +237,9 @@ export default ({ application, cmd }: LisaType) => {
 
       if (runner) {
         // lisa zep flash --runner pyocd --flash-opt="--base-address=xxxx" --bin-file xxxx.bin
+        const VENUS_FLASH_BASE = 0x18000000;
         for (let address in flashArgs) {
-          await exec('python', ['-m', 'west', 'flash', '--runner', runner, `--flash-opt="--base-address=${address}"`, '--bin-file',  flashArgs[address]])
+          await exec('python', ['-m', 'west', 'flash', '--runner', runner, `--flash-opt="--base-address=0x${(VENUS_FLASH_BASE + parseInt(address)).toString(16)}"`, '--bin-file',  flashArgs[address]])
         }
       } else {
         const flasher = await getFlasher(args['env']);
