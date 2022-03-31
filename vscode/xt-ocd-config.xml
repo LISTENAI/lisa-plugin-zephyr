@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<configuration>
+    // `usbser`为 jlink 的 sn 码，需要修改
+    <controller id="Controller0" module="jlink" speed="10000000" type="jtag" usbser="###usbser###"/>
+    <driver cust-idcode="0x1200379b" id="XtensaDriver0" module="xtensa" step-intr="mask,stepover,setps"/>
+    <driver id="TraxDriver0" module="trax"/>
+    <chain controller="Controller0">
+        <tap id="TAP0" irwidth="5"/>
+    </chain>
+    <system module="jtag">
+        <component config="trax" id="Component0" tap="TAP0"/>
+    </system>
+    <device component="Component0" driver="XtensaDriver0" id="Xtensa0"/>
+    <device component="Component0" driver="TraxDriver0" id="Trax0"/>
+    <application id="GDBStub0" module="gdbstub" port="30000">
+        <target device="Xtensa0"/>
+    </application>
+    <application id="TraxApp" module="traxapp" port="11444">
+        <target device="Trax0"/>
+    </application>
+</configuration>

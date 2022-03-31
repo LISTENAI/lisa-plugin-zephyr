@@ -8,7 +8,7 @@
     "git": ">=2"
   },
   "scripts": {
-    "build": "tsc -p .",
+    "build": "tsc -p .  &&  node prebuild",
     "watch": "nodemon --exec npm run build -w ./src -e ts",
     "prepublishOnly": "npm run build",
     "postinstall": "lisa zep install"

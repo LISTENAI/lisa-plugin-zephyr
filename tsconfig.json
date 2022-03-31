@@ -4,15 +4,12 @@
     "target": "esnext",
     "rootDir": "src",
     "outDir": "lib",
+    // "outDir": "C:\\Program Files\\nodejs\\node_modules\\@lisa-plugin\\zephyr\\lib",
     "moduleResolution": "node",
     "strict": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "types": [
-      "node",
-    ],
+    "types": ["node"]
   },
-  "include": [
-    "src/**/*",
-  ],
+  "include": ["src/**/*", "prebuild.js"]
 }

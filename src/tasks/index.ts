@@ -7,6 +7,7 @@ import project from './project';
 import west from './west';
 import fs from './fs';
 import create from './create';
+import initVs from './initVs';
 
 export default (core: LisaType) => {
   installation(core);
@@ -16,4 +17,5 @@ export default (core: LisaType) => {
   fs(core);
   west(core);
   create(core);
+  initVs(core);
 }
