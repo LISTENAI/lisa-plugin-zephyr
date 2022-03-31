@@ -41,6 +41,11 @@ export interface Controller {
 }
 
 export async function loadDT(buildDir: string, env: Record<string, string>): Promise<DeviceTree & IDeviceTreeParser> {
+  // console.log('python', [
+  //   resolve(__dirname, '..', '..', 'scripts', 'edt2json.py'),
+  //   '--dtlib', resolve(env.ZEPHYR_BASE, 'scripts', 'dts', 'python-devicetree', 'src'),
+  //   '--edt-pickle', resolve(buildDir, 'zephyr', 'edt.pickle'),
+  // ].join(' '))
   const { stdout } = await LISA.cmd('python', [
     resolve(__dirname, '..', '..', 'scripts', 'edt2json.py'),
     '--dtlib', resolve(env.ZEPHYR_BASE, 'scripts', 'dts', 'python-devicetree', 'src'),
