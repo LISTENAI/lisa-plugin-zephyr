@@ -1,29 +1,35 @@
 import { DeviceTree, IDeviceTreeParser } from './dt';
 import { join } from 'path';
 import { pathExists } from 'fs-extra';
+import Lisa from '@listenai/lisa_core';
 
 export interface IPartition {
   label: string;
   addr: number;
   size: number;
   type: 'littlefs';
+  source?: string;
 }
 
 export function parsePartitions(dt: DeviceTree & IDeviceTreeParser): IPartition[] {
   const partitions: IPartition[] = [];
   for (const node of Object.values(dt.nodes)) {
     if (node.compatible?.includes('zephyr,fstab,littlefs')) {
+      
       const path = node.properties.partition;
       if (typeof path != 'string') continue;
 
+      const labelName = dt.labelNameByPath(node.path);
+      if (typeof labelName != 'string') continue;
+
       const part = dt.node(path);
-      if (!part?.label) continue;
+      // if (!part?.label) continue;
       if (!part?.reg || !part?.reg[0]) continue;
 
       const reg = part.reg[0];
       if (typeof reg.addr != 'number' || typeof reg.size != 'number') continue;
       partitions.push({
-        label: part.label,
+        label: labelName,
         addr: reg.addr,
         size: reg.size,
         type: 'littlefs',

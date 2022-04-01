@@ -7,6 +7,7 @@ import { PLUGIN_HOME, get } from './env/config';
 import { zephyrVersion } from './utils/sdk';
 import { getRepoStatus } from './utils/repo';
 import Lisa from '@listenai/lisa_core';
+import { venvScripts } from './venv';
 
 const execFile = promisify(_execFile);
 
@@ -70,15 +71,19 @@ async function getZephyrInfo(): Promise<string | null> {
 
 export const exportEnv = getEnv
 
-export async function undertake(argv?: string[] | undefined): Promise<void> {
+export async function undertake(argv?: string[] | undefined): Promise<boolean> {
   argv = argv ?? process.argv.slice(3)
   const { cmd, application } = Lisa
   application.debug(`python -m west ${[...argv].join(' ')}`);
   application.debug(await getEnv());
   try {
-    await cmd('python', ['-m', 'west', ...argv], {
+    await cmd(await venvScripts('west'), [...argv], {
       stdio: 'inherit',
       env: await getEnv(),
     })
-  } catch (error) {}
+  } catch (error) {
+    return false
+  }
+  return true
+
 }
