@@ -73,7 +73,9 @@ export const exportEnv = getEnv
 
 export async function undertake(argv?: string[] | undefined): Promise<boolean> {
   argv = argv ?? process.argv.slice(3)
-  const { cmd } = Lisa
+  const { cmd, application } = Lisa
+  application.debug(`python -m west ${[...argv].join(' ')}`);
+  application.debug(await getEnv());
   try {
     await cmd(await venvScripts('west'), [...argv], {
       stdio: 'inherit',

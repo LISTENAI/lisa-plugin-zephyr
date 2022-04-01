@@ -18,6 +18,8 @@ export default ({ cmd }: LisaType) => {
 
       await mkdirs(PLUGIN_HOME);
 
+      await invalidateEnv();
+
       await exec(join(python.binaryDir, 'python'), [
         '-m', 'venv',
         venv.homeDir,
@@ -34,7 +36,7 @@ export default ({ cmd }: LisaType) => {
         'config', '--global',
         'zephyr.base-prefer', 'env',
       ], { env: await getEnv() });
-
+      
       await invalidateEnv();
     },
   });
