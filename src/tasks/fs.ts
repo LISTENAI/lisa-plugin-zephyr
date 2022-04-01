@@ -12,6 +12,7 @@ import { parsePartitions, checkFsFilter, IFsFilter, IPartition } from '../utils/
 import { appendFlashConfig, getFlashArgs } from '../utils/flash';
 import { getCMakeCache } from '../utils/cmake';
 import { venvScripts } from '../venv';
+import { flashFlags } from '../utils/westConfig';
 
 export default ({ application, cmd }: LisaType) => {
 
@@ -224,7 +225,7 @@ export default ({ application, cmd }: LisaType) => {
       if (args['task-help']) {
         return printHelp();
       }
-      const runner = args['runner'] || null;
+      // const runner = args['runner'] || null;
       // const nodeLabel = args['node-label'];
 
       const exec = extendExec(cmd, { task, env: await getEnv(args['env']) });
@@ -235,21 +236,21 @@ export default ({ application, cmd }: LisaType) => {
 
       application.debug(flashArgs);
 
-      if (runner) {
+      // if (runner) {
         // lisa zep flash --runner pyocd --flash-opt="--base-address=xxxx" --bin-file xxxx.bin
-        const VENUS_FLASH_BASE = 0x18000000;
-        for (let address in flashArgs) {
-          await exec(await venvScripts('west'), ['flash', '--runner', runner, `--flash-opt=--base-address=0x${(VENUS_FLASH_BASE + parseInt(address)).toString(16)}`, '--bin-file',  flashArgs[address]])
-        }
-      } else {
-        const flasher = await getFlasher(args['env']);
-        if (flasher) {
-          const { command, args: execArgs } = flasher.makeFlashExecArgs(flashArgs);
-          await exec(command, execArgs);
-        } else {
-          throw new Error('当前环境不支持烧录资源镜像');
-        }
+      const VENUS_FLASH_BASE = 0x18000000;
+      for (let address in flashArgs) {
+        await exec(await venvScripts('west'), await flashFlags(['flash', `--flash-opt=--base-address=0x${(VENUS_FLASH_BASE + parseInt(address)).toString(16)}`, '--bin-file',  flashArgs[address]]))
       }
+      // } else {
+      //   const flasher = await getFlasher(args['env']);
+      //   if (flasher) {
+      //     const { command, args: execArgs } = flasher.makeFlashExecArgs(flashArgs);
+      //     await exec(command, execArgs);
+      //   } else {
+      //     throw new Error('当前环境不支持烧录资源镜像');
+      //   }
+      // }
     },
   });
 
