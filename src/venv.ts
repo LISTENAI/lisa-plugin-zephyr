@@ -22,3 +22,7 @@ export default <Binary>{
     return stdout.split('\n')[0].trim();
   }
 }
+
+export async function venvScripts(name: string): Promise<string> {
+  return join(join(HOME, process.platform == 'win32' ? 'Scripts' : 'bin'), name)
+}

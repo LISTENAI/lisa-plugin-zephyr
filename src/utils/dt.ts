@@ -5,6 +5,7 @@ export interface IDeviceTreeParser {
   choose(name: string): Node | null;
   label(label: string): Node | null;
   node(path: NodePath): Node | null;
+  labelNameByPath(path: NodePath): string | null;
   under(parent: NodePath): Node[];
 }
 
@@ -40,6 +41,11 @@ export interface Controller {
 }
 
 export async function loadDT(buildDir: string, env: Record<string, string>): Promise<DeviceTree & IDeviceTreeParser> {
+  // console.log('python', [
+  //   resolve(__dirname, '..', '..', 'scripts', 'edt2json.py'),
+  //   '--dtlib', resolve(env.ZEPHYR_BASE, 'scripts', 'dts', 'python-devicetree', 'src'),
+  //   '--edt-pickle', resolve(buildDir, 'zephyr', 'edt.pickle'),
+  // ].join(' '))
   const { stdout } = await LISA.cmd('python', [
     resolve(__dirname, '..', '..', 'scripts', 'edt2json.py'),
     '--dtlib', resolve(env.ZEPHYR_BASE, 'scripts', 'dts', 'python-devicetree', 'src'),
@@ -73,6 +79,10 @@ export default class DeviceTreeParser implements IDeviceTreeParser, DeviceTree {
 
   node(path: NodePath): Node | null {
     return this.nodes[path] || null;
+  }
+
+  labelNameByPath(path: NodePath): string | null {
+    return Object.keys(this.labels).find(labelName => this.labels[labelName] === path) || null;
   }
 
   under(parent: NodePath): Node[] {

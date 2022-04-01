@@ -126,4 +126,17 @@ export default ({ application, cmd }: LisaType) => {
     });
   }
 
+  // job('export-env', {
+  //   title: 'export-env',
+  //   async task(ctx, task) {
+  //     const env = await getEnv()
+  //     console.log(env)
+  //     for (let key in env) {
+  //       console.log(`$env:${key}='${env[key]}'`)
+  //     }
+  //     console.log('\n')
+  //   }
+  // });
+
+
 }
