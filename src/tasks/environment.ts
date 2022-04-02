@@ -3,6 +3,7 @@ import { ParsedArgs } from 'minimist';
 import { resolve, join } from 'path';
 import { mkdirs, pathExists, readFile } from 'fs-extra';
 import { isEqual } from 'lodash';
+import Lisa from '@listenai/lisa_core';
 
 import { PACKAGE_HOME, loadBundles, getEnv, invalidateEnv } from '../env';
 import { get, set } from '../env/config';
@@ -78,6 +79,7 @@ export default ({ application, cmd }: LisaType) => {
   job('use-sdk', {
     title: 'SDK 设置',
     async task(ctx, task) {
+      task.title = '';
       const exec = extendExec(cmd, { task });
       const argv = application.argv as ParsedArgs;
 
@@ -109,54 +111,48 @@ export default ({ application, cmd }: LisaType) => {
         await set('sdk', undefined);
         await invalidateEnv();
       } else if (args['update']) {
-        await checkZephyrBase(ZEPHYR_BASE, westConfigPath)
+        await checkZephyrBase(ZEPHYR_BASE, westConfigPath);
         try {
-          const { stdout } = await exec('python', ['-m', 'west', 'config', 'manifest.path'], {
-            env, cwd: basicPath, stdio: 'pipe'
-          });
-          const manifestPath = join(basicPath, stdout)
+          const manifestPath = await getManifestPath(basicPath);
           //  git pull--tags origin 拉取某个tag
-          await exec('git', ['fetch'], {
-            env, cwd: manifestPath, stdio: 'pipe'
+          console.log('SDK 代码更新中...');
+          await exec('git', ['pull'], {
+            env, cwd: manifestPath,
           });
-          await await exec('lisa', ['zep', 'update'], {
+          console.log('modules 更新中...');
+          await exec('python', ['-m', 'west', 'update'], {
             env, cwd: basicPath,
           })
         } catch (e: any) {
           const { stderr } = e
           throw new Error((stderr && JSON.stringify(stderr)) || JSON.stringify(e));
         }
-        return
+        return task.title = 'SDK更新成功';
       } else if (args['mr']) {
         const branch = args.mr;
-        await checkZephyrBase(ZEPHYR_BASE, westConfigPath)
+        await checkZephyrBase(ZEPHYR_BASE, westConfigPath);
         try {
-          const { stdout } = await exec('python', ['-m', 'west', 'config', 'manifest.path'], {
-            env, cwd: basicPath, stdio: 'pipe'
-          });
-          const manifestPath = join(basicPath, stdout)
+          const manifestPath = await getManifestPath(basicPath);
           await exec('git', ['checkout', branch || 'master'], {
-            env, cwd: manifestPath, stdio: 'pipe'
+            env, cwd: manifestPath
           });
           await exec('git', ['pull', 'origin', branch || 'master'], {
             env, cwd: manifestPath
           });
-          await await exec('lisa', ['zep', 'update'], {
+          await await exec('python', ['-m', 'west', 'update'], {
             env, cwd: basicPath
           })
         } catch (e: any) {
           const { stderr } = e
           throw new Error((stderr && JSON.stringify(stderr)) || JSON.stringify(e));
         }
-        return
+        return task.title = `SDK 分支已切换到 ${branch}`;
       } else if (args['list']) {
         await checkZephyrBase(ZEPHYR_BASE, westConfigPath)
         try {
-          const { stdout } = await exec('python', ['-m', 'west', 'config', 'manifest.path'], {
-            env, cwd: basicPath, stdio: 'pipe'
-          });
-          const manifestPath = join(basicPath, stdout)
+          const manifestPath = await getManifestPath(basicPath);
           // task.title = `当前 SDK tag list`;
+          console.log(`当前 SDK tag list`);
           await exec('git', ['ls-remote', '-t'], {
             env,
             cwd: manifestPath,
@@ -241,4 +237,12 @@ export default ({ application, cmd }: LisaType) => {
     },
   });
 
+}
+
+const getManifestPath = async (basicPath: string) => {
+  const { stdout } = await Lisa.cmd('python', ['-m', 'west', 'config', 'manifest.path'], {
+    env: await getEnv(),
+    cwd: basicPath
+  });
+  return join(basicPath, stdout);
 }
