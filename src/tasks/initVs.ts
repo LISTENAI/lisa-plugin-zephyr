@@ -46,7 +46,7 @@ export default ({ application, cmd }: LisaType) => {
       })
       ctx.jlinkSNcode = jlinkSNcode;
       const targetDir = join(process.cwd(), '.vscode');
-      const formDir = resolve(__dirname, '..', 'vscode');
+      const formDir = join(__dirname, '..', '..', 'vscode');
       await copy(formDir, targetDir);
       const configFIle = join(targetDir, 'xt-ocd-config.xml');
       const Launchfile = join(targetDir, 'launch.json');
@@ -55,7 +55,7 @@ export default ({ application, cmd }: LisaType) => {
       await writeFile(configFIle, result, 'utf-8');
       const launchJson = await readJson(Launchfile);
       launchJson.configurations[0].linux.miDebuggerPath = XTENSA_TOOL || '';
-      await writeJson(Launchfile, launchJson);
+      await writeFile(Launchfile, JSON.stringify(launchJson, null, "\t"));
     },
 
   });

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <configuration>
-    // `usbser`为 jlink 的 sn 码，需要修改
     <controller id="Controller0" module="jlink" speed="10000000" type="jtag" usbser="###usbser###"/>
     <driver cust-idcode="0x1200379b" id="XtensaDriver0" module="xtensa" step-intr="mask,stepover,setps"/>
     <driver id="TraxDriver0" module="trax"/>
