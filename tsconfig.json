@@ -8,11 +8,7 @@
     "strict": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "types": [
-      "node",
-    ],
+    "types": ["node"]
   },
-  "include": [
-    "src/**/*",
-  ],
+  "include": ["src/**/*", "prebuild.js"]
 }

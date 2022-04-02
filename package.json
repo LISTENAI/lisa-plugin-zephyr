@@ -1,6 +1,6 @@
 {
   "name": "@lisa-plugin/zephyr",
-  "version": "1.4.0-beta.3",
+  "version": "1.4.0",
   "description": "LISA plugin for Zephyr",
   "main": "./lib/main.js",
   "engines": {
@@ -8,7 +8,7 @@
     "git": ">=2"
   },
   "scripts": {
-    "build": "tsc -p .",
+    "build": "tsc -p .  &&  node prebuild",
     "watch": "nodemon --exec npm run build -w ./src -e ts",
     "prepublishOnly": "npm run build",
     "postinstall": "lisa zep install"
@@ -30,7 +30,8 @@
   "license": "UNLICENSED",
   "files": [
     "lib",
-    "scripts"
+    "scripts",
+    "vscode"
   ],
   "bugs": {
     "url": "https://github.com/LISTENAI/lisa-plugin-zephyr/issues"
