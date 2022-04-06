@@ -116,12 +116,19 @@ export default ({ application, cmd }: LisaType) => {
           const manifestPath = await getManifestPath(basicPath);
           //  git pull--tags origin 拉取某个tag
           console.log('SDK 代码更新中...');
-          await exec('git', ['pull'], {
-            env, cwd: manifestPath,
+          await cmd('git', ['fetch', 'origin'], {
+            env,
+            cwd: manifestPath,
+          });
+          await cmd('git', ['pull'], {
+            env,
+            cwd: manifestPath,
           });
           console.log('modules 更新中...');
-          await exec('python', ['-m', 'west', 'update'], {
-            env, cwd: basicPath,
+          await cmd('python', ['-m', 'west', 'update'], {
+            stdio: 'inherit',
+            env,
+            cwd: basicPath,
           })
         } catch (e: any) {
           const { stderr } = e
@@ -133,14 +140,23 @@ export default ({ application, cmd }: LisaType) => {
         await checkZephyrBase(ZEPHYR_BASE, westConfigPath);
         try {
           const manifestPath = await getManifestPath(basicPath);
-          await exec('git', ['checkout', branch || 'master'], {
-            env, cwd: manifestPath
+          await cmd('git', ['fetch', 'origin'], {
+            env,
+            cwd: manifestPath,
           });
-          await exec('git', ['pull', 'origin', branch || 'master'], {
-            env, cwd: manifestPath
+          await cmd('git', ['checkout', branch || 'master'], {
+            env,
+            cwd: manifestPath
           });
-          await await exec('python', ['-m', 'west', 'update'], {
-            env, cwd: basicPath
+          await cmd('git', ['fetch', 'origin', branch || 'master'], {
+            stdio: 'inherit',
+            env,
+            cwd: manifestPath
+          });
+          await cmd('python', ['-m', 'west', 'update'], {
+            stdio: 'inherit',
+            env,
+            cwd: basicPath
           })
         } catch (e: any) {
           const { stderr } = e
