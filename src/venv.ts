@@ -27,6 +27,6 @@ export async function venvScripts(name?: string): Promise<string> {
   return join(join(HOME, process.platform == 'win32' ? 'Scripts' : 'bin'), name || '')
 }
 
-export async function venvLib(): Promise<string> {
-  return join(HOME, 'Lib')
+export async function venvLib(name?: string[]): Promise<string> {
+  return join(HOME, 'Lib', ...(name || []));
 }
