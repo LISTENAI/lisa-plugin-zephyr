@@ -96,9 +96,9 @@ export default ({ application, cmd }: LisaType) => {
       });
       const sdk = await get('sdk');
       const env = await getEnv();
-      const ZEPHYR_BASE = env['ZEPHYR_BASE']
-      const basicPath = resolve(ZEPHYR_BASE, '../')
-      const westConfigPath = resolve(ZEPHYR_BASE, '../.west/config')
+      const ZEPHYR_BASE = env['ZEPHYR_BASE'];
+      const basicPath = ZEPHYR_BASE ? resolve(ZEPHYR_BASE, '../') : '';
+      const westConfigPath = ZEPHYR_BASE ? resolve(ZEPHYR_BASE, '../.west/config') : '';
       if (args['task-help']) {
         return printHelp([
           'use-sdk [path] [--install]',
@@ -180,7 +180,6 @@ export default ({ application, cmd }: LisaType) => {
         }
         return
       } else {
-
         const path = argv._[1];
         const current = sdk;
         const target = path || current;
@@ -189,6 +188,27 @@ export default ({ application, cmd }: LisaType) => {
         if (target && /.*[\u4e00-\u9fa5]+.*$/.test(target)) {
           throw new Error(`SDK 路径不能包含中文: ${target}`);
         }
+
+        //from-git
+        const fromGit = args['from-git'];
+        if (fromGit && fromGit.match(/(.+?)(?:#(.+))?$/)) {
+          const { $1: url, $2: rev } = RegExp;
+          if (!path) {
+            throw new Error('未指定 SDK 路径');
+          }
+          const workspacePath = resolve(path);
+          const env = await getEnv();
+          delete env.ZEPHYR_BASE;
+          const initArgs = ['init'];
+          initArgs.push('--manifest-url', url);
+          if (rev) initArgs.push('--manifest-rev', rev);
+          if (args['manifest']) initArgs.push('--manifest-file', args['manifest']);
+          initArgs.push(workspacePath);
+          await exec('python', ['-m', 'west', ...initArgs], { env });
+          await exec('python', ['-m', 'west', 'update'], { env, cwd: workspacePath });
+          install = true;
+        }
+
         if (target && install) {
           let zephyrPath = resolve(target);
           // 可能存在zephyr或zephyr.git两个命名的文件夹
@@ -211,30 +231,6 @@ export default ({ application, cmd }: LisaType) => {
           await set('sdk', zephyrPath);
           await invalidateEnv();
         }
-
-        //from-git
-        const fromGit = args['from-git'];
-        if (fromGit && fromGit.match(/(.+?)(?:#(.+))?$/)) {
-
-          const { $1: url, $2: rev } = RegExp;
-          if (!path) {
-            throw new Error('未指定 SDK 路径');
-          }
-          const workspacePath = resolve(path);
-          const env = await getEnv();
-          delete env.ZEPHYR_BASE;
-          const initArgs = ['init'];
-          initArgs.push('--manifest-url', url);
-          if (rev) initArgs.push('--manifest-rev', rev);
-          if (args['manifest']) initArgs.push('--manifest-file', args['manifest']);
-          initArgs.push(workspacePath);
-          await exec('python', ['-m', 'west', ...initArgs], { env });
-
-          await exec('python', ['-m', 'west', 'update'], { env, cwd: workspacePath });
-
-          install = true;
-        }
-
       }
       const version = sdk ? await zephyrVersion(sdk) : null;
       const branch = sdk ? await getRepoStatus(sdk) : null;
