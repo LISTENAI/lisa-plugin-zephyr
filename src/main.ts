@@ -1,14 +1,15 @@
 import { promisify } from 'util';
 import { execFile as _execFile } from 'child_process';
 import { defaults } from 'lodash';
-import { pathExists } from 'fs-extra';
+import { pathExists, ensureDir, outputFile, readFile, writeFileSync } from 'fs-extra';
 import { loadBundles, loadBinaries, getEnv } from './env';
 import { PLUGIN_HOME, get } from './env/config';
 import { zephyrVersion } from './utils/sdk';
 import { getRepoStatus } from './utils/repo';
 import Lisa from '@listenai/lisa_core';
 import { venvScripts } from './venv';
-
+import { ParsedArgs } from 'minimist';
+import { join } from 'path'
 const execFile = promisify(_execFile);
 
 export async function env(): Promise<Record<string, string>> {
@@ -71,16 +72,45 @@ async function getZephyrInfo(): Promise<string | null> {
 
 export const exportEnv = getEnv
 
-export async function undertake(argv?: string[] | undefined): Promise<boolean> {
-  argv = argv ?? process.argv.slice(3)
-  const { cmd, application } = Lisa
+
+async function logFile(stdout: string, logPath: string, logName: string) {
+  await ensureDir(logPath)
+  const _logFile = join(logPath, logName)
+  const time = new Date();
 
   try {
-    await cmd(await venvScripts('west'), [...argv], {
-      stdio: 'inherit',
-      env: await getEnv(),
-    })
-  } catch (error) {
+    if (!await pathExists(_logFile)) {
+      await outputFile(_logFile, `${time}\n${stdout}\n`)
+    } else {
+      const data = await readFile(_logFile, 'utf8')
+      await outputFile(_logFile, `${data}\n${time}\n${stdout}\n`)
+    }
+  } catch (err) {
+    await writeFileSync(_logFile, `${time}\n${err}\n`)
+  }
+
+}
+export async function undertake(argv?: string[] | undefined, log?: boolean | false): Promise<boolean> {
+  argv = argv ?? process.argv.slice(3)
+  const { cmd, application } = Lisa
+  const buildDir = (Lisa.application.argv as ParsedArgs)?.['build-dir'] || 'build'
+  const buildPath = buildDir && join(process.cwd(), buildDir)
+  try {
+    if (log) {
+      const subprocess = await cmd(await venvScripts('west'), [...argv], {
+        env: await getEnv(),
+      })
+      const { stdout, stderr } = await subprocess;
+      stdout && await logFile(stdout, buildPath, 'build.log')
+      stderr && await logFile(stderr, buildPath, 'build.log')
+    } else {
+      await cmd(await venvScripts('west'), [...argv], {
+        stdio: 'inherit',
+        env: await getEnv(),
+      })
+    }
+  } catch (error: any) {
+    log && await logFile(error, buildPath, 'build.log')
     return false
   }
   return true
