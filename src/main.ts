@@ -86,7 +86,7 @@ async function logFile(stdout: string, logPath: string, logName: string) {
       await outputFile(_logFile, `${data}\n${time}\n${stdout}\n`)
     }
   } catch (err) {
-    await writeFileSync(_logFile, `${time}\n${err}\n`)
+    await outputFile(_logFile, `${time}\n${err}\n`)
   }
 
 }
