@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         node: ['14', '16']
-
+    
     steps:
       - uses: actions/checkout@v2
 
@@ -28,5 +28,18 @@ jobs:
       - name: Install dependencies
         run: yarn --ignore-scripts --registry=https://registry-lpm.listenai.com
 
-      - name: Build
-        run: npm run build
+      - name: Test
+        run: npm run test
+
+      steps:
+      - uses: actions/checkout@v3
+
+      - name: Cache test target
+        uses: actions/cache@v3
+        id: CacheTestTarget
+        env:
+          cache-name: cache-test-target
+        with:
+          path: ../../__testTarget__
+          key: ${{ runner.os }}-build-${{ env.cache-name }}
+     
