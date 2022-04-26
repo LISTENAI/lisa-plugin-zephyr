@@ -31,12 +31,25 @@ jobs:
       - name: Build
         id: build
         run: npm run build && echo "::set-output name=tarball::$(npm pack)"
-        
+
+      - name: Upload tarball
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ steps.build.outputs.tarball }}
+          path: ${{ steps.build.outputs.tarball }}
+
+      - name: Download tarball
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ needs.build.outputs.tarball }}
+
       - name: Install @listenai/lisa
         run: npm install -g @listenai/lisa && lisa login --token ${{ secrets.LS_ACCESS_TOKEN }}
-        
+
       - name: Install @lisa-plugin/zephyr
         run: lisa install -g ${{ needs.build.outputs.tarball }}
 
-      - name: Test plugin
+      - name: TEST 
         run: npm run test
+
+    
