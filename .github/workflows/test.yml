@@ -1,24 +1,23 @@
 name: test
 
 on:
-  push:
-    branches: ['feature/test']
+  schedule:
+    - cron: "0 16 * * *"
+  workflow_dispatch:
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node: ['14', '16']
-    
-    steps:
-      - uses: actions/checkout@v2
+    outputs:
+      tarball: ${{ steps.build.outputs.tarball }}
 
-      - name: Use Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v1
+    steps:
+      - uses: actions/checkout@v1
+
+      - uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node }}
+          node-version: '16'
 
       - name: NPM config
         run: |
@@ -30,26 +29,45 @@ jobs:
       - name: Install dependencies
         run: yarn --ignore-scripts --registry=https://registry-lpm.listenai.com
 
-      - name: Install lisa
+      - name: Build
+        id: build
+        run: npm run build && echo "::set-output name=tarball::$(npm pack)"
+
+      - name: Upload tarball
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ steps.build.outputs.tarball }}
+          path: ${{ steps.build.outputs.tarball }}
+
+  test:
+    needs: build
+    runs-on: ${{ matrix.os }}
+
+    env:
+      PIP_INDEX_URL: https://pypi.org/simple
+
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        node: ['14', '16']
+
+    steps:
+      - name: Use Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Download tarball
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ needs.build.outputs.tarball }}
+
+      - name: Install @listenai/lisa
         run: npm install -g @listenai/lisa && lisa login --token ${{ secrets.LS_ACCESS_TOKEN }}
 
-      - name: Build
-        run: npm install  && npm run build 
+      - name: Install @lisa-plugin/zephyr
+        run: lisa install -g ${{ needs.build.outputs.tarball }}
 
-      - name: Link
-        run: npm link 
-        
-      - name: Test
+      - name: Test plugin
         run: npm run test
 
-      - uses: actions/checkout@v2
-
-      - name: Cache test target
-        uses: actions/cache@v2
-        id: CacheTestTarget
-        env:
-          cache-name: cache-test-target
-        with:
-          path: ../../__testTarget__
-          key: ${{ runner.os }}-build-${{ env.cache-name }}
-     
