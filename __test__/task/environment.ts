@@ -19,19 +19,26 @@ export const testEnvironment = () =>
           "https://cloud.listenai.com/zephyr/manifest.git",
         ]);
         expect(stdout).toMatch("成功");
-      }
-      const env = await getEnv();
-      let ZEPHYR_BASE = join(env["ZEPHYR_BASE"]);
-      let TEST_ZEPHYR_BASE;
-      let pathNested = ["", "zephyr", "zephyr.git"];
-      for (const nested of pathNested) {
-        if (await zephyrVersion(join(TEST_SDK_DIR, nested))) {
-          TEST_ZEPHYR_BASE = join(TEST_SDK_DIR, nested);
-          break;
+      } else {
+        let TEST_ZEPHYR_BASE;
+        let pathNested = ["", "zephyr", "zephyr.git"];
+        for (const nested of pathNested) {
+          if (await zephyrVersion(join(TEST_SDK_DIR, nested))) {
+            TEST_ZEPHYR_BASE = join(TEST_SDK_DIR, nested);
+            break;
+          }
         }
+        const { stdout } = await testCmd("lisa", [
+          "zep",
+          "use-sdk",
+          TEST_ZEPHYR_BASE,
+        ]);
+        const env = await getEnv();
+        const ZEPHYR_BASE = join(env["ZEPHYR_BASE"]);
+        console.log(stdout);
+        expect(stdout).toMatch("SDK设置成功");
+        expect(ZEPHYR_BASE).toEqual(TEST_ZEPHYR_BASE);
       }
-      expect(await pathExists(ZEPHYR_BASE)).toEqual(true);
-      expect(ZEPHYR_BASE).toEqual(TEST_ZEPHYR_BASE);
     });
 
     test("test: use-sdk --list", async () => {
@@ -67,25 +74,25 @@ export const testEnvironment = () =>
       expect(env).toBeUndefined();
       expect(isExists).toEqual(false);
     });
-    test("test: use-sdk  [directory]", async () => {
-      let TEST_ZEPHYR_BASE;
-      let pathNested = ["", "zephyr", "zephyr.git"];
-      for (const nested of pathNested) {
-        if (await zephyrVersion(join(TEST_SDK_DIR, nested))) {
-          TEST_ZEPHYR_BASE = join(TEST_SDK_DIR, nested);
-          break;
-        }
-      }
-      const { stdout } = await testCmd("lisa", [
-        "zep",
-        "use-sdk",
-        TEST_ZEPHYR_BASE,
-      ]);
-      const env = await getEnv();
-      const ZEPHYR_BASE = join(env["ZEPHYR_BASE"]);
-      expect(stdout).toMatch("SDK设置成功");
-      expect(ZEPHYR_BASE).toEqual(TEST_ZEPHYR_BASE);
-    });
+    // test("test: use-sdk  [directory]", async () => {
+    //   let TEST_ZEPHYR_BASE;
+    //   let pathNested = ["", "zephyr", "zephyr.git"];
+    //   for (const nested of pathNested) {
+    //     if (await zephyrVersion(join(TEST_SDK_DIR, nested))) {
+    //       TEST_ZEPHYR_BASE = join(TEST_SDK_DIR, nested);
+    //       break;
+    //     }
+    //   }
+    //   const { stdout } = await testCmd("lisa", [
+    //     "zep",
+    //     "use-sdk",
+    //     TEST_ZEPHYR_BASE,
+    //   ]);
+    //   const env = await getEnv();
+    //   const ZEPHYR_BASE = join(env["ZEPHYR_BASE"]);
+    //   expect(stdout).toMatch("SDK设置成功");
+    //   expect(ZEPHYR_BASE).toEqual(TEST_ZEPHYR_BASE);
+    // });
     test("test: use-env", async () => {
       const { stdout } = await testCmd("lisa", ["zep", "use-env", "csk6-dsp"]);
       expect(stdout).toMatch("编译环境操作成功");

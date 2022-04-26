@@ -12,7 +12,7 @@
     "watch": "nodemon --exec npm run build -w ./src -e ts",
     "prepublishOnly": "npm run build",
     "postinstall": "lisa zep install",
-    "test": "cross-env NODE_ENV=test jest --verbose --testTimeout=1000000"
+    "test": "cross-env NODE_ENV=test jest --verbose --testTimeout=1200000"
   },
   "lisa": {
     "friendlyName": "zep",
