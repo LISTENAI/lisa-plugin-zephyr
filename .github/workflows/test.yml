@@ -68,5 +68,8 @@ jobs:
       - name: Install @lisa-plugin/zephyr
         run: lisa install -g ${{ needs.build.outputs.tarball }}
 
-      - name: Test plugin
-        run: npm run test
+      - name: Install dependencies
+        run: yarn --ignore-scripts --registry=https://registry-lpm.listenai.com
+        
+      - name: Test
+        run:  npm run test
