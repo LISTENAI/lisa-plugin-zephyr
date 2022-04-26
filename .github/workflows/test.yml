@@ -30,14 +30,14 @@ jobs:
       - name: Install dependencies
         run: yarn --ignore-scripts --registry=https://registry-lpm.listenai.com
 
-      - name: Install @listenai/lisa
-        run: npm install -g @listenai/lisa && lisa login --token ${{ secrets.LS_ACCESS_TOKEN }}
+      - name: Install
+        run: npm install 
 
       - name: Build
-        run: npm run build 
+        run: npm install -g @listenai/lisa && lisa login --token ${{ secrets.LS_ACCESS_TOKEN }} && npm run build 
 
       - name: Link
-        run: yarn link 
+        run: npm link 
         
       - name: Test
         run: npm run test
