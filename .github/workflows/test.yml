@@ -1,6 +1,8 @@
 name: test
 
-on: [ push ]
+on:
+  push:
+    branches: ['feature/test']
 
 jobs:
   test:
@@ -28,6 +30,15 @@ jobs:
       - name: Install dependencies
         run: yarn --ignore-scripts --registry=https://registry-lpm.listenai.com
 
+      - name: Install lisa
+        run: yarn add @listenai/lisa --registry=https://registry-lpm.listenai.com
+
+      - name: Build
+        run: npm run build 
+
+      - name: Build
+        run: npm link @listenai/lisa --force
+        
       - name: Test
         run: npm run test
 
