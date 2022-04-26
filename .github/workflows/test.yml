@@ -50,6 +50,8 @@ jobs:
         node: ['14', '16']
 
     steps:
+      - uses: actions/checkout@v1
+     
       - name: Use Node.js ${{ matrix.node }}
         uses: actions/setup-node@v1
         with:
@@ -67,4 +69,4 @@ jobs:
         run: lisa install -g ${{ needs.build.outputs.tarball }}
 
       - name: Test plugin
-        run: cd ../ && npm run test
+        run: npm run test
