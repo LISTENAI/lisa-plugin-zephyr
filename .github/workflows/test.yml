@@ -31,42 +31,12 @@ jobs:
       - name: Build
         id: build
         run: npm run build && echo "::set-output name=tarball::$(npm pack)"
-
-      - name: Upload tarball
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ steps.build.outputs.tarball }}
-          path: ${{ steps.build.outputs.tarball }}
-
-  test:
-    needs: build
-    runs-on: ${{ matrix.os }}
-
-    env:
-      PIP_INDEX_URL: https://pypi.org/simple
-
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
-        node: ['14', '16']
-
-    steps:
-      - name: Use Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node }}
-
-      - name: Download tarball
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{ needs.build.outputs.tarball }}
-
+        
       - name: Install @listenai/lisa
         run: npm install -g @listenai/lisa && lisa login --token ${{ secrets.LS_ACCESS_TOKEN }}
-
+        
       - name: Install @lisa-plugin/zephyr
         run: lisa install -g ${{ needs.build.outputs.tarball }}
 
       - name: Test plugin
         run: npm run test
-
