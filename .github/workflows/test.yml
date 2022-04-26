@@ -37,7 +37,7 @@ jobs:
         run: npm run build 
 
       - name: Link
-        run: npm link  --force
+        run: yarn link 
         
       - name: Test
         run: npm run test
