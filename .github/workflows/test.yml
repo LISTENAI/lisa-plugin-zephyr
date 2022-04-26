@@ -57,6 +57,15 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
+      - name: NPM config
+        run: |
+          npm config set //registry-lpm.listenai.com/:_password ${{ secrets.LPM_ADMIN_TOKEN }}
+          npm config set //registry-lpm.listenai.com/:username lpmadmin
+          npm config set //registry-lpm.listenai.com/:email lpm.admin@listenai.com
+          npm config set //registry-lpm.listenai.com/:always-auth true
+      - name: Install dependencies
+        run: yarn --ignore-scripts --registry=https://registry-lpm.listenai.com
+
       - name: Download tarball
         uses: actions/download-artifact@v2
         with:
@@ -67,9 +76,6 @@ jobs:
 
       - name: Install @lisa-plugin/zephyr
         run: lisa install -g ${{ needs.build.outputs.tarball }}
-
-      - name: Install dependencies
-        run: yarn --ignore-scripts --registry=https://registry-lpm.listenai.com
         
       - name: Test
         run:  npm run test
