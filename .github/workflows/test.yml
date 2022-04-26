@@ -38,11 +38,6 @@ jobs:
           name: ${{ steps.build.outputs.tarball }}
           path: ${{ steps.build.outputs.tarball }}
 
-      - name: Download tarball
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{ needs.build.outputs.tarball }}
-
       - name: Install @listenai/lisa
         run: npm install -g @listenai/lisa && lisa login --token ${{ secrets.LS_ACCESS_TOKEN }}
 
