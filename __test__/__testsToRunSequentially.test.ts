@@ -14,7 +14,7 @@ afterAll(async () => {
 });
 describe("sequentially run tests", () => {
   testEnvironment();
-  // testPorject();
+  testPorject();
   // testIinitVs();
   // testWest();
   // testInstallation();
