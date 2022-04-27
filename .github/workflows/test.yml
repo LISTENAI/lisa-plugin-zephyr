@@ -78,13 +78,13 @@ jobs:
         run: lisa install -g ${{ needs.build.outputs.tarball }}
         
       - name: Test
-        run:  npm run test  && echo "::set-output name=testTarget::$(npm pack)"
+        run:  npm run test  
 
       - name: Cache test target
         uses: actions/cache@v2
-        id: CacheTestTarget
         env:
           cache-name: cache-test-target
         with:
-          path: ${{ steps.build.outputs.testTarget }}
-          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          path: ./__testTarget__
+          key: ${{ runner.os }}-${{ matrix.node }}-build-${{ env.cache-name }}
+
