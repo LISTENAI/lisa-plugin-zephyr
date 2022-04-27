@@ -1,5 +1,5 @@
 export { testInstallation } from "./installation";
-export { testEnvironment } from "./environment";
+export { testEnvironment, testClearEnvironment } from "./environment";
 export { testPorject } from "./project";
 export { testWest } from "./west";
 export { testIinitVs } from "./initVs";

@@ -69,14 +69,7 @@ export const testEnvironment = () =>
       const { stdout } = await testCmd("lisa", ["zep", "use-sdk", "--install"]);
       expect(stdout).toMatch("SDK设置成功");
     });
-    test("test: use-sdk  --clear", async () => {
-      await testCmd("lisa", ["zep", "use-sdk", "--clear"]);
-      const env = await get("env");
-      const ENV_CACHE_DIR = join(PLUGIN_HOME, "envs");
-      const isExists = await pathExists(ENV_CACHE_DIR);
-      expect(env).toBeUndefined();
-      expect(isExists).toEqual(false);
-    });
+
     // test("test: use-sdk  [directory]", async () => {
     //   let TEST_ZEPHYR_BASE;
     //   let pathNested = ["", "zephyr", "zephyr.git"];
@@ -111,7 +104,10 @@ export const testEnvironment = () =>
       const { stdout } = await testCmd("lisa", ["zep", "use-env", "--update"]);
       expect(stdout).toMatch("编译环境操作成功");
     });
-
+  });
+export const testClearEnvironment = () =>
+  describe("测试 清除SDK设置", () => {
+    afterAll(async () => {});
     test("test: use-env --clear", async () => {
       const { stdout } = await testCmd("lisa", ["zep", "use-env", "--clear"]);
       expect(stdout).toMatch("编译环境操作成功");
@@ -119,6 +115,14 @@ export const testEnvironment = () =>
       const ENV_CACHE_DIR = join(PLUGIN_HOME, "envs");
       const isExists = await pathExists(ENV_CACHE_DIR);
       expect(env).toBeUndefined();
+      expect(isExists).toEqual(false);
+    });
+    test("test: use-sdk  --clear", async () => {
+      await testCmd("lisa", ["zep", "use-sdk", "--clear"]);
+      const sdk = await get("sdk");
+      const ENV_CACHE_DIR = join(PLUGIN_HOME, "envs");
+      const isExists = await pathExists(ENV_CACHE_DIR);
+      expect(sdk).toBeUndefined();
       expect(isExists).toEqual(false);
     });
   });

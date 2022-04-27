@@ -1,6 +1,7 @@
 import { remove } from "fs-extra";
 import {
   testEnvironment,
+  testClearEnvironment,
   testIinitVs,
   testPorject,
   testWest,
@@ -15,7 +16,8 @@ afterAll(async () => {
 describe("sequentially run tests", () => {
   testEnvironment();
   testPorject();
-  // testIinitVs();
-  // testWest();
-  // testInstallation();
+  testIinitVs();
+  testWest();
+  testInstallation();
+  testClearEnvironment();
 });
