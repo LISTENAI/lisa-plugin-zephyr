@@ -1,9 +1,9 @@
 import { join } from "path";
 import { getEnv, PACKAGE_HOME, loadBundles } from "../../src/env";
-import { pathExists, copy, remove } from "fs-extra";
+import { pathExists } from "fs-extra";
 import { zephyrVersion } from "../../src/utils/sdk";
 import { get, PLUGIN_HOME } from "../../src/env/config";
-import { testCmd, TEST_DIR, TEST_SDK_DIR } from "../utils";
+import { testCmd, TEST_SDK_DIR } from "../utils";
 
 export const testEnvironment = () =>
   describe("测试 SDK设置", () => {
@@ -28,6 +28,7 @@ export const testEnvironment = () =>
             break;
           }
         }
+        console.log(TEST_ZEPHYR_BASE);
         const { stdout } = await testCmd("lisa", [
           "zep",
           "use-sdk",
@@ -35,7 +36,6 @@ export const testEnvironment = () =>
         ]);
         const env = await getEnv();
         const ZEPHYR_BASE = join(env["ZEPHYR_BASE"]);
-        console.log(stdout);
         expect(stdout).toMatch("SDK设置成功");
         expect(ZEPHYR_BASE).toEqual(TEST_ZEPHYR_BASE);
       }
@@ -59,7 +59,10 @@ export const testEnvironment = () =>
         "--mr",
         tags,
       ]);
+
       expect(stdout).toMatch("SDK分支切换成功");
+      const res = await testCmd("lisa", ["zep", "use-sdk", "--mr", "master"]);
+      expect(res.stdout).toMatch("SDK分支切换成功");
     });
 
     test("test: use-sdk  --install", async () => {
