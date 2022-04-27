@@ -80,9 +80,6 @@ jobs:
       - name: Test
         run:  npm run test  && echo "::set-output name=testTarget::$(npm pack)"
 
-
-      - uses: actions/checkout@v2
-
       - name: Cache test target
         uses: actions/cache@v2
         id: CacheTestTarget
