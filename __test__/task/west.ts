@@ -13,8 +13,10 @@ export const testWest = () =>
       const current: string = (await get("sdk")) || "";
       try {
         const { stdout } = await testCmd("lisa", ["zep", "test"]);
+        console.log(stdout);
         expect(stdout).toMatch("测试成功");
       } catch (e: any) {
+        console.log(e.message);
         if (platform() === "win32") {
           expect(e.message).toMatch("该命令暂不支持在 windows 下执行");
         }
