@@ -7,7 +7,7 @@ import { testCmd, TEST_SDK_DIR } from "../utils";
 export const testWest = () =>
   describe("测试 west", () => {
     beforeAll(async () => {
-      await testCmd("lisa", ["zep", "use-sdk", TEST_SDK_DIR]);
+      // await testCmd("lisa", ["zep", "use-sdk", TEST_SDK_DIR]);
     });
     test("test: west", async () => {
       const current: string = (await get("sdk")) || "";

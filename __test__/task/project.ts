@@ -9,11 +9,17 @@ export const testPorject = () =>
     let SMAPLE_BUILD_DIR: string;
     beforeAll(async () => {
       await testCmd("lisa", ["zep", "use-env", "csk6"]);
+      const { stdout } = await testCmd("lisa", ["info", "zephyr"]);
+      console.log(stdout);
       const env = await getEnv();
       let ZEPHYR_BASE = join(env["ZEPHYR_BASE"]);
       const TEST_SAMPLE_DIR = join(ZEPHYR_BASE, "samples/hello_world");
       SMAPLE_DIR = resolve(ZEPHYR_BASE, "../", "hello_world");
       SMAPLE_BUILD_DIR = resolve(ZEPHYR_BASE, "../", "hello_world", "build");
+      console.log("ZEPHYR_BASE--->", ZEPHYR_BASE);
+      console.log("TEST_SAMPLE_DIR--->", TEST_SAMPLE_DIR);
+      console.log("SMAPLE_DIR--->", SMAPLE_DIR);
+      console.log("SMAPLE_BUILD_DIR--->", SMAPLE_BUILD_DIR);
       if (await pathExists(TEST_SAMPLE_DIR)) {
         await copy(TEST_SAMPLE_DIR, SMAPLE_DIR);
       }
