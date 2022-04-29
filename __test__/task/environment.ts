@@ -90,10 +90,10 @@ export const testEnvironment = () =>
     //   expect(ZEPHYR_BASE).toEqual(TEST_ZEPHYR_BASE);
     // });
     test("test: use-env", async () => {
-      const { stdout } = await testCmd("lisa", ["zep", "use-env", "csk6-dsp"]);
+      const { stdout } = await testCmd("lisa", ["zep", "use-env", "csk6"]);
       expect(stdout).toMatch("编译环境操作成功");
       const env = await get("env");
-      expect(env).toContain("csk6-dsp");
+      expect(env).toContain("csk6");
       const EXIT_PACKAGE_HOME = await pathExists(PACKAGE_HOME);
       expect(EXIT_PACKAGE_HOME).toEqual(true);
       const mod = await loadBundles(env);
