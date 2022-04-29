@@ -17,7 +17,7 @@ describe("sequentially run tests", () => {
   testEnvironment();
   testPorject();
   testIinitVs();
-  testWest();
+  // testWest();
   testClearEnvironment();
   testInstallation();
 });
