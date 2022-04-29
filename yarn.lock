@@ -101,9 +101,9 @@
   integrity sha1-lFrrSdmxZ+FnXuKuodzf7LW+J6o=
 
 "@listenai/lisa_core@^2.0.5":
-  version "2.1.0"
-  resolved "https://registry-lpm.listenai.com/@listenai/lisa_core/download/@listenai/lisa_core-2.1.0.tgz#1163fbda33912fd1e6b939901aac7eef094e5f05"
-  integrity sha1-EWP72jORL9HmuTmQGqx+7wlOXwU=
+  version "2.1.1"
+  resolved "https://registry-lpm.listenai.com/@listenai/lisa_core/download/@listenai/lisa_core-2.1.1.tgz#9c3f3f9d2164ba5354bd49f8aa504738f397834e"
+  integrity sha1-nD8/nSFkulNUvUn4qlBHOPOXg04=
   dependencies:
     "@types/adm-zip" "^0.4.34"
     "@types/fs-extra" "^9.0.11"
