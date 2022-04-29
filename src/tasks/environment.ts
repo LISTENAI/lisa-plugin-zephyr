@@ -91,10 +91,9 @@ export default ({ application, cmd }: LisaType) => {
         'manifest': { arg: 'file', help: '指定仓库中的 manifest 文件' },
         'update': { help: '更新当前SDK' },
         'mr': { arg: 'revision', help: '切换指定分支 SDK 并更新' },
-        'list': { short: 'l', help: '列出当前SDK所有tag' }
-
+        'list': { short: 'l', help: '列出当前SDK所有tag' },
+        'default': { help: '默认sdk配置' },
       });
-      const sdk = await get('sdk');
       const env = await getEnv();
       const ZEPHYR_BASE = env['ZEPHYR_BASE'];
       const basicPath = ZEPHYR_BASE ? resolve(ZEPHYR_BASE, '../') : '';
@@ -180,8 +179,14 @@ export default ({ application, cmd }: LisaType) => {
         }
         return
       } else {
-        const path = argv._[1];
-        const current = sdk;
+        const isDefault = !!args['default']
+        if (isDefault) {
+          // await cmd('git describe --abbrev=0 --tags', ['zep'])
+          args['from-git'] = args['from-git'] ?? 'https://cloud.listenai.com/zephyr/zephyr.git';
+          args['manifest'] = args['manifest'] ?? 'listenai/manifest.yml';
+        }
+        const path = argv._[1] || (isDefault ? resolve(join(process.env.LISA_PREFIX || '', 'csk-sdk')) : '');
+        const current = await get('sdk');
         const target = path || current;
         // install
         let install = args['install'] || (path && path != current);
@@ -197,6 +202,12 @@ export default ({ application, cmd }: LisaType) => {
             throw new Error('未指定 SDK 路径');
           }
           const workspacePath = resolve(path);
+          if (await pathExists(workspacePath)) {
+            throw new Error(`已存在sdk目录: ${workspacePath}，请更换目录名或删除后重新执行该命令`);
+          }
+          // 先clear掉一遍
+          await set('sdk', undefined);
+          await invalidateEnv();
           const env = await getEnv();
           delete env.ZEPHYR_BASE;
           const initArgs = ['init'];
@@ -232,6 +243,7 @@ export default ({ application, cmd }: LisaType) => {
           await invalidateEnv();
         }
       }
+      const sdk = await get('sdk');
       const version = sdk ? await zephyrVersion(sdk) : null;
       const branch = sdk ? await getRepoStatus(sdk) : null;
       if (sdk && version) {
