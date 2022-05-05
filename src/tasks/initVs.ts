@@ -7,6 +7,7 @@ import {
 import { getEnv } from '../env';
 import { get } from '../env/config';
 import parseArgs from '../utils/parseArgs';
+import { testLog } from '../utils/testLog';
 
 export default ({ application, cmd }: LisaType) => {
 
@@ -56,6 +57,7 @@ export default ({ application, cmd }: LisaType) => {
       const launchJson = await readJson(Launchfile);
       launchJson.configurations[0].linux.miDebuggerPath = XTENSA_TOOL || '';
       await writeFile(Launchfile, JSON.stringify(launchJson, null, "\t"));
+      testLog(task, '成功')
     },
 
   });

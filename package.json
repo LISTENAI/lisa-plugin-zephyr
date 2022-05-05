@@ -11,7 +11,8 @@
     "build": "tsc -p .  &&  node prebuild",
     "watch": "nodemon --exec npm run build -w ./src -e ts",
     "prepublishOnly": "npm run build",
-    "postinstall": "lisa zep install"
+    "postinstall": "lisa zep install",
+    "test": "cross-env NODE_ENV=test jest --verbose --testTimeout=1200000"
   },
   "lisa": {
     "friendlyName": "zep",
@@ -49,10 +50,14 @@
     "@binary/xz": "^1.1.1-5.2.5",
     "@lisa-env/type": "^1.2.0",
     "@listenai/lisa_core": "^2.0.5",
+    "@types/jest": "^27.4.1",
+    "cross-env": "^7.0.3",
     "glob": "^7.2.0",
     "ini": "^2.0.0",
+    "jest": "^27.5.1",
     "lodash": "^4.17.21",
-    "simple-git": "^2.48.0"
+    "simple-git": "^2.48.0",
+    "ts-jest": "^27.1.4"
   },
   "devDependencies": {
     "@types/glob": "^7.2.0",
