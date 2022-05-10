@@ -15,7 +15,28 @@ async function rev(git: SimpleGit): Promise<string | null> {
   }
 }
 
-async function clean(git: SimpleGit): Promise<boolean> {
+export async function getCommit(git: SimpleGit): Promise<string | null> {
+  let commit;
+  try {
+    commit = (await git.revparse(['--short', 'HEAD'])).trim();
+    return commit;
+  } catch (e) {
+    return null;
+  }
+}
+
+export async function getBranch(git: SimpleGit): Promise<string | null> {
+  let branch;
+  try {
+    branch = (await git.raw(['symbolic-ref', '--short', 'HEAD'])).trim();
+    return branch;
+  } catch (e) {
+    return null;
+  }
+}
+
+
+export async function clean(git: SimpleGit): Promise<boolean> {
   const status = await git.status(['--porcelain']);
   return status.isClean();
 }

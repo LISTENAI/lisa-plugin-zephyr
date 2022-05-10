@@ -4,10 +4,11 @@ import { defaults } from 'lodash';
 import { pathExists } from 'fs-extra';
 import { loadBundles, loadBinaries, getEnv } from './env';
 import { PLUGIN_HOME, get } from './env/config';
-import { zephyrVersion } from './utils/sdk';
-import { getRepoStatus } from './utils/repo';
+import { sdkTag } from './utils/sdk';
+import { getCommit, getBranch, clean } from './utils/repo';
 import Lisa from '@listenai/lisa_core';
 import { venvScripts } from './venv';
+import simpleGit from 'simple-git';
 
 const execFile = promisify(_execFile);
 
@@ -60,12 +61,21 @@ async function getZephyrInfo(): Promise<string | null> {
   const sdk = await get('sdk');
   if (!sdk) return null;
   if (!(await pathExists(sdk))) return null;
-  const version = await zephyrVersion(sdk);
-  const branch = await getRepoStatus(sdk);
+  const tag = await sdkTag(sdk);
+  const git = simpleGit(sdk);
+  const commit = await getCommit(git);
+  const branch = await getBranch(git);
+  const isClean = await clean(git);
+
+  const commitMsg = `commit: ${commit}${isClean ? '' : '*'}`
+
+  if (tag && !branch) {
+    return `${sdk} (版本: ${tag}, ${commitMsg})`;
+  }
   if (branch) {
-    return `${sdk} (版本: ${version}, 分支: ${branch})`;
+    return `${sdk} (分支: ${branch}, ${commitMsg})`;
   } else {
-    return `${sdk} (版本: ${version})`
+    return `${sdk} (${commitMsg})`;
   }
 }
 
