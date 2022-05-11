@@ -10,7 +10,7 @@ import { get, set } from "../env/config";
 
 import parseArgs from "../utils/parseArgs";
 import extendExec from "../utils/extendExec";
-import { zephyrVersion } from "../utils/sdk";
+import { zephyrVersion, sdkTag } from "../utils/sdk";
 import { getRepoStatus } from "../utils/repo";
 import { testLog } from "../utils/testLog";
 
@@ -24,7 +24,7 @@ async function checkZephyrBase(ZEPHYR_BASE: string, westConfigPath: string) {
     );
   }
 }
-export default ({ application, cmd }: LisaType) => {
+export default ({ application, cmd, got }: LisaType) => {
   job("use-env", {
     title: "环境设置",
     async task(ctx, task) {
@@ -199,15 +199,26 @@ export default ({ application, cmd }: LisaType) => {
       } else {
         const isDefault = !!args["default"];
         if (isDefault) {
-          // await cmd('git describe --abbrev=0 --tags', ['zep'])
+          let mr = ''
+          try {
+            const res = await got('https://cloud.listenai.com/api/v4/projects/554/repository/tags');
+            const released = (JSON.parse(res.body) as Array<any>).find(item => item.release);
+            mr = `#${released.name}`;
+            if (released.name === 'v1.0.0') {
+              mr = `#master`;
+            }
+          } catch (error) {
+            application.debug(error);
+            mr = `#master`;
+          }
           args["from-git"] =
-            args["from-git"] ?? "https://cloud.listenai.com/zephyr/zephyr.git";
+            args["from-git"] ?? `https://cloud.listenai.com/zephyr/zephyr.git${mr}`;
           args["manifest"] = args["manifest"] ?? "listenai/manifest.yml";
         }
         const path =
           argv._[1] ||
           (isDefault
-            ? resolve(join(process.env.LISA_PREFIX || "", "csk-sdk"))
+            ? resolve(join(process.env.LISA_PREFIX || "", "..", "csk-sdk"))
             : "");
         const current = await get("sdk");
         const target = path || current;
@@ -281,7 +292,7 @@ export default ({ application, cmd }: LisaType) => {
         }
       }
       const sdk = await get("sdk");
-      const version = sdk ? await zephyrVersion(sdk) : null;
+      const version = sdk ? await sdkTag(sdk) : null;
       const branch = sdk ? await getRepoStatus(sdk) : null;
       if (sdk && version) {
         if (branch) {
