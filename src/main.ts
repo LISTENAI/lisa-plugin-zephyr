@@ -9,6 +9,7 @@ import { getCommit, getBranch, clean } from './utils/repo';
 import Lisa from '@listenai/lisa_core';
 import { venvScripts } from './venv';
 import simpleGit from 'simple-git';
+import execa from 'execa';
 
 const execFile = promisify(_execFile);
 
@@ -81,17 +82,17 @@ async function getZephyrInfo(): Promise<string | null> {
 
 export const exportEnv = getEnv
 
-export async function undertake(argv?: string[] | undefined): Promise<boolean> {
+export async function undertake(argv?: string[] | undefined, options?: execa.Options<string> | undefined): Promise<boolean> {
   argv = argv ?? process.argv.slice(3)
-  const { cmd, application } = Lisa
+  const { cmd } = Lisa
 
   try {
-    await cmd(await venvScripts('west'), [...argv], {
+    await cmd(await venvScripts('west'), [...argv], Object.assign({
       stdio: 'inherit',
       env: await getEnv(),
-    })
-  } catch (error) {
-    return false
+    }, options));
+  } catch (error: any) {
+    process.exit(error.exitCode); 
   }
   return true
 
