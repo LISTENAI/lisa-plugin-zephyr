@@ -6,7 +6,7 @@ import { pathExists, remove } from "fs-extra";
 import { getEnv } from "../env";
 
 // import parseArgs from '../utils/parseArgs';
-import extendExec from "../utils/extendExec";
+// import extendExec from "../utils/extendExec";
 // import { workspace } from '../utils/ux';
 // import { getCMakeCache } from '../utils/cmake';
 import { get } from "../env/config";
@@ -67,19 +67,19 @@ export default ({ application, cmd }: LisaType) => {
     job("exec", {
       title: "exec",
       async task(ctx, task) {
-        const exec = extendExec(cmd, { task, env: await getEnv() });
-
+        task.title = '';
         const execArgsIndex = process.argv.indexOf("exec");
         const execArgs = process.argv.slice(execArgsIndex + 1);
         const command = execArgs.shift();
         if (!command) return;
 
-        await exec(command, execArgs);
-      },
-      options: {
-        persistentOutput: true,
-        bottomBar: Infinity,
-      },
+        await cmd(command, execArgs, {
+          stdio: "inherit",
+          env: await getEnv(),
+        });
+
+        task.title = 'exec exit';
+      }
     });
   }
 

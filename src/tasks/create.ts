@@ -1,6 +1,6 @@
 import { LisaType, job } from "../utils/lisa_ex";
 import { get } from "../env/config";
-import { join, parse, resolve, sep } from "path";
+import { join, parse, resolve, sep, basename, extname } from "path";
 import { pathExists, createReadStream, copy, mkdirs } from "fs-extra";
 import { createInterface } from "readline";
 import { once } from "events";
@@ -8,11 +8,50 @@ import * as glob from "glob";
 import { ISampleList, path2json } from "../utils/fs";
 import { promptDir } from "../utils/ux";
 import { testLog } from "../utils/testLog";
+import { ParsedArgs } from "minimist";
+import parseArgs from "../utils/parseArgs";
+import AppProject from "../utils/appProject";
 
 export default ({ application, cmd }: LisaType) => {
   job("create", {
-    title: "创建 sample112",
+    title: "创建 sample",
     async task(ctx, task) {
+
+      const argv = application.argv as ParsedArgs;
+      const { args, printHelp } = parseArgs(application.argv, {
+        // "task-help": { short: "h", help: "打印帮助" },
+        "from-git": { arg: "url", help: "从指定仓库及分支初始化 SDK" },
+      });
+
+      if (args["from-git"]) {
+        task.title = "";
+        const fromGit = args["from-git"];
+        const targetDir = join(
+          process.cwd(),
+          await task.prompt({
+            type: "Input",
+            message: "创建文件夹名",
+            initial: basename(fromGit, extname(fromGit)),
+          })
+        );
+
+        try {
+          await cmd('git', ['clone', fromGit, targetDir], {
+            stdio: 'inherit',
+          })  
+        } catch (error: any) {
+          process.exit(error.exitCode);
+          // console.log(error)
+        }
+        
+        const app = new AppProject(targetDir);
+        await app.init();
+
+        task.title = "创建成功";
+        return
+      }
+
+
       const sdk = (await get("sdk")) || "";
       // 查看含有 sample.list 的 board
       const samplePathGlob = join(sdk, "samples", "boards", "*", "sample.list");
