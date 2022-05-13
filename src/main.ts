@@ -10,6 +10,9 @@ import Lisa from '@listenai/lisa_core';
 import { venvScripts } from './venv';
 import simpleGit from 'simple-git';
 import execa from 'execa';
+import { workspace } from './utils/ux';
+import AppProject from './utils/appProject';
+import { resolve, dirname } from 'path';
 
 const execFile = promisify(_execFile);
 
@@ -86,10 +89,19 @@ export async function undertake(argv?: string[] | undefined, options?: execa.Opt
   argv = argv ?? process.argv.slice(3)
   const { cmd } = Lisa
 
+  const cwd = options?.cwd ?? workspace() ?? process.cwd();
+  const app = new AppProject(cwd);
+  const topdir = (await app.topdir()) || '';
+
+  const env = await getEnv();
+  if (resolve(topdir) !== resolve(dirname(env['ZEPHYR_BASE']))) {
+    delete env['ZEPHYR_BASE'];
+  }
+  
   try {
     await cmd(await venvScripts('west'), [...argv], Object.assign({
       stdio: 'inherit',
-      env: await getEnv(),
+      env
     }, options));
   } catch (error: any) {
     process.exit(error.exitCode); 

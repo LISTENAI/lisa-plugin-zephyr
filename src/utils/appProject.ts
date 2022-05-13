@@ -2,6 +2,8 @@ import { join } from 'path';
 import { pathExists, mkdirp, move, readdir } from 'fs-extra';
 import { undertake } from "../main";
 import { getEnv } from '../env';
+import Lisa from '@listenai/lisa_core';
+import { venvScripts } from '../venv';
 
 export default class AppProject {
     workspace: string;
@@ -12,6 +14,17 @@ export default class AppProject {
     hasWestManifest = async (): Promise<boolean> => {
         const manifest = join(this.workspace, 'west.yml');
         return await pathExists(manifest);
+    }
+
+    topdir = async (): Promise<string | null> => {
+        try {
+            const res = await Lisa.cmd(await venvScripts('west'), ['topdir'], {
+                env: await getEnv(),
+            })
+            return res.stdout
+        } catch (error) {
+        }
+        return null
     }
 
     init = async (): Promise<void> => {
