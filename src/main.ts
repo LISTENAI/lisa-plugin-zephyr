@@ -92,17 +92,23 @@ export async function undertake(argv?: string[] | undefined, options?: execa.Opt
   const cwd = options?.cwd ?? workspace() ?? process.cwd();
   const app = new AppProject(cwd);
   const topdir = (await app.topdir()) || '';
+  const selfSDK = (await app.selfSDK()) || '';
 
   const env = await getEnv();
-  if (resolve(topdir) !== resolve(dirname(env['ZEPHYR_BASE']))) {
+  if (env['ZEPHYR_BASE'] && resolve(topdir) !== resolve(dirname(env['ZEPHYR_BASE']))) {
     delete env['ZEPHYR_BASE'];
   }
-  
+
+  if (selfSDK) {
+    env['ZEPHYR_BASE'] = selfSDK;
+  }
+
   try {
-    await cmd(await venvScripts('west'), [...argv], Object.assign({
+    const res = await cmd(await venvScripts('west'), [...argv], Object.assign({
       stdio: 'inherit',
       env
     }, options));
+    Lisa.application.debug(res);
   } catch (error: any) {
     process.exit(error.exitCode); 
   }
