@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { pathExists, mkdirp, move, readdir } from 'fs-extra';
+import { pathExists, mkdirp, writeFile } from 'fs-extra';
 import { undertake } from "../main";
 import { getEnv } from '../env';
 import Lisa from '@listenai/lisa_core';
@@ -21,36 +21,42 @@ export default class AppProject {
             const res = await Lisa.cmd(await venvScripts('west'), ['topdir'], {
                 env: await getEnv(),
             })
-            return res.stdout
+            return res.stdout;
         } catch (error) {
         }
-        return null
+        return null;
+    }
+
+    selfSDK = async (): Promise<string | null> => {
+        try {
+            const sdkPath = join(this.workspace, '.sdk');
+            if (await pathExists(sdkPath)) {
+                const res = await Lisa.cmd(await venvScripts('west'), ['config', 'zephyr.base'], {
+                    cwd: sdkPath,
+                    env: await getEnv(),
+                })
+                return join(sdkPath ,res.stdout);
+            }
+        } catch (error) {}
+        return null;
     }
 
     init = async (): Promise<void> => {
         if (!(await this.hasWestManifest())) {
             return
         }
-        await mkdirp(join(this.workspace, 'app'));
-        const files = await readdir(this.workspace);
-        for (let i in files) {
-            const target = files[i];
-            if (target !== 'app') {
-                await move(join(this.workspace, target), join(this.workspace, 'app', target), {
-                    overwrite: true
-                })
-            }
-        }
+        await mkdirp(join(this.workspace, '.sdk', '.west'));
 
         const env = await getEnv();
         delete env['ZEPHYR_BASE'];
 
-        await undertake(['init', '-l', 'app'], {
-            cwd: this.workspace,
-            env
-        })
-        await undertake(['update'], { 
-            cwd: this.workspace,
+        const westConfig = join(this.workspace, '.sdk', '.west', 'config');
+        if (!await pathExists(westConfig)) {
+            await writeFile(westConfig, `[manifest]\npath = ..\nfile = west.yml`);
+        }
+
+        await undertake(['update'], {
+            cwd: join(this.workspace, '.sdk'),
             env
         })
     }

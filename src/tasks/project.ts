@@ -33,7 +33,7 @@ export default ({ application, cmd }: LisaType) => {
     async task(ctx, task) {
       task.title = "";
       await undertake(await flashFlags());
-      task.title = "烧录成功";
+      task.title = "结束";
       testLog(task, "烧录成功");
     },
   });
