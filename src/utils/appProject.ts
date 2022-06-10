@@ -52,7 +52,7 @@ export default class AppProject {
 
         const westConfig = join(this.workspace, '.sdk', '.west', 'config');
         if (!await pathExists(westConfig)) {
-            await writeFile(westConfig, `[manifest]\npath = ..\nfile = west.yml`);
+            await writeFile(westConfig, `[manifest]\npath = ..\nfile = west.yml\n\n[zephyr]\nbase=zephyr`);
         }
 
         await undertake(['update'], {

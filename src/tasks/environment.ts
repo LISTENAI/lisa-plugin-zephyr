@@ -212,7 +212,7 @@ export default ({ application, cmd, got }: LisaType) => {
             mr = `#master`;
           }
           args["from-git"] =
-            args["from-git"] ?? `https://cloud.listenai.com/zephyr/zephyr.git${mr}`;
+            args["from-git"] ?? `https://cloud.listenai.com/zephyr/zephyr${mr}`;
           args["manifest"] = args["manifest"] ?? "listenai/manifest.yml";
         }
         const path =
