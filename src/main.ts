@@ -13,7 +13,11 @@ import execa from 'execa';
 import { workspace } from './utils/ux';
 import AppProject from './utils/appProject';
 import { resolve, dirname } from 'path';
-
+import * as Sentry from "@sentry/node";
+Sentry.init({
+  dsn: "http://e1729ec787e54957b0252fff58844c80@sentry.iflyos.cn/106",
+  tracesSampleRate: 1.0,
+});
 const execFile = promisify(_execFile);
 
 export async function env(): Promise<Record<string, string>> {
@@ -110,6 +114,8 @@ export async function undertake(argv?: string[] | undefined, options?: execa.Opt
     }, options));
     Lisa.application.debug(res);
   } catch (error: any) {
+   await Sentry.captureException(error);
+    await Sentry.flush(2000);
     process.exit(error.exitCode); 
   }
   return true

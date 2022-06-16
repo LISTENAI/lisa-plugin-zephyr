@@ -50,6 +50,7 @@
     "@binary/xz": "^1.1.1-5.2.5",
     "@lisa-env/type": "^1.2.0",
     "@listenai/lisa_core": "^2.0.5",
+    "@sentry/node": "5.20.0",
     "@types/jest": "^27.4.1",
     "cross-env": "^7.0.3",
     "glob": "^7.2.0",
