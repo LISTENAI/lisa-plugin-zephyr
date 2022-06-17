@@ -10,7 +10,7 @@ import { promptDir } from "../utils/ux";
 import { testLog } from "../utils/testLog";
 import { ParsedArgs } from "minimist";
 import parseArgs from "../utils/parseArgs";
-import AppProject from "../utils/appProject";
+import AppProject from "../models/appProject";
 
 export default ({ application, cmd }: LisaType) => {
   job("create", {

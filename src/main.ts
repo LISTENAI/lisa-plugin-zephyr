@@ -11,7 +11,7 @@ import { venvScripts } from './venv';
 import simpleGit from 'simple-git';
 import execa from 'execa';
 import { workspace } from './utils/ux';
-import AppProject from './utils/appProject';
+import AppProject from './models/appProject';
 import { resolve, dirname } from 'path';
 
 const execFile = promisify(_execFile);
