@@ -11,7 +11,7 @@ import { venvScripts } from "./venv";
 import simpleGit from "simple-git";
 import execa from "execa";
 import { workspace } from "./utils/ux";
-import AppProject from "./utils/appProject";
+import AppProject from "./models/appProject";
 import { resolve, dirname } from "path";
 import * as Sentry from "@sentry/node";
 Sentry.init({
@@ -114,24 +114,6 @@ export async function undertake(
     env["ZEPHYR_BASE"] = selfSDK;
   }
 
-  // try {
-  //   const res = await cmd(
-  //     await venvScripts("west"),
-  //     [...argv],
-  //     Object.assign(
-  //       {
-  //         stdio: "inherit",
-  //         env,
-  //       },
-  //       options
-  //     )
-  //   );
-  //   Lisa.application.debug(res);
-  // } catch (error: any) {
-  //   await Sentry.captureException(error);
-  //   await Sentry.close(2000);
-  //   process.exit(error.exitCode);
-  // }
   try {
     const res = await cmd(
       await venvScripts("west"),

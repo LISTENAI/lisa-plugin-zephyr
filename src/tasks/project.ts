@@ -2,7 +2,7 @@ import { LisaType, job } from "../utils/lisa_ex";
 import { undertake } from "../main";
 import { flashFlags } from "../utils/westConfig";
 import { testLog } from "../utils/testLog";
-import AppProject from "../utils/appProject";
+import AppProject from "../models/appProject";
 import { workspace } from "../utils/ux";
 
 export default ({ application, cmd }: LisaType) => {

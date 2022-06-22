@@ -195,6 +195,8 @@ export default ({ application, cmd, got }: LisaType) => {
           );
         }
         testLog(task, "成功");
+
+        task.title = "完成";
         return;
       } else {
         const isDefault = !!args["default"];
