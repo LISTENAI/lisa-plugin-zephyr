@@ -120,7 +120,7 @@ export async function undertake(
   //     [...argv],
   //     Object.assign(
   //       {
-  //         // stdio: "inherit",
+  //         stdio: "inherit",
   //         env,
   //       },
   //       options
@@ -130,24 +130,26 @@ export async function undertake(
   // } catch (error: any) {
   //   await Sentry.captureException(error);
   //   await Sentry.close(2000);
-  //   return false;
+  //   process.exit(error.exitCode);
   // }
-  // return true;
-  const { stdout, stderr } = await cmd(
-    await venvScripts("west"),
-    [...argv],
-    Object.assign(
-      {
-        // stdio: "inherit",
-        env,
-      },
-      options
-    )
-  );
-  Lisa.application.debug({ stdout, stderr });
-  if (stderr) {
-    await Sentry.captureException(new Error(stderr));
+  try {
+    const res = await cmd(
+      await venvScripts("west"),
+      [...argv],
+      Object.assign(
+        {
+          stdio: ["inherit", "inherit", "pipe"],
+          env,
+        },
+        options
+      )
+    );
+    Lisa.application.debug(res);
+  } catch (error: any) {
+    console.log("\x1B[31m%s\x1B[0m", error.stderr);
+    await Sentry.captureMessage(error);
     await Sentry.close(2000);
+    process.exit(error.exitCode);
   }
   return true;
 }
