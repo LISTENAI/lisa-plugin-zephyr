@@ -20,6 +20,8 @@ const ENV_CACHE_DIR = join(PLUGIN_HOME, 'envs');
 
 const PIP_INDEX_URL = process.env.PIP_INDEX_URL || 'https://pypi.tuna.tsinghua.edu.cn/simple';
 
+const CMAKE_EXPORT_COMPILE_COMMANDS = process.env.CMAKE_EXPORT_COMPILE_COMMANDS || 1;
+
 const BUILTIN_BINARIES = [
   '../venv',
   '@binary/cmake',
@@ -109,6 +111,7 @@ async function makeEnv(override?: string): Promise<Record<string, string>> {
   Object.assign(env, {
     PIP_INDEX_URL,
     WEST_CONFIG_GLOBAL,
+    CMAKE_EXPORT_COMPILE_COMMANDS,
   });
 
   if (bundles.length > 0) {
