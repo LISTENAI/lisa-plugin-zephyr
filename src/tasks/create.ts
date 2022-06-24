@@ -11,12 +11,15 @@ import { testLog } from "../utils/testLog";
 import { ParsedArgs } from "minimist";
 import parseArgs from "../utils/parseArgs";
 import AppProject from "../models/appProject";
+import * as inquirer from 'inquirer';
+const inquirerFileTreeSelection = require('inquirer-file-tree-selection-prompt');
+inquirer.registerPrompt('file-tree-selection', inquirerFileTreeSelection)
 
 export default ({ application, cmd }: LisaType) => {
   job("create", {
     title: "创建 sample",
     async task(ctx, task) {
-
+      task.title = "";
       const argv = application.argv as ParsedArgs;
       const { args, printHelp } = parseArgs(application.argv, {
         // "task-help": { short: "h", help: "打印帮助" },
@@ -58,7 +61,7 @@ export default ({ application, cmd }: LisaType) => {
       const sampleFiles = glob.sync(samplePathGlob, {});
       const boardsSampleList: ISampleList = {};
       for (const file of sampleFiles) {
-        const board = resolve(parse(file).dir).split(sep).pop();
+        const board = resolve(parse(file).dir).split(sep).pop() ;
         if (board) {
           boardsSampleList[board] = file;
         }
@@ -109,33 +112,95 @@ export default ({ application, cmd }: LisaType) => {
       await once(rl, "close");
 
       let sampleListJson: ISampleList = {};
-
+      // console.log(sampleList)
       for (const samplePath of sampleList) {
         const files = glob.sync(samplePath, {});
         for (const file of files) {
           const dirParse = resolve(parse(file).dir)
             .replace(join(sdk, "samples"), "")
             .split(sep);
+          // console.log(dirParse);
           sampleListJson = await path2json(dirParse, sampleListJson);
         }
       }
 
       // 根据sampleListJson ux.select 嵌套
       application.debug(sampleListJson);
-      const selected = await promptDir([], sampleListJson, task);
-      const selectedSample = join(sdk, "samples", ...selected);
+
+      const answers = await inquirer.prompt([
+        {
+          type: 'file-tree-selection',
+          name: 'file',
+          root: join(sdk, 'samples'),
+          onlyShowValid: true,
+          validate: (item) => {
+            const dirParse = resolve(item).replace(join(sdk, "samples"), "").split(sep);
+            let val = false;
+            let startJson = JSON.parse(JSON.stringify(sampleListJson))
+            while(dirParse.length) {
+              const term = dirParse.shift();
+              if (term && startJson[term]) {
+                startJson = startJson[term]
+                val = true
+              } else {
+                val = false
+              }
+            }
+            return val;
+          },
+          transformer: (item) => {
+            const dirParse = resolve(item).replace(join(sdk, "samples"), "").split(sep);
+            let name = item.split(sep).pop();
+            let startJson = JSON.parse(JSON.stringify(sampleListJson))
+            while(dirParse.length) {
+              const term = dirParse.shift();
+              if (term && startJson[term]) {
+                startJson = startJson[term]
+                if (typeof startJson === 'string') {
+                  name = `[${name}]`
+                }
+              }
+            }
+            return name;
+          },
+        }
+      ])
+      const selected = resolve(answers.file);
+
+
+      const dirParse = selected.replace(join(sdk, "samples"), "").split(sep);
+      let val = false;
+      let startJson = JSON.parse(JSON.stringify(sampleListJson))
+      while(dirParse.length) {
+        const term = dirParse.shift();
+        if (term && startJson[term]) {
+          startJson = startJson[term]
+          val = typeof startJson === 'string' ? true : false
+        } else {
+          val = false
+        }
+      }
+     
+      if (!val) {
+        throw new Error('请选择选项为[xx]的项目sample，例如: [hello_world]')
+      }
+
+      // const selected = await promptDir([], sampleListJson, task);
+      // const selectedSample = join(sdk, "samples", ...selected);
 
       const targetDir = join(
         process.cwd(),
         await task.prompt({
           type: "Input",
           message: "创建文件夹名",
-          initial: selected.pop() as string,
+          initial: selected.split(sep).pop() as string,
         })
       );
 
       await mkdirs(targetDir);
-      await copy(selectedSample, targetDir);
+      await copy(selected, targetDir);
+
+      task.title = '创建sample成功';
       testLog(task, "创建sample成功");
     },
   });
