@@ -1,4 +1,5 @@
 import { LisaType, job } from "../utils/lisa_ex";
+import { ParsedArgs } from "minimist";
 import { undertake } from "../main";
 import { flashFlags } from "../utils/westConfig";
 import { testLog } from "../utils/testLog";
@@ -56,6 +57,10 @@ export default ({ application, cmd }: LisaType) => {
     title: "生成lpk包",
     async task(ctx, task) {
       task.title = "";
+
+      const argv = application.argv as ParsedArgs;
+      const log = argv.hasOwnProperty('lscloud-log') ? !!argv['lscloud-log'] : true;
+
       const lpk = new Lpk();
       const buildDir = join(process.cwd(), 'build');
       lpk.setName(basename(process.cwd()));
@@ -66,8 +71,9 @@ export default ({ application, cmd }: LisaType) => {
       const configBoard = await getKconfig(buildDir, 'CONFIG_BOARD') || '';
 
       await lpk.setChip((configBoard.match(/csk\d{4}/g) || [])[0] || '');
-      
-      await lpk.setLSCloudInfo();
+      if (log) {
+        await lpk.setLSCloudInfo();
+      }
       await lpk.setVersion();
 
       const sdk = await get('sdk');

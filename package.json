@@ -1,6 +1,6 @@
 {
   "name": "@lisa-plugin/zephyr",
-  "version": "1.6.0-beta.2",
+  "version": "1.6.0-beta.3",
   "description": "LISA plugin for Zephyr",
   "main": "./lib/main.js",
   "engines": {
@@ -50,7 +50,7 @@
     "@binary/xz": "^1.1.1-5.2.5",
     "@lisa-env/type": "^1.2.0",
     "@listenai/lisa_core": "^2.0.5",
-    "@tool/lpk": "^1.0.3",
+    "@tool/lpk": "^1.0.4",
     "@sentry/node": "5.20.0",
     "@types/jest": "^27.4.1",
     "cross-env": "^7.0.3",
