@@ -59,6 +59,22 @@ export default class AppProject {
             cwd: join(this.workspace, '.sdk'),
             env
         })
+
+        await Lisa.cmd(
+            "python",
+            [
+              "-m",
+              "pip",
+              "install",
+              "-r",
+              join(await this.selfSDK() || "", "scripts", "requirements.txt"),
+            ],
+            { 
+                stdio: "inherit",
+                env
+            }
+        );
+
     }
 
 } 

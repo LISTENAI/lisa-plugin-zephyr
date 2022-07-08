@@ -204,11 +204,8 @@ export default ({ application, cmd, got }: LisaType) => {
           let mr = ''
           try {
             const res = await got('https://cloud.listenai.com/api/v4/projects/554/repository/tags');
-            const released = (JSON.parse(res.body) as Array<any>).find(item => item.release);
+            const released = (JSON.parse(res.body) as Array<any>).find(item => item.release && item.name.indexOf('beta'));
             mr = `#${released.name}`;
-            if (released.name === 'v1.0.0') {
-              mr = `#master`;
-            }
           } catch (error) {
             application.debug(error);
             mr = `#master`;
@@ -238,23 +235,24 @@ export default ({ application, cmd, got }: LisaType) => {
             throw new Error("未指定 SDK 路径");
           }
           const workspacePath = resolve(path);
-          if (await pathExists(workspacePath)) {
-            throw new Error(
-              `已存在sdk目录: ${workspacePath}，请更换目录名或删除后重新执行该命令`
-            );
-          }
-          // 先clear掉一遍
+
           await set("sdk", undefined);
           await invalidateEnv();
           const env = await getEnv();
           delete env.ZEPHYR_BASE;
-          const initArgs = ["init"];
-          initArgs.push("--manifest-url", url);
-          if (rev) initArgs.push("--manifest-rev", rev);
-          if (args["manifest"])
-            initArgs.push("--manifest-file", args["manifest"]);
-          initArgs.push(workspacePath);
-          await exec("python", ["-m", "west", ...initArgs], { env });
+
+          if (!await pathExists(workspacePath)) {
+            const initArgs = ["init"];
+            initArgs.push("--manifest-url", url);
+            if (rev) initArgs.push("--manifest-rev", rev);
+            if (args["manifest"])
+              initArgs.push("--manifest-file", args["manifest"]);
+            initArgs.push(workspacePath);
+            await exec("python", ["-m", "west", ...initArgs], { env });
+            // throw new Error(
+            //   `已存在sdk目录: ${workspacePath}，请更换目录名或删除后重新执行该命令`
+            // );
+          }
           await exec("python", ["-m", "west", "update"], {
             env,
             cwd: workspacePath,

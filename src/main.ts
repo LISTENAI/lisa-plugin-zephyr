@@ -14,6 +14,7 @@ import { workspace } from "./utils/ux";
 import AppProject from "./models/appProject";
 import { resolve, dirname } from "path";
 import * as Sentry from "@sentry/node";
+import { join } from "path";
 Sentry.init({
   dsn: "http://e1729ec787e54957b0252fff58844c80@sentry.iflyos.cn/106",
   tracesSampleRate: 1.0,
@@ -114,21 +115,24 @@ export async function undertake(
     env["ZEPHYR_BASE"] = selfSDK;
   }
 
+  const isUpdate = env["ZEPHYR_BASE"] && argv[0] === "update";
   try {
     const res = await cmd(
       await venvScripts("west"),
       [...argv],
       Object.assign(
         {
-          stdio: ["inherit", "inherit", "pipe"],
+          // stdio: ["inherit", "inherit", "pipe"],
+          stdio: "inherit",
           env,
+          cwd: isUpdate ? join(env["ZEPHYR_BASE"], '..') : process.cwd()
         },
         options
       )
     );
     Lisa.application.debug(res);
   } catch (error: any) {
-    console.log("\x1B[31m%s\x1B[0m", error.stderr);
+    // console.log("\x1B[31m%s\x1B[0m", error.stderr);
     await Sentry.captureMessage(error);
     await Sentry.close(2000);
     process.exit(error.exitCode);
