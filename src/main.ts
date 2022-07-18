@@ -1,19 +1,29 @@
-import { promisify } from 'util';
-import { execFile as _execFile } from 'child_process';
-import { defaults } from 'lodash';
-import { pathExists, ensureDir, outputFile, readFile, writeFileSync } from 'fs-extra';
-import { loadBundles, loadBinaries, getEnv } from './env';
-import { PLUGIN_HOME, get } from './env/config';
-import { zephyrVersion } from './utils/sdk';
-import { getRepoStatus } from './utils/repo';
-import Lisa from '@listenai/lisa_core';
-import { venvScripts } from './venv';
-import { ParsedArgs } from 'minimist';
-import { join } from 'path'
+import { promisify } from "util";
+import { execFile as _execFile } from "child_process";
+import { defaults } from "lodash";
+import { pathExists } from "fs-extra";
+import { loadBundles, loadBinaries, getEnv } from "./env";
+import { PLUGIN_HOME, get } from "./env/config";
+import { sdkTag } from "./utils/sdk";
+import { getCommit, getBranch, clean } from "./utils/repo";
+import Lisa from "@listenai/lisa_core";
+import { venvScripts } from "./venv";
+import simpleGit from "simple-git";
+import execa from "execa";
+import { workspace } from "./utils/ux";
+import AppProject from "./models/appProject";
+import { resolve, dirname } from "path";
+import * as Sentry from "@sentry/node";
+import { join } from "path";
+Sentry.init({
+  dsn: "http://e1729ec787e54957b0252fff58844c80@sentry.iflyos.cn/106",
+  tracesSampleRate: 1.0,
+  maxValueLength: 10000,
+});
 const execFile = promisify(_execFile);
 
 export async function env(): Promise<Record<string, string>> {
-  const env = await get('env');
+  const env = await get("env");
   const bundles = await loadBundles(env);
 
   const versions: Record<string, string> = {};
@@ -23,7 +33,7 @@ export async function env(): Promise<Record<string, string>> {
     try {
       versions[name] = await binary.version();
     } catch (e) {
-      versions[name] = '(缺失)';
+      versions[name] = "(缺失)";
     }
     Object.assign(variables, binary.env);
   }
@@ -37,10 +47,10 @@ export async function env(): Promise<Record<string, string>> {
   }
 
   return {
-    env: env && env.length > 0 ? env.join(', ') : '(未设置)',
-    west: await getWestVersion() || '(未安装)',
+    env: env && env.length > 0 ? env.join(", ") : "(未设置)",
+    west: (await getWestVersion()) || "(未安装)",
     ...versions,
-    ZEPHYR_BASE: await getZephyrInfo() || '(未设置)',
+    ZEPHYR_BASE: (await getZephyrInfo()) || "(未设置)",
     PLUGIN_HOME,
     ...variables,
   };
@@ -48,9 +58,9 @@ export async function env(): Promise<Record<string, string>> {
 
 async function getWestVersion(): Promise<string | null> {
   try {
-    const { stdout } = await execFile('python', [
-      '-m', 'west', '--version',
-    ], { env: await getEnv() });
+    const { stdout } = await execFile("python", ["-m", "west", "--version"], {
+      env: await getEnv(),
+    });
     return stdout.trim();
   } catch (e) {
     return null;
@@ -58,61 +68,74 @@ async function getWestVersion(): Promise<string | null> {
 }
 
 async function getZephyrInfo(): Promise<string | null> {
-  const sdk = await get('sdk');
+  const sdk = await get("sdk");
   if (!sdk) return null;
   if (!(await pathExists(sdk))) return null;
-  const version = await zephyrVersion(sdk);
-  const branch = await getRepoStatus(sdk);
+  const tag = await sdkTag(sdk);
+  const git = simpleGit(sdk);
+  const commit = await getCommit(git);
+  const branch = await getBranch(git);
+  const isClean = await clean(git);
+
+  const commitMsg = `commit: ${commit}${isClean ? "" : "*"}`;
+
+  if (tag && !branch) {
+    return `${sdk} (版本: ${tag}, ${commitMsg})`;
+  }
   if (branch) {
-    return `${sdk} (版本: ${version}, 分支: ${branch})`;
+    return `${sdk} (分支: ${branch}, ${commitMsg})`;
   } else {
-    return `${sdk} (版本: ${version})`
+    return `${sdk} (${commitMsg})`;
   }
 }
 
-export const exportEnv = getEnv
+export const exportEnv = getEnv;
 
+export async function undertake(
+  argv?: string[] | undefined,
+  options?: execa.Options<string> | undefined
+): Promise<boolean> {
+  argv = argv ?? process.argv.slice(3);
+  const { cmd } = Lisa;
 
-async function logFile(stdout: string, logPath: string, logName: string) {
-  await ensureDir(logPath)
-  const _logFile = join(logPath, logName)
-  const time = new Date();
+  const cwd = options?.cwd ?? workspace() ?? process.cwd();
+  const app = new AppProject(cwd);
+  const topdir = (await app.topdir()) || "";
+  const selfSDK = (await app.selfSDK()) || "";
 
-  try {
-    if (!await pathExists(_logFile)) {
-      await outputFile(_logFile, `${time}\n${stdout}\n`)
-    } else {
-      const data = await readFile(_logFile, 'utf8')
-      await outputFile(_logFile, `${data}\n${time}\n${stdout}\n`)
-    }
-  } catch (err) {
-    await outputFile(_logFile, `${time}\n${err}\n`)
+  const env = await getEnv();
+  if (
+    env["ZEPHYR_BASE"] &&
+    resolve(topdir) !== resolve(dirname(env["ZEPHYR_BASE"]))
+  ) {
+    delete env["ZEPHYR_BASE"];
   }
 
-}
-export async function undertake(argv?: string[] | undefined, log?: boolean | false): Promise<boolean> {
-  argv = argv ?? process.argv.slice(3)
-  const { cmd, application } = Lisa
-  const buildDir = (Lisa.application.argv as ParsedArgs)?.['build-dir'] || 'build'
-  const buildPath = buildDir && join(process.cwd(), buildDir)
+  if (selfSDK) {
+    env["ZEPHYR_BASE"] = selfSDK;
+  }
+
+  const isUpdate = env["ZEPHYR_BASE"] && argv[0] === "update";
   try {
-    if (log) {
-      const subprocess = await cmd(await venvScripts('west'), [...argv], {
-        env: await getEnv(),
-      })
-      const { stdout, stderr } = await subprocess;
-      stdout && await logFile(stdout, buildPath, 'build.log')
-      stderr && await logFile(stderr, buildPath, 'build.log')
-    } else {
-      await cmd(await venvScripts('west'), [...argv], {
-        stdio: 'inherit',
-        env: await getEnv(),
-      })
-    }
+    const res = await cmd(
+      await venvScripts("west"),
+      [...argv],
+      Object.assign(
+        {
+          // stdio: ["inherit", "inherit", "pipe"],
+          stdio: "inherit",
+          env,
+          cwd: isUpdate ? join(env["ZEPHYR_BASE"], '..') : process.cwd()
+        },
+        options
+      )
+    );
+    Lisa.application.debug(res);
   } catch (error: any) {
-    log && await logFile(error, buildPath, 'build.log')
-    return false
+    // console.log("\x1B[31m%s\x1B[0m", error.stderr);
+    await Sentry.captureMessage(error);
+    await Sentry.close(2000);
+    process.exit(error.exitCode);
   }
-  return true
-
+  return true;
 }

@@ -220,12 +220,14 @@ export default ({ application, cmd }: LisaType) => {
         'env': { arg: 'name', help: '指定当次编译有效的环境' },
         'task-help': { short: 'h', help: '打印帮助' },
         'runner': { arg: 'string', help: '指定当次的烧录类型' },
+        'port': { arg: 'string', help: '指定当次烧录的串口号' },
+        'baud': { arg: 'string', help: '指定当次烧录的波特率' },
         // 'node-label': { arg: 'label', help: '指定烧录的分区节点'},
       });
       if (args['task-help']) {
         return printHelp();
       }
-      // const runner = args['runner'] || null;
+      const runner = args['runner'] || null;
       // const nodeLabel = args['node-label'];
 
       const exec = extendExec(cmd, { task, env: await getEnv(args['env']) });
@@ -240,7 +242,11 @@ export default ({ application, cmd }: LisaType) => {
         // lisa zep flash --runner pyocd --flash-opt="--base-address=xxxx" --bin-file xxxx.bin
       const VENUS_FLASH_BASE = 0x18000000;
       for (let address in flashArgs) {
-        await exec(await venvScripts('west'), await flashFlags(['flash', `--flash-opt=--base-address=0x${(VENUS_FLASH_BASE + parseInt(address)).toString(16)}`, '--bin-file',  flashArgs[address]]))
+        if (runner === 'csk') {
+          await exec('cskburn', ['--chip', '6', '--serial', `${args['port']}`, `--baud`, `${args['baud'] || 748800}`, `--reset-nanokit`, `0x${(VENUS_FLASH_BASE + parseInt(address)).toString(16)}`, flashArgs[address]])
+        } else {
+          await exec(await venvScripts('west'), await flashFlags(['flash', `--flash-opt=--base-address=0x${(VENUS_FLASH_BASE + parseInt(address)).toString(16)}`, '--bin-file',  flashArgs[address]]))
+        }
       }
       // } else {
       //   const flasher = await getFlasher(args['env']);

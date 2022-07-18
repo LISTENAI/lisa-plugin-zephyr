@@ -3,3 +3,7 @@ node_modules
 
 /lib
 .npmrc
+__testTarget__/
+my-zephyr-sdk/
+build/
+

@@ -1,18 +1,57 @@
 name: test
 
-on: [ push ]
+on:
+  push:
+    branches: ['master']
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
+
+    outputs:
+      tarball: ${{ steps.build.outputs.tarball }}
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '16'
+
+      - name: NPM config
+        run: |
+          npm config set //registry-lpm.listenai.com/:_password ${{ secrets.LPM_ADMIN_TOKEN }}
+          npm config set //registry-lpm.listenai.com/:username lpmadmin
+          npm config set //registry-lpm.listenai.com/:email lpm.admin@listenai.com
+          npm config set //registry-lpm.listenai.com/:always-auth true
+      - name: Install dependencies
+        run: yarn --ignore-scripts --registry=https://registry-lpm.listenai.com
+
+      - name: Build
+        id: build
+        run: npm run build && echo "::set-output name=tarball::$(npm pack)"
+
+      - name: Upload tarball
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ steps.build.outputs.tarball }}
+          path: ${{ steps.build.outputs.tarball }}
+
+  test:
+    needs: build
+    runs-on: ${{ matrix.os }}
+
+    env:
+      PIP_INDEX_URL: https://pypi.org/simple
 
     strategy:
       matrix:
-        node: ['14', '16']
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        node: ['16']
 
     steps:
-      - uses: actions/checkout@v2
-
+      - uses: actions/checkout@v1
+     
       - name: Use Node.js ${{ matrix.node }}
         uses: actions/setup-node@v1
         with:
@@ -24,9 +63,30 @@ jobs:
           npm config set //registry-lpm.listenai.com/:username lpmadmin
           npm config set //registry-lpm.listenai.com/:email lpm.admin@listenai.com
           npm config set //registry-lpm.listenai.com/:always-auth true
-
       - name: Install dependencies
         run: yarn --ignore-scripts --registry=https://registry-lpm.listenai.com
 
-      - name: Build
-        run: npm run build
+      - name: Download tarball
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ needs.build.outputs.tarball }}
+
+      - name: Install @listenai/lisa
+        run: npm install -g @listenai/lisa && lisa login --token ${{ secrets.LS_ACCESS_TOKEN }}
+
+      - name: Install @lisa-plugin/zephyr
+        run: lisa install -g ${{ needs.build.outputs.tarball }}
+        
+      - name: Cache test target
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-test-target
+        with:
+          path: ./__testTarget__
+          key: ${{ runner.os }}-${{ matrix.node }}-build-${{ env.cache-name }}
+          
+      - name: Test
+        run:  npm run test  
+
+    
+
