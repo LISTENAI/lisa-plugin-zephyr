@@ -20,7 +20,7 @@ async function getAppFlashAddr(buildDir: string): Promise<number> {
   return isNaN(loadOffset) ? 0 : loadOffset;
 }
 
-export default ({ application, cmd }: LisaType) => {
+export default ({ application, cmd, cli }: LisaType) => {
 
   job("init-app", {
     title: "初始化项目",
