@@ -32,7 +32,8 @@
   "files": [
     "lib",
     "scripts",
-    "vscode"
+    "vscode",
+    "plugin"
   ],
   "bugs": {
     "url": "https://github.com/LISTENAI/lisa-plugin-zephyr/issues"
