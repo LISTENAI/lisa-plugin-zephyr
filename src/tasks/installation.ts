@@ -16,9 +16,7 @@ export default ({ cmd, application }: LisaType) => {
     async task(ctx, task) {
       const exec = extendExec(cmd, { task });
       await mkdirs(PLUGIN_HOME);
-
       await invalidateEnv();
-
       const requirementsPath = (join(process.env.LISA_HOME || "", ".listenai", "lisa-zephyr", "whl"));
       const isExists = await pathExists(requirementsPath);
       application.debug(`PLUGIN_HOME:${PLUGIN_HOME},venv.homeDir:${venv.homeDir},requirementsPath:${requirementsPath},isExists:${isExists}`);

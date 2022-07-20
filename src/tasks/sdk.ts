@@ -80,10 +80,6 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
           const res = await got('https://cloud.listenai.com/api/v4/projects/554/repository/tags');
           const released = (JSON.parse(res.body) as Array<any>).find(item => item.release && item.name.indexOf('beta'));
           mr = `${released.name}`;
-
-          mr = "v1.0.2-beta.1"    //记得删掉
-
-
           const url = `https://cdn.iflyos.cn/public/lisa-zephyr-dist/${mr}.tar.zst`
           //用户选择的安装目录 LISA_HOME
           const sdkPath = resolve(join(process.env.LISA_HOME || '', ".listenai", "csk-sdk"))
@@ -95,7 +91,7 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
 
           const sdkZSTPath = join(sdkPath, `${mr}.tar.zst`)
           application.debug('sdk下载', '\n', process.env.LISA_HOME, '\n', url, '\n', sdkZSTPath, '\n', sdkPath);
-          console.log('sdk下载', '\n', process.env.LISA_HOME, '\n', url, '\n', sdkZSTPath, '\n', sdkPath);
+          // console.log('sdk下载', '\n', process.env.LISA_HOME, '\n', url, '\n', sdkZSTPath, '\n', sdkPath);
           cli.action.start('正在下载sdk...')
           await fs.project.downloadFile({
             url,
