@@ -65,7 +65,7 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
         await cmd("lisa", ["zep", "sdk", opt.command], { stdio: "inherit" });
       }
       if (args === "set") {
-        const addArgs = argv._.slice(2);
+        const addArgs = process.argv.slice(5);
         if (addArgs.length > 0) {
           await cmd("lisa", ["zep", "use-sdk"].concat(addArgs), {
             stdio: "inherit",
