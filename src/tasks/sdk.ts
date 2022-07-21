@@ -116,11 +116,10 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
           }
           cli.action.stop("下载sdk完成");
           cli.action.start("正在解压sdk...");
-          const zstd = join(__dirname, "..", "..", "plugin", "zstd");
-          const unzipApp = join(__dirname, "..", "..", "plugin", "7-zip");
+          const pluginDir = join(__dirname, "..", "..", "plugin");
           const sdkZipPath = join(sdkPath, `${mr}.tar`);
-          await exec(join(zstd, "zstd.exe"), ["-d", sdkZSTPath]);
-          await exec(join(unzipApp, "7z.exe"), [
+          await exec(join(pluginDir, "zstd.exe"), ["-d", sdkZSTPath]);
+          await exec(join(pluginDir, "7z.exe"), [
             "x",
             sdkZipPath,
             `-o${sdkPath}`,
