@@ -84,7 +84,6 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
             (item) => item.release && item.name.indexOf("beta")
           );
           mr = `${released.name}`;
-          mr = "v1.0.2-beta.1";
           const url = `https://cdn.iflyos.cn/public/lisa-zephyr-dist/${mr}.tar.zst`;
           //用户选择的安装目录 LISA_HOME
           const sdkPath = resolve(join(process.env.LISA_HOME || "", "csk-sdk"));
