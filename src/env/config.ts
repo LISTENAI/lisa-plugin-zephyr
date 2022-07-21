@@ -1,7 +1,7 @@
 import { pathExists, readJson, writeJson } from 'fs-extra';
 import { join } from 'path';
 import { homedir } from 'os';
-export const PLUGIN_HOME = join(process.env.LISA_HOME || homedir(), '.listenai', 'lisa-zephyr');
+export const PLUGIN_HOME = join( process.env.LISA_HOME || '',  'lisa-zephyr')  || join(homedir(), '.listenai', 'lisa-zephyr');
 const CONFIG_FILE = join(PLUGIN_HOME, 'config.json');
 interface IPluginConfig {
   env?: string[];

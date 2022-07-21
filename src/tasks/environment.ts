@@ -217,7 +217,7 @@ export default ({ application, cmd, got }: LisaType) => {
         const path =
           argv._[1] ||
           (isDefault
-            ? resolve(join(process.env.LISA_HOME || "", ".listenai", "csk-sdk")) || resolve(join(process.env.LISA_PREFIX || "", "..", "csk-sdk"))
+            ? resolve(join(process.env.LISA_HOME || "", "csk-sdk")) || resolve(join(process.env.LISA_PREFIX || "", "..", "csk-sdk"))
             : "");
         const current = await get("sdk");
         const target = path || current;
