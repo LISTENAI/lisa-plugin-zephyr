@@ -98,7 +98,7 @@ export async function undertake(
   argv = argv ?? process.argv.slice(3);
   const { cmd } = Lisa;
 
-  const cwd = options?.cwd ?? workspace() ?? process.cwd();
+  const cwd = options?.cwd ?? process.cwd();
   const app = new AppProject(cwd);
   const topdir = (await app.topdir()) || "";
   const selfSDK = (await app.selfSDK()) || "";
