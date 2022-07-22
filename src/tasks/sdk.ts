@@ -4,7 +4,7 @@ import { resolve, join } from "path";
 import { pathExists, remove } from "fs-extra";
 import { getEnv } from "../env";
 import { get } from "../env/config";
-import { sdkTag } from "../utils/sdk";
+import { zephyrVersion,sdkTag } from "../utils/sdk";
 import { getRepoStatus } from "../utils/repo";
 import { testLog } from "../utils/testLog";
 import extendExec from "../utils/extendExec";
@@ -44,15 +44,10 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
           ];
         } else {
           opts = [
-         
             {
               name: "切换SDK版本",
               command: "use",
-            },
-            {
-              name: "重新安装SDK",
-              command: "set",
-            },
+            }
           ];
         }
         const option = await task.prompt({
@@ -67,15 +62,33 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
       if (args === "set") {
         const addArgs = process.argv.slice(5);
         if (addArgs.length > 0) {
+          //进use-sdk逻辑
           await cmd("lisa", ["zep", "use-sdk"].concat(addArgs), {
             stdio: "inherit",
           });
         } else {
           //lisa zep sdk set
           //1 下载sdk zip包 2 解压 3 use-sdk
-          await cmd("lisa", ["zep", "use-sdk", "--clear"], {
-            stdio: "inherit",
-          });
+          await cmd("lisa", ["zep", "use-sdk", "--clear"]);
+          const sdkPath = resolve(join(process.env.LISA_HOME || "", "csk-sdk"));
+          let hasZephyrPath = await pathExists(sdkPath)
+          if (hasZephyrPath) {
+            let zephyrPath = resolve(sdkPath);
+            // 可能存在zephyr或zephyr.git两个命名的文件夹
+            let pathNested = ["", "zephyr", "zephyr.git"];
+            let isZephyrBase = false;
+            for (const nested of pathNested) {
+              if (await zephyrVersion(join(zephyrPath, nested))) {
+                zephyrPath = join(zephyrPath, nested);
+                isZephyrBase = true;
+                break;
+              }
+            }
+            if (isZephyrBase) {
+              await cmd("lisa", ["zep", "use-sdk", sdkPath], { stdio: "inherit" });
+              return
+            }
+          }
           let mr = "";
           const res = await got(
             "https://cloud.listenai.com/api/v4/projects/554/repository/tags"
@@ -86,7 +99,7 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
           mr = `${released.name}`;
           const url = `https://cdn.iflyos.cn/public/lisa-zephyr-dist/${mr}.tar.zst`;
           //用户选择的安装目录 LISA_HOME
-          const sdkPath = resolve(join(process.env.LISA_HOME || "", "csk-sdk"));
+      
           application.download_path = sdkPath;
           // 下载sdk .zst包
           if (sdkPath && /.*[\u4e00-\u9fa5]+.*$/.test(sdkPath)) {
@@ -121,6 +134,7 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
           await exec(join(pluginDir, "zstd.exe"), ["-d", sdkZSTPath]);
           await exec(join(pluginDir, "7z.exe"), [
             "x",
+            "-y",
             sdkZipPath,
             `-o${sdkPath}`,
           ]);
