@@ -314,7 +314,7 @@ export default ({ application, cmd }: LisaType) => {
             `--baud`,
             `${args["baud"] || 748800}`,
             `--reset-nanokit`,
-            `0x${(VENUS_FLASH_BASE + parseInt(address)).toString(16)}`,
+            `0x${parseInt(address).toString(16)}`,
             flashArgs[address],
           ]);
         } else {
