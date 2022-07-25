@@ -4,10 +4,11 @@ import { resolve, join } from "path";
 import { pathExists, remove } from "fs-extra";
 import { getEnv } from "../env";
 import { get } from "../env/config";
-import { zephyrVersion,sdkTag } from "../utils/sdk";
+import { zephyrVersion, sdkTag } from "../utils/sdk";
 import { getRepoStatus } from "../utils/repo";
 import { testLog } from "../utils/testLog";
 import extendExec from "../utils/extendExec";
+import { platform } from "os";
 
 async function checkZephyrBase(ZEPHYR_BASE: string, westConfigPath: string) {
   if (!ZEPHYR_BASE) {
@@ -99,7 +100,7 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
           mr = `${released.name}`;
           const url = `https://cdn.iflyos.cn/public/lisa-zephyr-dist/${mr}.tar.zst`;
           //用户选择的安装目录 LISA_HOME
-      
+
           application.download_path = sdkPath;
           // 下载sdk .zst包
           if (sdkPath && /.*[\u4e00-\u9fa5]+.*$/.test(sdkPath)) {
@@ -131,14 +132,36 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
           cli.action.start("正在解压sdk...");
           const pluginDir = join(__dirname, "..", "..", "plugin");
           const sdkZipPath = join(sdkPath, `${mr}.tar`);
-          await exec(join(pluginDir, "zstd.exe"), ["-d", sdkZSTPath]);
-          await exec(join(pluginDir, "7z.exe"), [
-            "x",
-            "-y",
-            sdkZipPath,
-            `-o${sdkPath}`,
-          ]);
+          if (platform() === "win32") {
+            await exec(join(pluginDir, "zstd.exe"), ["-d", sdkZSTPath]);
+            await exec(join(pluginDir, "7z.exe"), [
+              "x",
+              "-y",
+              sdkZipPath,
+              `-o${sdkPath}`,
+            ]);
+          } else {
+            //其他平台的解压
+            //zstd解压
+            // //tar解压
+            try {
+              const { stderr } = await exec('type', ['tar'])
+              if (stderr) {
+                throw new Error('You need tar to install Lisa')
+              }
+              await exec('tar', [
+                "-xvf",
+                sdkZipPath,
+                "-C",
+                sdkPath,
+              ]);
+
+            } catch (error) {
+              throw new Error('You need tar to install Lisa')
+            }
+          }
           cli.action.stop("解压sdk完成");
+          
           await cmd("lisa", ["zep", "use-sdk", sdkPath], { stdio: "inherit" });
           const env = await getEnv();
           const ZEPHYR_BASE = env["ZEPHYR_BASE"];
