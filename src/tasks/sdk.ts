@@ -8,8 +8,7 @@ import { zephyrVersion, sdkTag } from "../utils/sdk";
 import { getRepoStatus } from "../utils/repo";
 import { testLog } from "../utils/testLog";
 import extendExec from "../utils/extendExec";
-import { platform } from "os";
-
+const _7z = require('7zip-min');
 async function checkZephyrBase(ZEPHYR_BASE: string, westConfigPath: string) {
   if (!ZEPHYR_BASE) {
     return false;
@@ -69,7 +68,7 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
           });
         } else {
           //lisa zep sdk set
-          //1 下载sdk zip包 2 解压 3 use-sdk
+          //1 下载sdk 7z包 2 解压 3 use-sdk
           await cmd("lisa", ["zep", "use-sdk", "--clear"]);
           const sdkPath = resolve(join(process.env.LISA_HOME || "", "csk-sdk"));
           let hasZephyrPath = await pathExists(sdkPath)
@@ -98,16 +97,15 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
             (item) => item.release && item.name.indexOf("beta")
           );
           mr = `${released.name}`;
-          const url = `https://cdn.iflyos.cn/public/lisa-zephyr-dist/${mr}.tar.zst`;
+          const url = `https://cdn.iflyos.cn/public/lisa-zephyr-dist/${mr}.7z`;
           //用户选择的安装目录 LISA_HOME
-
           application.download_path = sdkPath;
           // 下载sdk .zst包
           if (sdkPath && /.*[\u4e00-\u9fa5]+.*$/.test(sdkPath)) {
             throw new Error(`SDK 路径不能包含中文: ${sdkPath}`);
           }
 
-          const sdkZSTPath = join(sdkPath, `${mr}.tar.zst`);
+          const sdk7zPath = join(sdkPath, `${mr}.7z`);
           application.debug(
             "sdk下载",
             "\n",
@@ -115,53 +113,21 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
             "\n",
             url,
             "\n",
-            sdkZSTPath,
+            sdk7zPath,
             "\n",
             sdkPath
           );
-          // console.log('sdk下载', '\n', process.env.LISA_HOME, '\n', url, '\n', sdkZSTPath, '\n', sdkPath);
+          console.log('sdk下载', '\n', process.env.LISA_HOME, '\n', url, '\n', sdk7zPath, '\n', sdkPath);
           cli.action.start("正在下载sdk...");
           await fs.project.downloadFile({
             url,
-            fileName: `${mr}.tar.zst`,
+            fileName: `${mr}.7z`,
           });
-          if (!(await pathExists(sdkZSTPath))) {
-            throw new Error(`SDK zst包不存在: ${sdkZSTPath}`);
+          if (!(await pathExists(sdk7zPath))) {
+            throw new Error(`SDK 压缩包不存在: ${sdk7zPath}`);
           }
           cli.action.stop("下载sdk完成");
-          cli.action.start("正在解压sdk...");
-          const pluginDir = join(__dirname, "..", "..", "plugin");
-          const sdkZipPath = join(sdkPath, `${mr}.tar`);
-          if (platform() === "win32") {
-            await exec(join(pluginDir, "zstd.exe"), ["-d", sdkZSTPath]);
-            await exec(join(pluginDir, "7z.exe"), [
-              "x",
-              "-y",
-              sdkZipPath,
-              `-o${sdkPath}`,
-            ]);
-          } else {
-            //其他平台的解压
-            //zstd解压
-            // //tar解压
-            try {
-              const { stderr } = await exec('type', ['tar'])
-              if (stderr) {
-                throw new Error('You need tar to install Lisa')
-              }
-              await exec('tar', [
-                "-xvf",
-                sdkZipPath,
-                "-C",
-                sdkPath,
-              ]);
-
-            } catch (error) {
-              throw new Error('You need tar to install Lisa')
-            }
-          }
-          cli.action.stop("解压sdk完成");
-          
+          await cmd("lisa", ["zep", "sdk", "7z", sdk7zPath, sdkPath], { stdio: "inherit" });
           await cmd("lisa", ["zep", "use-sdk", sdkPath], { stdio: "inherit" });
           const env = await getEnv();
           const ZEPHYR_BASE = env["ZEPHYR_BASE"];
@@ -169,8 +135,7 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
             env,
             cwd: ZEPHYR_BASE,
           });
-          await remove(sdkZSTPath);
-          await remove(sdkZipPath);
+          await remove(sdk7zPath);
         }
       }
       if (args === "use") {
@@ -205,6 +170,20 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
         await cmd("lisa", ["zep", "use-sdk", "--mr", tagName], {
           stdio: "inherit",
         });
+      }
+      if (args === '7z') { 
+        const addArgs = process.argv.slice(5);
+        const zipDir = addArgs[0];
+        const targetDir = addArgs[1];
+        cli.action.start("正在解压sdk...");
+        await  new Promise<void>((resolve, _reject) => {
+          _7z.unpack(zipDir, targetDir, (err: string | undefined) => {
+            // done
+            resolve()
+            if (err) { throw new Error(err) }
+          })
+        })
+        cli.action.stop("解压sdk完成");
       }
       const sdk = await get("sdk");
       const version = sdk ? await sdkTag(sdk) : null;
