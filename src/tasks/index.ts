@@ -8,6 +8,8 @@ import west from './west';
 import fs from './fs';
 import create from './create';
 import initVs from './initVs';
+import ide from './ide';
+
 
 export default (core: LisaType) => {
   installation(core);
@@ -18,4 +20,6 @@ export default (core: LisaType) => {
   west(core);
   create(core);
   initVs(core);
+  ide(core);
+
 }

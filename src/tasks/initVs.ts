@@ -1,7 +1,7 @@
 import { LisaType, job } from '../utils/lisa_ex';
 import { join, resolve } from 'path';
 import {
-  readFile, copy, writeFile, readJson, pathExists, writeJson
+  readFile, copy, writeFile, readJson, pathExists
 } from 'fs-extra';
 
 import { getEnv } from '../env';
@@ -47,14 +47,19 @@ export default ({ application, cmd }: LisaType) => {
       })
       ctx.jlinkSNcode = jlinkSNcode;
       const targetDir = join(process.cwd(), '.vscode');
-      const formDir = join(__dirname, '..', '..', 'vscode');
-      await copy(formDir, targetDir);
-      const configFIle = join(targetDir, 'xt-ocd-config.xml');
+      const formDir = join(__dirname, '..', '..', 'vscode', 'csk6-dsp');
       const Launchfile = join(targetDir, 'launch.json');
+      let launchJson;
+      if (await pathExists(Launchfile)) { 
+         launchJson = await readJson(Launchfile)
+        const NewlaunchJson = await readJson(join(formDir, 'launch.json'))
+        launchJson.configurations = (launchJson.configurations || [] ).concat(NewlaunchJson.configurations)
+      }
+      await copy(formDir, targetDir)
+      const configFIle = join(targetDir, 'xt-ocd-config.xml');
       const configFileStr = await readFile(configFIle, 'utf8');
       const result = configFileStr.replace(/###usbser###/g, jlinkSNcode);
       await writeFile(configFIle, result, 'utf-8');
-      const launchJson = await readJson(Launchfile);
       launchJson.configurations[0].linux.miDebuggerPath = XTENSA_TOOL || '';
       await writeFile(Launchfile, JSON.stringify(launchJson, null, "\t"));
       testLog(task, '成功')

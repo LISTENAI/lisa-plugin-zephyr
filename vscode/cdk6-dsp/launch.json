@@ -1,0 +1,48 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "CSK6 DSP Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/zephyr/zephyr.elf",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "miDebuggerServerAddress": "localhost:30000",
+            "debugServerPath": "~/Tensilica/xocd-14.04/xt-ocd",
+            "debugServerArgs": "-c ${workspaceFolder}/.vscode/xt-ocd-config.xml",
+            "serverStarted": "Listening for GDB connection on port",
+            "filterStderr": true,
+            "logging": {},
+            "linux": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "~/xtensa/XtDevTools/install/tools/RI-2020.4-linux/XtensaTools/bin/xt-gdb"
+            },
+            "postRemoteConnectCommands": [
+                {
+                    "text": "reset",
+                    "description": "reset",
+                    "ignoreFailures": false
+                },
+                {
+                    "text": "load ${workspaceFolder}/build/zephyr/zephyr.elf",
+                    "description": "load elf",
+                    "ignoreFailures": false
+                },
+                {
+                    "text": "reset",
+                    "description": "reset",
+                    "ignoreFailures": false
+                },
+                {
+                    "text": "break main",
+                    "description": "break main",
+                    "ignoreFailures": false
+                }
+            ]
+        }
+    ]
+}
