@@ -53,6 +53,7 @@ export default ({ application, cmd }: LisaType) => {
       if (await pathExists(Launchfile)) { 
          launchJson = await readJson(Launchfile)
         const NewlaunchJson = await readJson(join(formDir, 'launch.json'))
+        NewlaunchJson.configurations[0].linux.miDebuggerPath = XTENSA_TOOL || '';
         launchJson.configurations = (launchJson.configurations || [] ).concat(NewlaunchJson.configurations)
       }
       await copy(formDir, targetDir)
@@ -60,7 +61,6 @@ export default ({ application, cmd }: LisaType) => {
       const configFileStr = await readFile(configFIle, 'utf8');
       const result = configFileStr.replace(/###usbser###/g, jlinkSNcode);
       await writeFile(configFIle, result, 'utf-8');
-      launchJson.configurations[0].linux.miDebuggerPath = XTENSA_TOOL || '';
       await writeFile(Launchfile, JSON.stringify(launchJson, null, "\t"));
       testLog(task, '成功')
     },
