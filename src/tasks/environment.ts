@@ -294,6 +294,8 @@ export default ({ application, cmd, got }: LisaType) => {
       const sdk = await get("sdk");
       const version = sdk ? await sdkTag(sdk) : null;
       const branch = sdk ? await getRepoStatus(sdk) : null;
+   
+
       if (sdk && version) {
         if (branch) {
           task.title = `当前 SDK: Zephyr ${version}(分支 ${branch}, 位于 ${sdk})`;
