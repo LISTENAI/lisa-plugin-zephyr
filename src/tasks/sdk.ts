@@ -5,10 +5,8 @@ import { pathExists, remove } from "fs-extra";
 import { getEnv } from "../env";
 import { get } from "../env/config";
 import { zephyrVersion, sdkTag } from "../utils/sdk";
-import { getRepoStatus } from "../utils/repo";
-import { testLog } from "../utils/testLog";
 import extendExec from "../utils/extendExec";
-const _7z = require('7zip-min');
+const path7za = require('7zip-bin').path7za;
 async function checkZephyrBase(ZEPHYR_BASE: string, westConfigPath: string) {
   if (!ZEPHYR_BASE) {
     return false;
@@ -66,6 +64,7 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
           await cmd("lisa", ["zep", "use-sdk"].concat(addArgs), {
             stdio: "inherit",
           });
+          console.log('')
         } else {
           //lisa zep sdk set
           //1 下载sdk 7z包 2 解压 3 use-sdk
@@ -86,6 +85,7 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
             }
             if (isZephyrBase) {
               await cmd("lisa", ["zep", "use-sdk", sdkPath], { stdio: "inherit" });
+              console.log('')
               return
             }
           }
@@ -100,7 +100,7 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
           const url = `https://cdn.iflyos.cn/public/lisa-zephyr-dist/${mr}.7z`;
           //用户选择的安装目录 LISA_HOME
           application.download_path = sdkPath;
-          // 下载sdk .zst包
+          // 下载sdk 
           if (sdkPath && /.*[\u4e00-\u9fa5]+.*$/.test(sdkPath)) {
             throw new Error(`SDK 路径不能包含中文: ${sdkPath}`);
           }
@@ -117,17 +117,35 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
             "\n",
             sdkPath
           );
-          console.log('sdk下载', '\n', process.env.LISA_HOME, '\n', url, '\n', sdk7zPath, '\n', sdkPath);
-          cli.action.start("正在下载sdk...");
+          console.log("正在下载sdk...");
+          console.time("download");
+          const customBar = cli.progress({
+            format: 'Download SDK Progress [ {bar} ] {percentage}% ',
+          },)
+          customBar.start(100, 0, {
+            speed: "N/A"
+          });
+
           await fs.project.downloadFile({
             url,
             fileName: `${mr}.7z`,
+            targetDir: sdkPath,
+            progress: (percentage: number, transferred: number, total: number) => {
+              customBar.update(percentage);
+              if (percentage === 100) {
+                customBar.stop()
+              }
+            }
           });
           if (!(await pathExists(sdk7zPath))) {
             throw new Error(`SDK 压缩包不存在: ${sdk7zPath}`);
           }
-          cli.action.stop("下载sdk完成");
+          customBar.stop()
+          console.timeEnd("download");
+          console.time("unzip");
           await cmd("lisa", ["zep", "sdk", "7z", sdk7zPath, sdkPath], { stdio: "inherit" });
+          console.timeEnd("unzip");
+          console.log("done");
           await cmd("lisa", ["zep", "use-sdk", sdkPath], { stdio: "inherit" });
           const env = await getEnv();
           const ZEPHYR_BASE = env["ZEPHYR_BASE"];
@@ -175,29 +193,13 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
         const addArgs = process.argv.slice(5);
         const zipDir = addArgs[0];
         const targetDir = addArgs[1];
-        cli.action.start("正在解压sdk...");
-        await  new Promise<void>((resolve, _reject) => {
-          _7z.unpack(zipDir, targetDir, (err: string | undefined) => {
-            // done
-            resolve()
-            if (err) { throw new Error(err) }
-          })
-        })
-        cli.action.stop("解压sdk完成");
-      }
-      const sdk = await get("sdk");
-      const version = sdk ? await sdkTag(sdk) : null;
-      const branch = sdk ? await getRepoStatus(sdk) : null;
-      if (sdk && version) {
-        if (branch) {
-          task.title = `当前 SDK: Zephyr ${version}(分支 ${branch}, 位于 ${sdk})`;
-        } else {
-          task.title = `当前 SDK: Zephyr ${version}(位于 ${sdk})`;
-        }
-        testLog(task, `SDK设置成功 位于 ${sdk}`);
-      } else {
-        task.title = "当前 SDK: (未设置)";
-        testLog(task, "SDK设置失败");
+        console.log("正在解压sdk...");
+        await cmd(path7za,[
+          "x",
+          "-y",
+          zipDir,
+          `-o${targetDir}`,
+        ],{ stdio: "inherit"})
       }
     },
     options: {

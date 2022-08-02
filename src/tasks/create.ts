@@ -199,7 +199,9 @@ export default ({ application, cmd }: LisaType) => {
 
       await mkdirs(targetDir);
       await copy(selected, targetDir);
-
+      await cmd('lisa', ['zep', 'ide'], {
+        cwd: targetDir
+      })  
       task.title = '创建sample成功';
       testLog(task, "创建sample成功");
     },
