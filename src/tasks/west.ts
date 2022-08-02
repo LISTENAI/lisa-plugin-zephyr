@@ -63,25 +63,25 @@ export default ({ application, cmd }: LisaType) => {
     },
   });
 
-  if (process.env.LISA_ZEP_EXEC) {
-    job("exec", {
-      title: "exec",
-      async task(ctx, task) {
-        task.title = '';
-        const execArgsIndex = process.argv.indexOf("exec");
-        const execArgs = process.argv.slice(execArgsIndex + 1);
-        const command = execArgs.shift();
-        if (!command) return;
+  // if (process.env.LISA_ZEP_EXEC) {
+  //   job("exec", {
+  //     title: "exec",
+  //     async task(ctx, task) {
+  //       task.title = '';
+  //       const execArgsIndex = process.argv.indexOf("exec");
+  //       const execArgs = process.argv.slice(execArgsIndex + 1);
+  //       const command = execArgs.shift();
+  //       if (!command) return;
 
-        await cmd(command, execArgs, {
-          stdio: "inherit",
-          env: await getEnv(),
-        });
+  //       await cmd(command, execArgs, {
+  //         stdio: "inherit",
+  //         env: await getEnv(),
+  //       });
 
-        task.title = 'exec exit';
-      }
-    });
-  }
+  //       task.title = 'exec exit';
+  //     }
+  //   });
+  // }
 
   // job('export-env', {
   //   title: 'export-env',

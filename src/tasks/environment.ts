@@ -119,6 +119,8 @@ export default ({ application, cmd, got }: LisaType) => {
         await invalidateEnv();
       } else if (args["update"]) {
         await checkZephyrBase(ZEPHYR_BASE, westConfigPath);
+        const sdk = await get("sdk");
+        const version = sdk ? await sdkTag(sdk) : null;
         try {
           const manifestPath = await getManifestPath(basicPath);
           //  git pull--tags origin 拉取某个tag
@@ -127,7 +129,7 @@ export default ({ application, cmd, got }: LisaType) => {
             env,
             cwd: manifestPath,
           });
-          await cmd("git", ["pull"], {
+          await cmd("git", ["pull",'origin',version||'master'], {
             env,
             cwd: manifestPath,
           });

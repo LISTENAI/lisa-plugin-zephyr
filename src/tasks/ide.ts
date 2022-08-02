@@ -29,19 +29,19 @@ export default ({ application, cli }: LisaType) => {
             const PYOCD_HOMEDIR_INDEX = HOMEDIR && pyocdpath && pyocdpath.indexOf(HOMEDIR)
             const PYOCD_LISA_HOME_INDEX = LISA_HOME && pyocdpath && pyocdpath.indexOf(LISA_HOME)
             if (JLINK_HOMEDIR_INDEX === 0) {
-                serverpath = jlink.binaryDir.replace(HOMEDIR, '${userHome}${pathSeparator}')
+                serverpath = jlink.binaryDir.replace(HOMEDIR, '${userHome}')
             }
             if (JLINK_LISA_HOME_INDEX === 0) {
                 serverpath = jlink.binaryDir.replace(LISA_HOME, '${env:LISA_HOME}')
             }
             if (ARM_HOMEDIR_INDEX === 0) {
-                armToolchainPath = armTool.binaryDir.replace(HOMEDIR, '${userHome}${pathSeparator}')
+                armToolchainPath = armTool.binaryDir.replace(HOMEDIR, '${userHome}')
             }
             if (ARM_LISA_HOME_INDEX === 0) {
                 armToolchainPath = armTool.binaryDir.replace(LISA_HOME, '${env:LISA_HOME}')
             }
             if (PYOCD_HOMEDIR_INDEX === 0) {
-                pyocdpath = pyocdpath.replace(HOMEDIR, '${userHome}${pathSeparator}')
+                pyocdpath = pyocdpath.replace(HOMEDIR, '${userHome}')
             }
             if (PYOCD_LISA_HOME_INDEX === 0) {
                 pyocdpath = pyocdpath.replace(LISA_HOME || '', '${env:LISA_HOME}')
@@ -60,36 +60,35 @@ export default ({ application, cli }: LisaType) => {
             const Launchfile = join(targetDir, 'launch.json');
             const newLaunchfile = join(formDir, 'launch.json');
             cli.action.start('正在为您生成vscode 配置文件')
-            if (await pathExists(Launchfile)) {
-                //原来那份
-                let launchJson:any = {};
-                try {
-                     launchJson = await readJson(Launchfile)
-                } catch (error) {
-                }
-                const NewlaunchJson = await readJson(newLaunchfile)
-                await copy(formDir, targetDir)
-                const configurations = launchJson.configurations || []
-                launchJson.configurations = configurations.concat(NewlaunchJson.configurations)
-                launchJson.configurations.map((config: {
-                    armToolchainPath: string; name: any; serverpath: string;
-                }) => {
-                    switch (config.name) {
-                        case 'LISA DAPlink Launch':
-                            config.serverpath = pyocdpath
-                            config.armToolchainPath = armToolchainPath
-                            break
-                        case 'LISA Jlink Launch':
-                            config.serverpath = serverpath;
-                            config.armToolchainPath = armToolchainPath
-                            break
-                    }
-                    return config
-                })
-                await writeFile(Launchfile, JSON.stringify(launchJson, null, "\t"));
-            } else {
-                await copy(formDir, targetDir)
+            //原来那份
+            let launchJson: any = {};
+            try {
+                if (await pathExists(Launchfile)) {
+                    launchJson = await readJson(Launchfile)
+                } 
+            } catch (error) {
             }
+            const NewlaunchJson = await readJson(newLaunchfile)
+            await copy(formDir, targetDir)
+            const configurations = launchJson.configurations || []
+            launchJson.configurations = configurations.concat(NewlaunchJson.configurations)
+            launchJson.configurations.map((config: {
+                armToolchainPath: string; name: any; serverpath: string;
+            }) => {
+                switch (config.name) {
+                    case 'LISA DAPlink Launch':
+                        config.serverpath = pyocdpath
+                        config.armToolchainPath = armToolchainPath
+                        break
+                    case 'LISA Jlink Launch':
+                        config.serverpath = serverpath;
+                        config.armToolchainPath = armToolchainPath
+                        break
+                }
+                return config
+            })
+            await writeFile(Launchfile, JSON.stringify(launchJson, null, "\t"));
+
             cli.action.stop('vscode 配置文件生成完毕')
         },
 
