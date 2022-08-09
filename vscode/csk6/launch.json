@@ -11,7 +11,15 @@
       "targetId": "csk6001",
       "serverpath": "${env:LISA_HOME}lisa-zephyr/venv/Scripts/pyocd.exe",
       "armToolchainPath": "${env:LISA_HOME}lisa-zephyr/packages/node_modules/@binary/gcc-arm-none-eabi-9/binary/bin",
-      "postLaunchCommands": [
+      "toolchainPrefix": "arm-none-eabi",
+      "interface": "swd",
+      "runToEntryPoint": "main",
+      "overrideRestartCommands": [
+        "monitor reset",
+        "monitor halt",
+        "load"
+      ],
+      "overrideLaunchCommands": [
         "set $sp=((int*)_vector_table)[0]",
         "monitor reset",
         "monitor halt",
@@ -31,7 +39,6 @@
       "armToolchainPath": "${env:LISA_HOME}lisa-zephyr/packages/node_modules/@binary/gcc-arm-none-eabi-9/binary/bin",
       "toolchainPrefix": "arm-none-eabi",
       "interface": "swd",
-      "showDevDebugOutput": false,
       "runToMain": true,
       "runToEntryPoint": "main",
       "serverArgs": [
@@ -46,13 +53,17 @@
         "-endian",
         "little"
       ],
-      "preLaunchCommands": [
-        "monitor flash erase",
-        "monitor clrbp",
-        "monitor reset"
+      "overrideRestartCommands": [
+        "monitor reset",
+        "monitor halt",
+        "load"
       ],
-      "preRestartCommands": [],
-      "postLaunchCommands": ["set $sp=((int*)_vector_table)[0]"]
+      "overrideLaunchCommands": [
+        "set $sp=((int*)_vector_table)[0]",
+        "monitor reset",
+        "monitor halt",
+        "load"
+      ]
     }
   ]
 }
