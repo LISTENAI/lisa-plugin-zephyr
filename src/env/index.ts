@@ -151,7 +151,7 @@ async function makeEnv(override?: string): Promise<Record<string, string>> {
   return env;
 }
 
-export async function getBinarie(name: string): Promise<any> {
+export async function getBinarie(name: string): Promise<Binary | undefined> {
   const envs = (await get("env")) || [];
   const bundles = await loadBundles(uniq(envs));
   const binaries = await loadBinaries(bundles);
