@@ -12,7 +12,7 @@ export default ({ application, cli }: LisaType) => {
         title: '生成vscode 配置文件',
         async task(ctx, task) {
             const os = platform()
-            const LISA_HOME = process.env.LISA_HOME
+            const LISA_HOME = process.env.LISA_HOME || ''
             const HOMEDIR = homedir()
             const jlink = await getBinarie('jlink-venus')
             const armTool = await getBinarie('gcc-arm-none-eabi-9')
@@ -29,16 +29,16 @@ export default ({ application, cli }: LisaType) => {
             const PYOCD_HOMEDIR_INDEX = HOMEDIR && pyocdpath && pyocdpath.indexOf(HOMEDIR)
             const PYOCD_LISA_HOME_INDEX = LISA_HOME && pyocdpath && pyocdpath.indexOf(LISA_HOME)
             if (JLINK_HOMEDIR_INDEX === 0) {
-                serverpath = jlink.binaryDir.replace(HOMEDIR, '${userHome}')
+                serverpath = jlink?.binaryDir.replace(HOMEDIR, '${userHome}') || ''
             }
             if (JLINK_LISA_HOME_INDEX === 0) {
-                serverpath = jlink.binaryDir.replace(LISA_HOME, '${env:LISA_HOME}')
+                serverpath = jlink?.binaryDir.replace(LISA_HOME, '${env:LISA_HOME}') || ''
             }
             if (ARM_HOMEDIR_INDEX === 0) {
-                armToolchainPath = armTool.binaryDir.replace(HOMEDIR, '${userHome}')
+                armToolchainPath = armTool?.binaryDir.replace(HOMEDIR, '${userHome}') || ''
             }
             if (ARM_LISA_HOME_INDEX === 0) {
-                armToolchainPath = armTool.binaryDir.replace(LISA_HOME, '${env:LISA_HOME}')
+                armToolchainPath = armTool?.binaryDir.replace(LISA_HOME, '${env:LISA_HOME}') || ''
             }
             if (PYOCD_HOMEDIR_INDEX === 0) {
                 pyocdpath = pyocdpath.replace(HOMEDIR, '${userHome}')
