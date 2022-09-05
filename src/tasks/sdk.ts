@@ -201,6 +201,8 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
           `-o${targetDir}`,
         ],{ stdio: "inherit"})
       }
+
+      task.title = "结束";
     },
     options: {
       bottomBar: 5,
