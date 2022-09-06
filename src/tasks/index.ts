@@ -9,7 +9,7 @@ import fs from './fs';
 import create from './create';
 import initVs from './initVs';
 import ide from './ide';
-
+import erase from './erase';
 
 export default (core: LisaType) => {
   installation(core);
@@ -21,5 +21,5 @@ export default (core: LisaType) => {
   create(core);
   initVs(core);
   ide(core);
-
+  erase(core);
 }
