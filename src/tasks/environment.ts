@@ -55,7 +55,7 @@ export default ({ application, cmd, got }: LisaType) => {
         }
         if (target.length > 0) {
 
-          const beta = process.env.LISA_ENV === 'beta' ? '@beta' : '';
+          const beta = process.env.LISA_ENV === 'debug' ? '@beta' : '';
 
           await exec(
             "lisa",
