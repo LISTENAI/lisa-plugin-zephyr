@@ -7,6 +7,8 @@ import { get } from "../env/config";
 import { zephyrVersion, sdkTag } from "../utils/sdk";
 import extendExec from "../utils/extendExec";
 const path7za = require('7zip-bin').path7za;
+import SDK from "../models/sdk";
+
 async function checkZephyrBase(ZEPHYR_BASE: string, westConfigPath: string) {
   if (!ZEPHYR_BASE) {
     return false;
@@ -21,8 +23,10 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
     title: "SDK 设置",
     async task(_ctx, task) {
       task.title = "";
+      const Sdk = new SDK();
       const exec = extendExec(cmd, { task });
       const argv = application.argv as ParsedArgs;
+      console.log(argv)
       const args = argv._[1];
       const env = await getEnv();
       const ZEPHYR_BASE = env["ZEPHYR_BASE"];
@@ -185,9 +189,13 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
           throw new Error(`当前 SDK 已经在此分支`);
         }
         console.log(`正在为您切换分支（${tagName}）`);
-        await cmd("lisa", ["zep", "use-sdk", "--mr", tagName], {
-          stdio: "inherit",
-        });
+        try {
+          await Sdk.changeVersion(tagName);  
+        } catch (error: any) {
+          task.title = `SDK 版本切换失败`;  
+          throw Error(error ? error : `SDK 版本切换失败`);
+        }
+        task.title = `SDK 分支已切换到 ${tagName}`;
       }
       if (args === '7z') { 
         const addArgs = process.argv.slice(5);

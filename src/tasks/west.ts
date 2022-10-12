@@ -73,12 +73,15 @@ export default ({ application, cmd }: LisaType) => {
       const command = execArgs.shift();
       if (!command) return;
 
-      await cmd(command, execArgs, {
-        stdio: "inherit",
-        env: await getEnv(),
-      });
-
-      task.title = 'exec exit';
+      try {
+        await cmd(command, execArgs, {
+          stdio: "inherit",
+          env: await getEnv(),
+        });
+      } catch (error) {
+        task.title = 'exec exit';  
+        throw new Error(`Command failed : ${command} ${execArgs.join(' ')}`)
+      }
     }
   });
   // }
