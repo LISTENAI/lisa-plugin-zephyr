@@ -129,11 +129,11 @@ export default ({ application, cmd }: LisaType) => {
 
         // 根据sampleListJson ux.select 嵌套
         application.debug(sampleListJson);
-
         const answers = await inquirer.prompt([
           {
             type: 'file-tree-selection',
-            name: '选择sample. (`左右键/空格键` 展开文件夹，`回车键` 确定选择)',
+            name: 'file',
+            message: '选择sample. (`左右键/空格键` 展开文件夹，`回车键` 确定选择)',
             root: join(sdk, 'samples'),
             onlyShowValid: true,
             validate: (item) => {
@@ -193,7 +193,6 @@ export default ({ application, cmd }: LisaType) => {
 
       // const selected = await promptDir([], sampleListJson, task);
       // const selectedSample = join(sdk, "samples", ...selected);
-
       const targetDir = workspace() || join(
         process.cwd(),
         await task.prompt({
