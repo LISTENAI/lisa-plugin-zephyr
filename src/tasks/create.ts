@@ -30,7 +30,7 @@ export default ({ application, cmd }: LisaType) => {
       if (args["from-git"]) {
         task.title = "";
         const fromGit = args["from-git"];
-        const targetDir = join(
+        const targetDir = workspace() || join(
           process.cwd(),
           await task.prompt({
             type: "Input",
@@ -42,7 +42,7 @@ export default ({ application, cmd }: LisaType) => {
         try {
           await cmd('git', ['clone', fromGit, targetDir], {
             stdio: 'inherit',
-          })  
+          })
         } catch (error: any) {
           process.exit(error.exitCode);
           // console.log(error)
@@ -129,11 +129,11 @@ export default ({ application, cmd }: LisaType) => {
 
         // 根据sampleListJson ux.select 嵌套
         application.debug(sampleListJson);
-
         const answers = await inquirer.prompt([
           {
             type: 'file-tree-selection',
             name: 'file',
+            message: '选择sample. (`左右键/空格键` 展开文件夹，`回车键` 确定选择)',
             root: join(sdk, 'samples'),
             onlyShowValid: true,
             validate: (item) => {
@@ -184,7 +184,7 @@ export default ({ application, cmd }: LisaType) => {
         }
       
         if (!val) {
-          throw new Error('请选择选项为[xx]的项目sample，例如: [hello_world]')
+          throw new Error('请选择选项为[xx]的项目sample，例如: [hello_world]。注意：`左右键/空格键` 展开文件夹，`回车键` 确定选择。')
         }
         from = selected;
       }
@@ -193,7 +193,6 @@ export default ({ application, cmd }: LisaType) => {
 
       // const selected = await promptDir([], sampleListJson, task);
       // const selectedSample = join(sdk, "samples", ...selected);
-
       const targetDir = workspace() || join(
         process.cwd(),
         await task.prompt({

@@ -164,7 +164,7 @@ export default ({ application, cmd, got }: LisaType) => {
             env,
             cwd: manifestPath,
           });
-          await cmd("git", ["fetch", "origin", branchName], {
+          await cmd("git", ["pull", "origin", branchName], {
             stdio: "inherit",
             env,
             cwd: manifestPath,
