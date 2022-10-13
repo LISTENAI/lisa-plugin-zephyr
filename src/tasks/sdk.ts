@@ -26,7 +26,6 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
       const Sdk = new SDK();
       const exec = extendExec(cmd, { task });
       const argv = application.argv as ParsedArgs;
-      console.log(argv)
       const args = argv._[1];
       const env = await getEnv();
       const ZEPHYR_BASE = env["ZEPHYR_BASE"];

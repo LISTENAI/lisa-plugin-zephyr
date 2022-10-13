@@ -59,7 +59,7 @@ export default class SDK {
         try {
           await cmd("git", ["fetch", "origin"], {
             env,
-            cwd: zephyrbase+'123',
+            cwd: zephyrbase,
           });
           await cmd("git", ["checkout", version], {
             env,
