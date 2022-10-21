@@ -54,11 +54,14 @@ export default ({ application, cmd, got }: LisaType) => {
           target = envs.length > 0 ? envs : current;
         }
         if (target.length > 0) {
+
+          const beta = process.env.LISA_ENV === 'debug' ? '@beta' : '';
+
           await exec(
             "lisa",
             [
               "install",
-              ...target.map((name) => `@lisa-env/${name}`),
+              ...target.map((name) => `@lisa-env/${name}${beta}`),
               "--loglevel",
               "info",
             ],
@@ -161,7 +164,7 @@ export default ({ application, cmd, got }: LisaType) => {
             env,
             cwd: manifestPath,
           });
-          await cmd("git", ["fetch", "origin", branchName], {
+          await cmd("git", ["pull", "origin", branchName], {
             stdio: "inherit",
             env,
             cwd: manifestPath,

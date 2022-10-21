@@ -25,7 +25,6 @@ export default ({ cmd, application }: LisaType) => {
         "-m",
         "venv",
         venv.homeDir,
-        "--upgrade-deps",
       ]);
       //装requirement.txt whl的离线包
       isExists ? await exec("python", ["-m", "pip", "install", "-r", join(requirementsPath, "local_requirements.txt"), "-f", "./dependencies", "--no-index"], {
