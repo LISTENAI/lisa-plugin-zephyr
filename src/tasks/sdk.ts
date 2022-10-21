@@ -165,6 +165,9 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
         }
         const sdk = await get("sdk");
         const version = sdk ? await sdkTag(sdk) : null;
+        let addVerArgs = process.argv.slice(5)[0]; 
+        let tagName = '';
+        let isTag = false ;
         const res = await got(
           "https://cloud.listenai.com/api/v4/projects/554/repository/tags"
         );
@@ -173,17 +176,27 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
         // );
         let tags = JSON.parse(res.body);
         tags.forEach((item: any) => {
+          if (addVerArgs && item.name === addVerArgs) {
+            isTag = true;
+          }
           if (item.name === version) {
             item.name = item.name + "(current)";
           }
         });
-        const tagName = await task.prompt({
-          type: "select",
-          name: "value",
-          message: "请选择切换的分支",
-          choices: tags.map((item: any) => item.name),
-        });
-
+        if (addVerArgs) {
+          if (!isTag) {
+            throw new Error(`当前 SDK 不存在该版本`);
+          }
+          tagName = addVerArgs;
+        } else {
+            tagName = await task.prompt({
+            type: "select",
+            name: "value",
+            message: "请选择切换的分支",
+            choices: tags.map((item: any) => item.name),
+          });
+        }
+       
         if (version === tagName) {
           throw new Error(`当前 SDK 已经在此分支`);
         }
