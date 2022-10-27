@@ -100,7 +100,8 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
             (item) => item.release && item.name.indexOf("beta")
           );
           mr = `${released.name}`;
-          const url = `https://cdn.iflyos.cn/public/lisa-zephyr-dist/${mr}.7z`;
+          const sys = process.platform == 'win32' ? 'windows' : 'linux';
+          const url = `https://cdn.iflyos.cn/public/lisa-zephyr-dist/${mr}-${sys}.7z`;
           //用户选择的安装目录 LISA_HOME
           application.download_path = sdkPath;
           // 下载sdk 
@@ -108,7 +109,7 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
             throw new Error(`SDK 路径不能包含中文: ${sdkPath}`);
           }
 
-          const sdk7zPath = join(sdkPath, `${mr}.7z`);
+          const sdk7zPath = join(sdkPath, `${mr}-${sys}.7z`);
           application.debug(
             "sdk下载",
             "\n",
@@ -131,7 +132,7 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
 
           await fs.project.downloadFile({
             url,
-            fileName: `${mr}.7z`,
+            fileName: `${mr}-${sys}.7z`,
             targetDir: sdkPath,
             progress: (percentage: number, transferred: number, total: number) => {
               customBar.update(percentage);
