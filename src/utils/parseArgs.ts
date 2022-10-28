@@ -27,7 +27,7 @@ type ParseArgResult<Fields> = {
   : boolean;
 };
 
-export default function parseArgs<T = ParseArgOptions>(argv: string[] | ParsedArgs, options: T): {
+export default function parseArgs<T extends ParseArgOptions>(argv: string[] | ParsedArgs, options: T): {
   args: ParseArgResult<T>;
   printHelp: (usages?: string[]) => void;
 } {
@@ -46,7 +46,7 @@ export default function parseArgs<T = ParseArgOptions>(argv: string[] | ParsedAr
   return { args: result, printHelp: (usages) => printHelp(options, usages) };
 }
 
-function printHelp<T = ParseArgOptions>(options: T, usages?: string[]): void {
+function printHelp<T extends ParseArgOptions >(options: T, usages?: string[]): void {
   process.nextTick(() => {
     if (usages && usages.length) {
       for (const usage of usages) {
@@ -58,10 +58,10 @@ function printHelp<T = ParseArgOptions>(options: T, usages?: string[]): void {
     const helps = Object.entries(options).map(([key, opt]) => {
       let keys = opt.short ? `-${opt.short}, ` : '    ';
       keys += `--${key}`;
-      if (opt.arg) {
-        keys += ` <${opt.arg}>`;
-      } else if (opt.optArg) {
-        keys += ` [${opt.arg}]`;
+      if ((<ParseArgFieldWithArg>opt).arg) {
+        keys += ` <${(<ParseArgFieldWithArg>opt).arg}>`;
+      } else if ((<ParseArgFieldWithOptionalArg>opt).optArg) {
+        keys += ` [${(<ParseArgFieldWithOptionalArg>opt).optArg}]`;
       }
 
       return { keys, help: opt.help || '' };
