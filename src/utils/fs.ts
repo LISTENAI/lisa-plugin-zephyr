@@ -10,12 +10,19 @@ export interface IPartition {
   type: 'littlefs';
   source?: string;
 }
+export interface IPartitionInfo {
+  label: string;
+  addr: number;
+  size: number;
+  source?: string;
+}
+
 
 export function parsePartitions(dt: DeviceTree & IDeviceTreeParser): IPartition[] {
   const partitions: IPartition[] = [];
   for (const node of Object.values(dt.nodes)) {
     if (node.compatible?.includes('zephyr,fstab,littlefs')) {
-      
+
       const path = node.properties.partition;
       if (typeof path != 'string') continue;
 
@@ -37,6 +44,26 @@ export function parsePartitions(dt: DeviceTree & IDeviceTreeParser): IPartition[
     }
   }
   return partitions;
+}
+
+export function getPartitionInfo(dt: DeviceTree & IDeviceTreeParser, name: string): IPartitionInfo | undefined {
+  let partition;
+  for (const node of Object.values(dt.nodes)) {
+    const labelName = dt.labelNameByPath(node.path);
+    if (labelName === name) {
+      if (!node?.reg || !node?.reg[0]) continue;
+      const reg = node.reg[0];
+      if (typeof reg.addr != 'number' || typeof reg.size != 'number') continue;
+      partition = {
+        label: labelName,
+        addr: reg.addr,
+        size: reg.size,
+      };
+      break;
+    }
+  }
+
+  return partition;
 }
 
 export interface IFsFilter {
@@ -67,7 +94,7 @@ export async function path2json(dirParse: Array<string>, json: ISampleList): Pro
   const dir = dirParse.shift();
   if (dir) {
     if (typeof json[dir] === 'string') {
-      return json
+      return json;
     }
     json[dir] = dirParse.length ? await path2json(dirParse, (json[dir] || {}) as ISampleList) : dir;
   } else {
