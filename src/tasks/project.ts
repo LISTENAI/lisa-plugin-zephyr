@@ -65,8 +65,8 @@ async function lpkHandle(application: Application, task: any) {
     const mapJson = await readJSON(mapFile);
     const dt = await loadDT('build', await getEnv());
     for (const key in mapJson) {
-      const { partition_file_path, required, address } = mapJson[key];
-      const partition_file = partition_file_path && join(project, partition_file_path);
+      const { path, required, address } = mapJson[key];
+      const partition_file = path && join(project, path);
       if ((await pathExists(partition_file))) {
         if (address) {
           application.debug(partition_file, address);
@@ -75,7 +75,7 @@ async function lpkHandle(application: Application, task: any) {
         }
         const partition = getPartitionInfo(dt, key);
         if (!partition) {
-          return task.skip(`${partition_file_path}该文件无分区信息`);
+          return task.skip(`${path}该文件无分区信息`);
         } else {
           application.debug(partition_file, `0x${partition.addr.toString(16)}`);
           await lpk.addImage(partition_file, `0x${partition.addr.toString(16)}`);
