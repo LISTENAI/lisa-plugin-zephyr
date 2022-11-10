@@ -38,8 +38,9 @@ async function lpkHandle(application: Application, task: any) {
     throw new Error(`项目不存在: ${project}`);
   }
   const lpk = new Lpk();
-  const buildDir = join(project, 'build');
+  const buildDir = (await getCMakeCache("build", "APPLICATION_BINARY_DIR", "PATH")) || "";
   const resourceDir = join(project, 'resource');
+  application.debug(buildDir, resourceDir)
   lpk.setName(basename(project));
   if (!(await pathExists(join(buildDir, 'zephyr', '.config')))) {
     throw new Error("请先编译出固件再进行生成lpk包");
