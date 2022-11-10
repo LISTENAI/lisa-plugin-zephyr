@@ -18,6 +18,17 @@ export default class SDK {
         await invalidateEnv();
     }
 
+    async sdkTag(path: string): Promise<string | null> {
+      try {
+        const res = await Lisa.cmd('git', ['describe', '--abbrev=0', '--tags'], {
+          cwd: path
+        });
+        return res.stdout || '';
+      } catch (error) {
+        return ''
+      }
+    }
+
     async zephyrbase() {
         const env = await getEnv();
         return env["ZEPHYR_BASE"] ?? '';
@@ -53,15 +64,26 @@ export default class SDK {
 
     async changeVersion(version: string, install: boolean = false) {
         const zephyrbase = await this.zephyrbase();
+        const tag = await this.sdkTag(zephyrbase);
         await this._checkZephyrBase(zephyrbase, await this.westConfigPath());
         const {cmd} = Lisa;
         const env = await getEnv();
         try {
-          await cmd("git", ["fetch", "origin"], {
+          await cmd("git", ["tag", "-d", tag || ''], {
+            env,
+            cwd: zephyrbase,
+          });
+        } catch (error) {
+          
+        }
+        try {
+          await cmd("git", ["fetch", "origin", "tag", version, "--no-tags"], {
+            stdio: "inherit",
             env,
             cwd: zephyrbase,
           });
           await cmd("git", ["checkout", version], {
+            stdio: "inherit",
             env,
             cwd: zephyrbase,
           });

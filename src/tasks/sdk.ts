@@ -100,7 +100,8 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
             (item) => item.release && item.name.indexOf("beta")
           );
           mr = `${released.name}`;
-          const url = `https://cdn.iflyos.cn/public/lisa-zephyr-dist/${mr}.7z`;
+          const sys = process.platform == 'win32' ? 'windows' : 'linux';
+          const url = `https://cdn.iflyos.cn/public/lisa-zephyr-dist/${mr}-${sys}.7z`;
           //用户选择的安装目录 LISA_HOME
           application.download_path = sdkPath;
           // 下载sdk 
@@ -108,7 +109,7 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
             throw new Error(`SDK 路径不能包含中文: ${sdkPath}`);
           }
 
-          const sdk7zPath = join(sdkPath, `${mr}.7z`);
+          const sdk7zPath = join(sdkPath, `${mr}-${sys}.7z`);
           application.debug(
             "sdk下载",
             "\n",
@@ -131,7 +132,7 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
 
           await fs.project.downloadFile({
             url,
-            fileName: `${mr}.7z`,
+            fileName: `${mr}-${sys}.7z`,
             targetDir: sdkPath,
             progress: (percentage: number, transferred: number, total: number) => {
               customBar.update(percentage);
@@ -165,6 +166,9 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
         }
         const sdk = await get("sdk");
         const version = sdk ? await sdkTag(sdk) : null;
+        let addVerArgs = process.argv.slice(5)[0]; 
+        let tagName = '';
+        let isTag = false ;
         const res = await got(
           "https://cloud.listenai.com/api/v4/projects/554/repository/tags"
         );
@@ -173,17 +177,27 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
         // );
         let tags = JSON.parse(res.body);
         tags.forEach((item: any) => {
+          if (addVerArgs && item.name === addVerArgs) {
+            isTag = true;
+          }
           if (item.name === version) {
             item.name = item.name + "(current)";
           }
         });
-        const tagName = await task.prompt({
-          type: "select",
-          name: "value",
-          message: "请选择切换的分支",
-          choices: tags.map((item: any) => item.name),
-        });
-
+        if (addVerArgs) {
+          if (!isTag) {
+            throw new Error(`当前 SDK 不存在该版本`);
+          }
+          tagName = addVerArgs;
+        } else {
+            tagName = await task.prompt({
+            type: "select",
+            name: "value",
+            message: "请选择切换的分支",
+            choices: tags.map((item: any) => item.name),
+          });
+        }
+       
         if (version === tagName) {
           throw new Error(`当前 SDK 已经在此分支`);
         }
