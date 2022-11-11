@@ -11,7 +11,7 @@
     "build": "tsc -p .  &&  node prebuild",
     "watch": "nodemon --exec npm run build -w ./src -e ts",
     "prepublishOnly": "npm run build",
-    "postinstall": "lisa zep install",
+    "postinstall": "lisa zep install --online",
     "test": "cross-env NODE_ENV=test jest --verbose --testTimeout=1200000"
   },
   "lisa": {
