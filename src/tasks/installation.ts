@@ -42,7 +42,7 @@ export default ({ cmd, application }: LisaType) => {
       //装requirement.txt whl的离线包
       (isExists && !online) ? await exec("python", ["-m", "pip", "install", "-r", requirementsPath, "-f", "./dependencies", "--no-index"], {
         env: await getEnv(),
-        cwd: requirementsPath
+        cwd: whlPath
       }) :
         await exec("python", ["-m", "pip", "install", "west"], {
           env: await getEnv(),
