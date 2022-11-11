@@ -1,6 +1,6 @@
 {
   "name": "@lisa-plugin/zephyr",
-  "version": "1.6.7",
+  "version": "1.6.7-beta.3",
   "description": "LISA plugin for Zephyr",
   "main": "./lib/main.js",
   "engines": {
@@ -11,7 +11,7 @@
     "build": "tsc -p .  &&  node prebuild",
     "watch": "nodemon --exec npm run build -w ./src -e ts",
     "prepublishOnly": "npm run build",
-    "postinstall": "lisa zep install --online",
+    "postinstall": "lisa zep install",
     "test": "cross-env NODE_ENV=test jest --verbose --testTimeout=1200000"
   },
   "lisa": {
