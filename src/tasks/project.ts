@@ -111,6 +111,18 @@ export default ({ application, cmd, cli }: LisaType) => {
     },
   });
 
+  job("update", {
+    title: "更新提货单projects",
+    async task(ctx, task) {
+      task.title = "";
+      const targetDir = workspace() || process.cwd();
+      const app = new AppProject(targetDir);
+      await app.update();
+      task.title = "更新成功";
+      testLog(task, "更新成功");
+    }
+  })
+
   job("build", {
     title: "构建",
     async task(ctx, task) {
