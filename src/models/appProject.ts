@@ -6,6 +6,7 @@ import Lisa, { TaskObject } from '@listenai/lisa_core';
 import { venvScripts } from '../venv';
 import { PLUGIN_HOME } from '../env/config';
 import * as yaml from 'js-yaml';
+import { platform } from "os";
 import simpleGit from "simple-git";
 import { clean } from "../utils/repo";
 // import { parse } from 'ini';
@@ -110,31 +111,33 @@ export default class AppProject {
     }
 
     update = async (): Promise<void> => {
-        const selfSDK = await this.selfSDK();
-        if (selfSDK) {
-            await this.updateSelfSDK()
-        }
-        const manifest = await this.manifest();
-        if (selfSDK && manifest) {
-            const appSDK = join(selfSDK, '..')
-            const projects = manifest.manifest.projects;
-            for (let i in projects) {
-                const project: { [key: string]: any } = projects[i];
-                // const targetLink = project.name === 'zephyr' ? join(appSDK, 'zephyr') : (project.path ? join(appSDK, project.path) : '');
-                const targetLink = project.path ? join(appSDK, project.path) : '';
-                if (!targetLink) continue;
-                if (await pathExists(targetLink)) {
-                    const isLink = (await lstat(targetLink)).isSymbolicLink();
-                    if (isLink) {
-                        await unlink(targetLink);
+        if (platform() !== 'win32') {
+            const selfSDK = await this.selfSDK();
+            if (selfSDK) {
+                await this.updateSelfSDK()
+            }
+            const manifest = await this.manifest();
+            if (selfSDK && manifest) {
+                const appSDK = join(selfSDK, '..')
+                const projects = manifest.manifest.projects;
+                for (let i in projects) {
+                    const project: { [key: string]: any } = projects[i];
+                    // const targetLink = project.name === 'zephyr' ? join(appSDK, 'zephyr') : (project.path ? join(appSDK, project.path) : '');
+                    const targetLink = project.path ? join(appSDK, project.path) : '';
+                    if (!targetLink) continue;
+                    if (await pathExists(targetLink)) {
+                        const isLink = (await lstat(targetLink)).isSymbolicLink();
+                        if (isLink) {
+                            await unlink(targetLink);
+                            await this.symlinkPocject(project, targetLink);
+                        }
+                    } else {
                         await this.symlinkPocject(project, targetLink);
                     }
-                } else {
-                    await this.symlinkPocject(project, targetLink);
                 }
             }
+            this.setTaskTitle('');
         }
-        this.setTaskTitle('');
         await undertake(['update'])
     }
 
