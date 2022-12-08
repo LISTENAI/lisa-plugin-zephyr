@@ -26,7 +26,7 @@ export default ({ application, cmd }: LisaType) => {
         "from": { arg: "url", help: "从指定Sample进行创建" },
         "from-git": { arg: "url", help: "从指定仓库及分支初始化 SDK" }
       });
-
+      application.debug = 'lisa zep create';
       if (args["from-git"]) {
         task.title = "";
         const fromGit = args["from-git"];

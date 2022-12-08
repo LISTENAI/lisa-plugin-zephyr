@@ -117,11 +117,13 @@ export default class AppProject {
                 await this.updateSelfSDK()
             }
             const manifest = await this.manifest();
+            Lisa.application.debug(manifest);
             if (selfSDK && manifest) {
                 const appSDK = join(selfSDK, '..')
                 const projects = manifest.manifest.projects;
                 for (let i in projects) {
                     const project: { [key: string]: any } = projects[i];
+                    Lisa.application.debug(project.name);
                     // const targetLink = project.name === 'zephyr' ? join(appSDK, 'zephyr') : (project.path ? join(appSDK, project.path) : '');
                     const targetLink = project.path ? join(appSDK, project.path) : '';
                     if (!targetLink) continue;
@@ -138,6 +140,7 @@ export default class AppProject {
             }
             this.setTaskTitle('');
         }
+        Lisa.application.debug(this.workspace);
         await undertake(['update'], {
             cwd: this.workspace
         })
@@ -169,12 +172,16 @@ export default class AppProject {
         } else {
             await this.symlinkPocject(project, targetLink);
         }
+        Lisa.application.debug('updateSelfSDK symlink end')
         await undertake(['update', 'zephyr'], {
             stdio: "ignore",
+            cwd: this.workspace
         })
+        Lisa.application.debug('update zephyr end')
     }
 
     symlinkPocject = async (project: { [key: string]: any }, targetLink: string): Promise<Boolean> => {
+        Lisa.application.debug(project.name);
         const cacheDir = resolve(join(this.cacheDir, project.url.replace(/^https?:\/\//,'')));
         const mainCache = join(cacheDir, 'main');
         await mkdirp(cacheDir);
@@ -186,6 +193,7 @@ export default class AppProject {
         await mkdirp(join(targetLink, '..'));
         if (await pathExists(targetCache)) {
             try {
+                Lisa.application.debug('1');
                 await symlink(targetCache, targetLink);
                 link = true;
             } catch (error) {
@@ -194,6 +202,7 @@ export default class AppProject {
         }
         if (!link && await pathExists(mainCache)) {
             try {
+                Lisa.application.debug('2');
                 const res = await Lisa.cmd('git', ['config', '--get', 'remote.origin.url'], {
                     env,
                     cwd: mainCache
@@ -211,6 +220,8 @@ export default class AppProject {
         }
         if (!link && !await pathExists(mainCache)) {
             try {
+                Lisa.application.debug('3');
+                console.log(`\x1B[32m=== cache clone ${project.name} (${project.name})\x1B[0m`);
                 await Lisa.cmd('git', ['clone', `${project.url}.git`, 'main', '--depth', '1',], {
                     env,
                     stdio: 'inherit',
@@ -225,18 +236,21 @@ export default class AppProject {
                 console.log(error)
             }
         }
-
         if (link) {
             try {
-                this.setTaskTitle(`=== cache fetch ${project.name} (${project.name})`);
-                await Lisa.cmd('git', ['fetch', `origin`, `${project.revision}`], {
+                Lisa.application.debug('4');
+                console.log(`\x1B[32m=== cache fetch target revision ${project.name} (${project.name})\x1B[0m`);
+                await Lisa.cmd('git', ['fetch', `origin`, `${project.revision}`, '--depth', '1'], {
                     env,
-                    cwd: targetLink
+                    cwd: targetLink,
+                    stdio: 'inherit'
                 })
             } catch (error) {
                 console.log(error)
             }
         }
+        
+        Lisa.application.debug(link);
         return link;
     }
 

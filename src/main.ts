@@ -116,6 +116,7 @@ export async function undertake(
   }
 
   const isUpdate = env["ZEPHYR_BASE"] && argv[0] === "update";
+  Lisa.application.debug(env["ZEPHYR_BASE"]);
   try {
     const res = await cmd(
       await venvScripts("west"),
