@@ -138,7 +138,9 @@ export default class AppProject {
             }
             this.setTaskTitle('');
         }
-        await undertake(['update'])
+        await undertake(['update'], {
+            cwd: this.workspace
+        })
     }
 
     updateSelfSDK = async (): Promise<void> => {
