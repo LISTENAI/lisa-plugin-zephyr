@@ -22,8 +22,7 @@ export default ({ application, cli }: LisaType) => {
             const HOMEDIR = homedir();
             const LISA_HOME = process.env.LISA_HOME || '';
             const env = await getEnv();
-            // const ZEPHYR_TOOLCHAIN_VARIANT = env["ZEPHYR_TOOLCHAIN_VARIANT"] || 'gnuarmemb';
-            const ZEPHYR_TOOLCHAIN_VARIANT = 'zephyr';
+            const ZEPHYR_TOOLCHAIN_VARIANT = env["ZEPHYR_TOOLCHAIN_VARIANT"] || 'gnuarmemb';
             const toolchainPrefix = ToolchainPrefixType[ZEPHYR_TOOLCHAIN_VARIANT];
             const jlink = await getBinarie('jlink-venus');
             let armTool: Binary | undefined;
@@ -31,16 +30,15 @@ export default ({ application, cli }: LisaType) => {
             let armToolchainPath = "";
             let pyocdpath = await venvScripts('pyocd');
             switch (ZEPHYR_TOOLCHAIN_VARIANT) {
-                // case 'gnuarmemb':
-                //     armTool = await getBinarie('gcc-arm-none-eabi-9');
-                //     break;
+                case 'gnuarmemb':
+                    armTool = await getBinarie('gcc-arm-none-eabi-9');
+                    break;
                 case 'zephyr':
                     armTool = await getBinarie('zephyr-sdk-0.14.2');
                     break;
                 default:
                     break;
             }
-            console.debug('armTool----------');
             console.debug(armTool);
             const JLINK_LISA_HOME_INDEX = jlink && jlink.binaryDir && jlink.binaryDir.indexOf(LISA_HOME);
             const JLINK_HOMEDIR_INDEX = jlink && jlink.binaryDir && jlink.binaryDir.indexOf(HOMEDIR);
