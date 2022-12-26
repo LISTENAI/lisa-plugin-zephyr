@@ -2,7 +2,7 @@ name: test
 
 on:
   push:
-    branches: ['master']
+    branches: ['master', 'feature/generate_eup_and_register']
 
 jobs:
   build:
