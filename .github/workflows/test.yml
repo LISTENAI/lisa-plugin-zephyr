@@ -40,9 +40,13 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.build.outputs.tarball }}
-          path: |
-            ${{ steps.build.outputs.tarball }}
-            ./publish.zip
+          path: ${{ steps.build.outputs.tarball }}
+
+      - name: Upload EUP package
+        uses: actions/upload-artifact@v2
+        with:
+          name: eup.zip
+          path: ./eup.zip
 
   test:
     needs: build
