@@ -54,7 +54,7 @@ jobs:
         uses: indiesdev/curl@v1.1
         id: eup_entity
         with:
-          url: https://staging-castor.iflyos.cn/castor/v3/lisaPlugin/version
+          url: https://castor.iflyos.cn/castor/v3/lisaPlugin/version
           method: "POST"
           accept: 200,201
           headers: "{ \"x-eup-token\": \"${{ secrets.LS_CASTOR_EUP_MANAGE_KEY }}\" }"
