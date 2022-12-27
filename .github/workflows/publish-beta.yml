@@ -33,8 +33,8 @@ jobs:
         with:
           args: zip -qq -r ./eup.zip lib scripts vscode package.json
 
-#      - name: Publish (beta)
-#        run: npm publish --registry=https://registry-lpm.listenai.com --tag=beta
+      - name: Publish (beta)
+        run: npm publish --registry=https://registry-lpm.listenai.com --tag=beta
 
       - uses: battila7/get-version-action@v2
         id: get_version
@@ -62,7 +62,3 @@ jobs:
           timeout: 5000
           retries: 3
           log-response: true
-
-      - name: EUP Summary
-        run: |
-          echo '${{ steps.eup_entity.outputs.response }}' |jq '.data.data.id'
