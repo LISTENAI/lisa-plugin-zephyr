@@ -9,9 +9,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
           node-version: '16.x'
 
@@ -31,4 +31,17 @@ jobs:
       - uses: battila7/get-version-action@v2
         id: get_version
 
-    
+      - uses: actions/download-artifact@v3
+        with:
+          name: eup.zip
+
+      - name: Upload to OSS
+        id: upload_to_oss
+        uses: listenai-jw/upload-to-oss@master
+        with:
+          key-id: ${{ secrets.OSS_KEY_ID }}
+          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          endpoint: https://oss-cn-shanghai.aliyuncs.com
+          bucket: iflyos-external
+          assets: |
+            eup.zip:/public/lisa_plugin_express_update/@lisa-plugin/zephyr/${{ steps.get_version.outputs.version-without-v }}.zip

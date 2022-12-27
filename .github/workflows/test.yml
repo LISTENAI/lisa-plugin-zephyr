@@ -12,7 +12,7 @@ jobs:
       tarball: ${{ steps.build.outputs.tarball }}
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
 
       - uses: actions/setup-node@v3
         with:
@@ -64,7 +64,7 @@ jobs:
         node: ['16']
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
      
       - name: Use Node.js ${{ matrix.node }}
         uses: actions/setup-node@v3
@@ -81,7 +81,7 @@ jobs:
         run: yarn --ignore-scripts --registry=https://registry-lpm.listenai.com
 
       - name: Download tarball
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ${{ needs.build.outputs.tarball }}
 
