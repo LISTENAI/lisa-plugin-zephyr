@@ -50,14 +50,19 @@ jobs:
           assets: |
             eup.zip:/public/lisa_plugin_express_update/@lisa-plugin/zephyr/${{ steps.get_version.outputs.version-without-v }}.zip
 
-      - name: Register EUP entry
+      - name: Register EUP entity
         uses: indiesdev/curl@v1.1
+        id: eup_entity
         with:
-          url: http://staging-castor.iflyos.cn/castor/v3/lisaPlugin/version
+          url: https://staging-castor.iflyos.cn/castor/v3/lisaPlugin/version
           method: "POST"
           accept: 200,201
           headers: "{ \"x-eup-token\": \"${{ secrets.LS_CASTOR_EUP_MANAGE_KEY }}\" }"
           body: "{\"name\":\"@lisa-plugin/zephyr\",\"version\":\"${{ steps.get_version.outputs.version-without-v }}\",\"isEnabled\":\"1\",\"isBeta\":true,\"expressPackageUrl\":\"https://cdn.iflyos.cn/public/lisa_plugin_express_update/@lisa-plugin/zephyr/${{ steps.get_version.outputs.version-without-v }}.zip\",\"expressBaseVersion\":\"1.6.8\",\"releaseNotes\":[\"${{ steps.get_version.outputs.version-without-v }}\"]}"
-          timeout: 10000
+          timeout: 5000
           retries: 3
           log-response: true
+
+      - name: EUP Summary
+        run: |
+          echo ${{ steps.eup_entity.outputs.response }} |jq '.id'

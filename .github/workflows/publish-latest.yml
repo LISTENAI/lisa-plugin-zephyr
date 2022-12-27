@@ -25,13 +25,38 @@ jobs:
       - uses: battila7/get-version-action@v2
         id: get_version
 
-      - name: Publish (latest)
-        run: npm dist-tag add @lisa-plugin/zephyr@${{ steps.get_version.outputs.version-without-v }} latest --registry=https://registry-lpm.listenai.com
+      - name: Get jq
+        run: wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && chmod 755 jq
 
-      - name: WeChat Work notification by news
-        uses: chf007/action-wechat-work@master
-        env:
-          WECHAT_WORK_BOT_WEBHOOK: ${{secrets.WECHAT_BOT_WEBHOOK_LISA_ZEPHYR}}
+      - name: Get EUP entity
+        id: eup_entity
+        uses: indiesdev/curl@v1.1
         with:
-          msgtype: news
-          articles: '[{"title":"@lisa-plugin/zephyr@latest","description":"最新版本 ${{ steps.get_version.outputs.version-without-v }} 发布","url":"https://github.com/LISTENAI/lisa-plugin-zephyr/releases/tag/v${{ steps.get_version.outputs.version-without-v }}","picurl":"https://cdn.iflyos.cn/public/qwfb.jpeg"}]'
+          url: https://staging-castor.iflyos.cn/castor/v3/lisaPlugin/version?name=@lisa-plugin/zephyr&version=${{ steps.get_version.outputs.version-without-v }}&isBeta=0
+          method: "GET"
+          accept: 200
+          log-response: true
+
+      - name: Get EUP entity ID
+        id: eup_entity_id
+        run: echo "id=$(echo ${{ steps.eup_entity.outputs.response }} |jq '.id')" >> $GITHUB_OUTPUT
+
+      - name: Update EUP entity
+        uses: indiesdev/curl@v1.1
+        with:
+          url: https://staging-castor.iflyos.cn/castor/v3/lisaPlugin/version
+          method: "POST"
+          accept: 200
+          headers: "{ \"x-eup-token\": \"${{ secrets.LS_CASTOR_EUP_MANAGE_KEY }}\" }"
+          body: "{ \"id\": ${{ steps.eup_entity_id.outputs.id }}, \"isBeta\": false }"
+
+#      - name: Publish (latest)
+#        run: npm dist-tag add @lisa-plugin/zephyr@${{ steps.get_version.outputs.version-without-v }} latest --registry=https://registry-lpm.listenai.com
+
+#      - name: WeChat Work notification by news
+#        uses: chf007/action-wechat-work@master
+#        env:
+#          WECHAT_WORK_BOT_WEBHOOK: ${{secrets.WECHAT_BOT_WEBHOOK_LISA_ZEPHYR}}
+#        with:
+#          msgtype: news
+#          articles: '[{"title":"@lisa-plugin/zephyr@latest","description":"最新版本 ${{ steps.get_version.outputs.version-without-v }} 发布","url":"https://github.com/LISTENAI/lisa-plugin-zephyr/releases/tag/v${{ steps.get_version.outputs.version-without-v }}","picurl":"https://cdn.iflyos.cn/public/qwfb.jpeg"}]'
