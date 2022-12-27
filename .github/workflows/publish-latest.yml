@@ -29,7 +29,7 @@ jobs:
         id: eup_entity
         uses: indiesdev/curl@v1.1
         with:
-          url: https://staging-castor.iflyos.cn/castor/v3/lisaPlugin/version?name=@lisa-plugin/zephyr&version=${{ steps.get_version.outputs.version-without-v }}&isBeta=1
+          url: https://castor.iflyos.cn/castor/v3/lisaPlugin/version?name=@lisa-plugin/zephyr&version=${{ steps.get_version.outputs.version-without-v }}&isBeta=1
           method: "GET"
           accept: 200
           timeout: 5000
@@ -43,7 +43,7 @@ jobs:
       - name: Update EUP entity
         uses: indiesdev/curl@v1.1
         with:
-          url: https://staging-castor.iflyos.cn/castor/v3/lisaPlugin/version
+          url: https://castor.iflyos.cn/castor/v3/lisaPlugin/version
           method: "POST"
           accept: 200
           timeout: 5000
