@@ -32,6 +32,8 @@ jobs:
           url: https://staging-castor.iflyos.cn/castor/v3/lisaPlugin/version?name=@lisa-plugin/zephyr&version=${{ steps.get_version.outputs.version-without-v }}&isBeta=0
           method: "GET"
           accept: 200
+          timeout: 5000
+          retries: 3
           log-response: true
 
       - name: Get EUP entity ID
@@ -44,8 +46,11 @@ jobs:
           url: https://staging-castor.iflyos.cn/castor/v3/lisaPlugin/version
           method: "POST"
           accept: 200
+          timeout: 5000
+          retries: 3
           headers: "{ \"x-eup-token\": \"${{ secrets.LS_CASTOR_EUP_MANAGE_KEY }}\" }"
           body: "{ \"id\": ${{ steps.eup_entity_id.outputs.id }}, \"isBeta\": false }"
+          log-response: true
 
 #      - name: Publish (latest)
 #        run: npm dist-tag add @lisa-plugin/zephyr@${{ steps.get_version.outputs.version-without-v }} latest --registry=https://registry-lpm.listenai.com
