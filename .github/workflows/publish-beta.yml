@@ -65,4 +65,4 @@ jobs:
 
       - name: EUP Summary
         run: |
-          echo ${{ steps.eup_entity.outputs.response }} |jq '.data.data.id'
+          echo '${{ steps.eup_entity.outputs.response }}' |jq '.data.data.id'

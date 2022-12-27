@@ -36,7 +36,7 @@ jobs:
 
       - name: Get EUP entity ID
         id: eup_entity_id
-        run: echo "id=$(echo ${{ steps.eup_entity.outputs.response }} |jq '.data.data.id')" >> $GITHUB_OUTPUT
+        run: echo "id=$(echo '${{ steps.eup_entity.outputs.response }}' |jq '.data.data.id')" >> $GITHUB_OUTPUT
 
       - name: Update EUP entity
         uses: indiesdev/curl@v1.1
