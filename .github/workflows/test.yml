@@ -28,10 +28,10 @@ jobs:
         run: yarn --ignore-scripts --registry=https://registry-lpm.listenai.com
 
       - name: Build (NPM package)
-        id: build
         run: npm run build
 
       - name: Pack (NPM package)
+        id: build
         run: echo "tarball=$(npm pack)" >> $GITHUB_OUTPUT
 
       - name: Pack (EUP package)
