@@ -25,15 +25,19 @@ jobs:
       - name: Install dependencies
         run: npm install --ignore-scripts --registry=https://registry-lpm.listenai.com
 
+      - name: Build (NPM package)
+        run: npm run build
+
+      - name: Pack (EUP package)
+        uses: montudor/action-zip@v1
+        with:
+          args: zip -qq -r ./eup.zip lib scripts vscode package.json
+
       - name: Publish (beta)
         run: npm publish --registry=https://registry-lpm.listenai.com --tag=beta
 
       - uses: battila7/get-version-action@v2
         id: get_version
-
-      - uses: actions/download-artifact@v3
-        with:
-          name: eup.zip
 
       - name: Upload to OSS
         id: upload_to_oss
