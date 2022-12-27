@@ -9,9 +9,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
           node-version: '16.x'
 
@@ -24,6 +24,33 @@ jobs:
 
       - uses: battila7/get-version-action@v2
         id: get_version
+
+      - name: Get EUP entity
+        id: eup_entity
+        uses: indiesdev/curl@v1.1
+        with:
+          url: https://staging-castor.iflyos.cn/castor/v3/lisaPlugin/version?name=@lisa-plugin/zephyr&version=${{ steps.get_version.outputs.version-without-v }}&isBeta=1
+          method: "GET"
+          accept: 200
+          timeout: 5000
+          retries: 3
+          log-response: true
+
+      - name: Get EUP entity ID
+        id: eup_entity_id
+        run: echo "id=$(echo '${{ steps.eup_entity.outputs.response }}' |jq '.data.data.id')" >> $GITHUB_OUTPUT
+
+      - name: Update EUP entity
+        uses: indiesdev/curl@v1.1
+        with:
+          url: https://staging-castor.iflyos.cn/castor/v3/lisaPlugin/version
+          method: "POST"
+          accept: 200
+          timeout: 5000
+          retries: 3
+          headers: "{ \"x-eup-token\": \"${{ secrets.LS_CASTOR_EUP_MANAGE_KEY }}\" }"
+          body: "{ \"id\": ${{ steps.eup_entity_id.outputs.id }}, \"isBeta\": false }"
+          log-response: true
 
       - name: Publish (latest)
         run: npm dist-tag add @lisa-plugin/zephyr@${{ steps.get_version.outputs.version-without-v }} latest --registry=https://registry-lpm.listenai.com

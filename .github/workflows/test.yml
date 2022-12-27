@@ -12,9 +12,9 @@ jobs:
       tarball: ${{ steps.build.outputs.tarball }}
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
           node-version: '16'
 
@@ -27,15 +27,29 @@ jobs:
       - name: Install dependencies
         run: yarn --ignore-scripts --registry=https://registry-lpm.listenai.com
 
-      - name: Build
+      - name: Build (NPM package)
+        run: npm run build
+
+      - name: Pack (NPM package)
         id: build
-        run: npm run build && echo "::set-output name=tarball::$(npm pack)"
+        run: echo "tarball=$(npm pack)" >> $GITHUB_OUTPUT
+
+      - name: Pack (EUP package)
+        uses: montudor/action-zip@v1
+        with:
+          args: zip -qq -r ./eup.zip lib scripts vscode package.json
 
       - name: Upload tarball
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.build.outputs.tarball }}
           path: ${{ steps.build.outputs.tarball }}
+
+      - name: Upload EUP package
+        uses: actions/upload-artifact@v3
+        with:
+          name: eup.zip
+          path: eup.zip
 
   test:
     needs: build
@@ -50,10 +64,10 @@ jobs:
         node: ['16']
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
      
       - name: Use Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
 
@@ -67,7 +81,7 @@ jobs:
         run: yarn --ignore-scripts --registry=https://registry-lpm.listenai.com
 
       - name: Download tarball
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ${{ needs.build.outputs.tarball }}
 

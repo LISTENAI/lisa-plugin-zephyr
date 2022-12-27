@@ -9,9 +9,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
           node-version: '16.x'
 
@@ -25,10 +25,40 @@ jobs:
       - name: Install dependencies
         run: npm install --ignore-scripts --registry=https://registry-lpm.listenai.com
 
+      - name: Build (NPM package)
+        run: npm run build
+
+      - name: Pack (EUP package)
+        uses: montudor/action-zip@v1
+        with:
+          args: zip -qq -r ./eup.zip lib scripts vscode package.json
+
       - name: Publish (beta)
         run: npm publish --registry=https://registry-lpm.listenai.com --tag=beta
 
       - uses: battila7/get-version-action@v2
         id: get_version
 
-    
+      - name: Upload to OSS
+        id: upload_to_oss
+        uses: listenai-jw/upload-to-oss@master
+        with:
+          key-id: ${{ secrets.OSS_KEY_ID }}
+          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          endpoint: https://oss-cn-shanghai.aliyuncs.com
+          bucket: iflyos-external
+          assets: |
+            eup.zip:/public/lisa_plugin_express_update/@lisa-plugin/zephyr/${{ steps.get_version.outputs.version-without-v }}.zip
+
+      - name: Register EUP entity
+        uses: indiesdev/curl@v1.1
+        id: eup_entity
+        with:
+          url: https://staging-castor.iflyos.cn/castor/v3/lisaPlugin/version
+          method: "POST"
+          accept: 200,201
+          headers: "{ \"x-eup-token\": \"${{ secrets.LS_CASTOR_EUP_MANAGE_KEY }}\" }"
+          body: "{\"name\":\"@lisa-plugin/zephyr\",\"version\":\"${{ steps.get_version.outputs.version-without-v }}\",\"isEnabled\":\"1\",\"isBeta\":true,\"expressPackageUrl\":\"https://cdn.iflyos.cn/public/lisa_plugin_express_update/@lisa-plugin/zephyr/${{ steps.get_version.outputs.version-without-v }}.zip\",\"expressBaseVersion\":\"1.6.8\",\"releaseNotes\":[\"${{ steps.get_version.outputs.version-without-v }}\"]}"
+          timeout: 5000
+          retries: 3
+          log-response: true
