@@ -107,7 +107,7 @@ export default ({ application, cli }: LisaType) => {
                         config.serverpath = pyocdpath;
                         config.armToolchainPath = armToolchainPath;
                         config.toolchainPrefix = toolchainPrefix;
-                        if (os === 'linux' && ZEPHYR_TOOLCHAIN_VARIANT === 'zephyr') {
+                        if (ZEPHYR_TOOLCHAIN_VARIANT === 'zephyr') {
                             config.gdbPath = gdbPath;
                         }
                         break;
@@ -115,7 +115,7 @@ export default ({ application, cli }: LisaType) => {
                         config.serverpath = serverpath;
                         config.armToolchainPath = armToolchainPath;
                         config.toolchainPrefix = toolchainPrefix;
-                        if (os === 'linux' && ZEPHYR_TOOLCHAIN_VARIANT === 'zephyr') {
+                        if (ZEPHYR_TOOLCHAIN_VARIANT === 'zephyr') {
                             config.gdbPath = gdbPath;
                         }
                         break;
