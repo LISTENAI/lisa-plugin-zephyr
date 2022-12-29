@@ -39,7 +39,7 @@ export default ({ application, cli }: LisaType) => {
                 default:
                     break;
             }
-            console.debug(armTool);
+            // console.debug(armTool);
             const JLINK_LISA_HOME_INDEX = jlink && jlink.binaryDir && jlink.binaryDir.indexOf(LISA_HOME);
             const JLINK_HOMEDIR_INDEX = jlink && jlink.binaryDir && jlink.binaryDir.indexOf(HOMEDIR);
             const ARM_LISA_HOME_INDEX = armTool && armTool.binaryDir && armTool.binaryDir.indexOf(LISA_HOME);
@@ -47,23 +47,27 @@ export default ({ application, cli }: LisaType) => {
             const PYOCD_HOMEDIR_INDEX = HOMEDIR && pyocdpath && pyocdpath.indexOf(HOMEDIR);
             const PYOCD_LISA_HOME_INDEX = LISA_HOME && pyocdpath && pyocdpath.indexOf(LISA_HOME);
             if (JLINK_HOMEDIR_INDEX === 0) {
-                serverpath = jlink?.binaryDir.replace(HOMEDIR, '${userHome}') || '';
+                // serverpath = jlink?.binaryDir.replace(HOMEDIR, '${userHome}') || '';
+                serverpath = jlink?.binaryDir || '';
             }
             if (JLINK_LISA_HOME_INDEX === 0) {
-                serverpath = jlink?.binaryDir.replace(LISA_HOME, '${env:LISA_HOME}') || '';
+                // serverpath = jlink?.binaryDir.replace(LISA_HOME, '${env:LISA_HOME}') || '';
+                serverpath = jlink?.binaryDir || '';
             }
             if (ARM_HOMEDIR_INDEX === 0) {
-                armToolchainPath = armTool?.binaryDir.replace(HOMEDIR, '${userHome}') || '';
+                // armToolchainPath = armTool?.binaryDir.replace(HOMEDIR, '${userHome}') || '';
+                armToolchainPath = armTool?.binaryDir || '';
             }
             if (ARM_LISA_HOME_INDEX === 0) {
-                armToolchainPath = armTool?.binaryDir.replace(LISA_HOME, '${env:LISA_HOME}') || '';
+                // armToolchainPath = armTool?.binaryDir.replace(LISA_HOME, '${env:LISA_HOME}') || '';
+                armToolchainPath = armTool?.binaryDir || '';
             }
-            if (PYOCD_HOMEDIR_INDEX === 0) {
-                pyocdpath = pyocdpath.replace(HOMEDIR, '${userHome}');
-            }
-            if (PYOCD_LISA_HOME_INDEX === 0) {
-                pyocdpath = pyocdpath.replace(LISA_HOME || '', '${env:LISA_HOME}');
-            }
+            // if (PYOCD_HOMEDIR_INDEX === 0) {
+            //     pyocdpath = pyocdpath.replace(HOMEDIR, '${userHome}');
+            // }
+            // if (PYOCD_LISA_HOME_INDEX === 0) {
+            //     pyocdpath = pyocdpath.replace(LISA_HOME || '', '${env:LISA_HOME}');
+            // }
 
             if (os === 'win32') {
                 serverpath = join(serverpath, 'JLinkGDBServerCL.exe');
