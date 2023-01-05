@@ -1,6 +1,11 @@
 import LISA from '@listenai/lisa_core';
 import { sortBy } from 'lodash';
-import { stat } from 'fs-extra';
+import { stat, writeFile } from 'fs-extra';
+import { IImage } from '@tool/lpk/lib/manifest';
+import { getEnv } from '../env';
+import { join } from 'path';
+import { getBinarie } from '../env'
+import { platform, tmpdir } from 'os';
 
 interface Context {
   flash: FlashConfig[];
@@ -48,4 +53,92 @@ export async function getFlashArgs(ctx: any, tag?: string): Promise<Record<numbe
 
 export function toHex(addr: number): string {
   return `0x${addr.toString(16).padStart(8, '0')}`;
+}
+
+
+interface IFlashOpts {
+  p?: string;
+  b?: number;
+  f?: number;
+  speed?: number;
+  device?: string;
+}
+
+export async function flashRun(images: IImage[], runner: string, opts?: IFlashOpts): Promise<void> {
+  images = [
+    {
+			"name": "zephyr.bin",
+			"addr": "0",
+			"size": 39428,
+			"md5": "1dc86e2a06744f0c83a27b0369c751c9",
+			"file": "/Users/zhaozhuobin/zzb/hello_world/build/hello_world-1.0.0-20230105-15-40-factory/images/zephyr.bin"
+		},
+		{
+			"name": "cp.bin",
+			"addr": "0x100000",
+			"size": 39428,
+			"md5": "1dc86e2a06744f0c83a27b0369c751c9",
+			"file": "/Users/zhaozhuobin/zzb/hello_world/build/hello_world-1.0.0-20230105-15-40-factory/images/cp.bin"
+		}
+  ]
+
+  let flashCmd = '', flashArgs = '';
+  
+  switch(runner) {
+    case 'csk':
+      // cskburn -s /dev/tty.usbmodem141202 -C 6 0x0 ./build/zephyr/zephyr.bin -b 748800
+      if (!opts?.p) {
+        throw new Error('串口烧录需要指定端口号')
+      }
+      flashArgs = images.map(image => {
+        return `${image.addr} ${image.file}`
+      }).join(' ')
+      flashCmd = `cskburn -s ${opts?.p} -C 6 ${flashArgs} -b ${opts?.b || 748800}`
+      await cmdRun(flashCmd)
+      break;
+    case 'pyocd':
+      // pyocd flash -e sector -t csk6001 ./images/zephyr.bin@0x18000000 ./images/cp.bin@0x18100000 --frequency=30000000
+      flashArgs = images.map(image => {
+        return `${image.file}@0x18${(parseInt(image.addr, 16)).toString(16).padStart(6, '0')}`
+      }).join(' ')
+      flashCmd = `pyocd flash -e sector -t csk6001 ${flashArgs} --frequency=${opts?.f || 30000000}`
+      await cmdRun(flashCmd)
+      break;
+    case 'jlink':
+      const tmpfile = join(tmpdir(), 'runner.jlink')
+      const CommanderScript = [];
+      CommanderScript.push('r')
+      // CommanderScript.push('erase')
+      images.forEach(image => {
+        CommanderScript.push(`loadbin ${image.file} 0x18${(parseInt(image.addr, 16)).toString(16).padStart(6, '0')}`)
+      })
+      CommanderScript.push('q')
+
+      console.log(CommanderScript)
+
+      await writeFile(join(tmpdir(), 'runner.jlink'), CommanderScript.join('\n'))
+      const jlinkArgs = [];
+      jlinkArgs.push(platform() === 'win32' ? 'JLink.exe' : 'JLinkExe');
+      jlinkArgs.push('-nogui', '1');
+      jlinkArgs.push('-if', 'swd');
+      jlinkArgs.push('-speed', opts?.speed ?? 'auto');
+      jlinkArgs.push('-device', opts?.device ?? 'Venus');
+      jlinkArgs.push('-CommanderScript', tmpfile);
+      jlinkArgs.push('-nogui', '1');
+      flashCmd = jlinkArgs.join(' ')
+      await cmdRun(flashCmd)
+      break;
+  }
+}
+
+async function cmdRun(cmd: string) {
+  const cmdArgs = cmd.split(' ')
+  try {
+    await LISA.cmd(cmdArgs.shift() || '', cmdArgs, {
+      stdio: "inherit",
+      env: await getEnv(),
+    });
+  } catch (error) {
+    throw new Error(`Command failed : ${cmd}`)
+  }
 }

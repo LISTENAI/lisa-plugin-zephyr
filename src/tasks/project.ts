@@ -20,6 +20,7 @@ import { Application } from "@listenai/lisa_core";
 import {
   getPartitionInfo,
 } from "../utils/fs";
+import { flashRun } from "../utils/flash";
 
 async function getAppFlashAddr(buildDir: string): Promise<number> {
   const hasLoadOffset = await getKconfig(buildDir, 'CONFIG_HAS_FLASH_LOAD_OFFSET');
@@ -137,20 +138,33 @@ export default ({ application, cmd, cli }: LisaType) => {
     title: "烧录",
     async task(ctx, task) {
       task.title = "";
-      const intendedLpkPath: string = process.argv[4];
+      const intendedLpkPath: string = workspace() ?? '';
       if (intendedLpkPath.toLowerCase().endsWith('.lpk')) {
         //This could be a package, parse and flash accordingly
         if (!(await pathExists(intendedLpkPath))) {
           throw new Error(`指定路径的LPK不存在。Path = ${intendedLpkPath}`);
         }
+        // let lpk = new Lpk();
+        // await lpk.load(intendedLpkPath);
+        // if (!lpk._tmp_path || lpk._manifest.images.length === 0) {
+        //   throw new Error('LPK不存在或已损坏。');
+        // }
 
-        let lpk = new Lpk();
-        await lpk.load(intendedLpkPath);
-        if (!lpk._tmp_path || lpk._manifest.images.length === 0) {
-          throw new Error('LPK不存在或已损坏。');
-        }
+        // 串口
+        // await flashRun([], 'csk', {
+        //   p: '/dev/tty.usbmodem141202'
+        // })
 
-        task.title = JSON.stringify(lpk._manifest.images);
+        // pyocd
+        // await flashRun([], 'pyocd', {
+          // f: 30000000
+        // })
+
+        // jlink
+        await flashRun([], 'jlink')
+
+        // task.title = JSON.stringify(lpk._manifest.images);
+        task.title = "结束";
       } else {
         //or, just proceed to west
         await undertake(await flashFlags());
