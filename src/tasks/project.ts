@@ -137,9 +137,26 @@ export default ({ application, cmd, cli }: LisaType) => {
     title: "烧录",
     async task(ctx, task) {
       task.title = "";
-      await undertake(await flashFlags());
-      task.title = "结束";
-      testLog(task, "烧录成功");
+      const intendedLpkPath: string = process.argv[4];
+      if (intendedLpkPath.toLowerCase().endsWith('.lpk')) {
+        //This could be a package, parse and flash accordingly
+        if (!(await pathExists(intendedLpkPath))) {
+          throw new Error(`指定路径的LPK不存在。Path = ${intendedLpkPath}`);
+        }
+
+        let lpk = new Lpk();
+        await lpk.load(intendedLpkPath);
+        if (!lpk._tmp_path || lpk._manifest.images.length === 0) {
+          throw new Error('LPK不存在或已损坏。');
+        }
+
+        task.title = JSON.stringify(lpk._manifest.images);
+      } else {
+        //or, just proceed to west
+        await undertake(await flashFlags());
+        task.title = "结束";
+        testLog(task, "烧录成功");
+      }
     },
   });
 
