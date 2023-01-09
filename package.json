@@ -42,6 +42,7 @@
   },
   "homepage": "https://github.com/LISTENAI/lisa-plugin-zephyr#readme",
   "dependencies": {
+    "7zip-bin": "^5.2.0",
     "@binary/cmake": "^1.1.2-3.21.4",
     "@binary/dtc": "^1.1.2-1.6.0",
     "@binary/gperf": "^1.0.1-3.1",
@@ -54,9 +55,8 @@
     "@lisa-env/type": "^1.2.0",
     "@listenai/lisa_core": "^2.0.5",
     "@sentry/node": "5.20.0",
-    "@tool/lpk": "^1.0.4",
+    "@tool/lpk": "1.1.0",
     "@types/jest": "^27.4.1",
-    "7zip-bin": "^5.2.0",
     "cross-env": "^7.0.3",
     "glob": "^7.2.0",
     "ini": "^2.0.0",
