@@ -56,7 +56,7 @@ export function toHex(addr: number): string {
 }
 
 
-interface IFlashOpts {
+export interface IFlashOpts {
   p?: string;
   b?: number;
   f?: number;
@@ -65,7 +65,7 @@ interface IFlashOpts {
 }
 
 export async function flashRun(images: IImage[], runner: string, opts?: IFlashOpts): Promise<void> {
-  images = [
+  /*images = [
     {
 			"name": "zephyr.bin",
 			"addr": "0",
@@ -80,7 +80,7 @@ export async function flashRun(images: IImage[], runner: string, opts?: IFlashOp
 			"md5": "1dc86e2a06744f0c83a27b0369c751c9",
 			"file": "/Users/zhaozhuobin/zzb/hello_world/build/hello_world-1.0.0-20230105-15-40-factory/images/cp.bin"
 		}
-  ]
+  ]*/
 
   let flashCmd = '', flashArgs = '';
   
@@ -88,10 +88,10 @@ export async function flashRun(images: IImage[], runner: string, opts?: IFlashOp
     case 'csk':
       // cskburn -s /dev/tty.usbmodem141202 -C 6 0x0 ./build/zephyr/zephyr.bin -b 748800
       if (!opts?.p) {
-        throw new Error('串口烧录需要指定端口号')
+        throw new Error('串口烧录需要使用 --port 或 -p 参数指定端口号')
       }
       flashArgs = images.map(image => {
-        return `${image.addr} ${image.file}`
+        return `0x${image.addr} ${image.file}`
       }).join(' ')
       flashCmd = `cskburn -s ${opts?.p} -C 6 ${flashArgs} -b ${opts?.b || 748800}`
       await cmdRun(flashCmd)
@@ -128,6 +128,8 @@ export async function flashRun(images: IImage[], runner: string, opts?: IFlashOp
       flashCmd = jlinkArgs.join(' ')
       await cmdRun(flashCmd)
       break;
+    default:
+      throw new Error(`不支持的runner: ${runner}`);
   }
 }
 

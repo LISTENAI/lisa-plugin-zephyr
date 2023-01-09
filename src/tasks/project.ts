@@ -20,7 +20,9 @@ import { Application } from "@listenai/lisa_core";
 import {
   getPartitionInfo,
 } from "../utils/fs";
-import { flashRun } from "../utils/flash";
+import {flashRun, IFlashOpts} from "../utils/flash";
+import {IImage} from "@tool/lpk/lib/manifest";
+import {toNumber} from "lodash";
 
 async function getAppFlashAddr(buildDir: string): Promise<number> {
   const hasLoadOffset = await getKconfig(buildDir, 'CONFIG_HAS_FLASH_LOAD_OFFSET');
@@ -138,32 +140,45 @@ export default ({ application, cmd, cli }: LisaType) => {
     title: "烧录",
     async task(ctx, task) {
       task.title = "";
-      const intendedLpkPath: string = workspace() ?? '';
+      const intendedLpkPath: string = process.argv[4] || '';
+
       if (intendedLpkPath.toLowerCase().endsWith('.lpk')) {
         //This could be a package, parse and flash accordingly
+        const { args, printHelp } = parseArgs(application.argv, {
+          "task-help": { short: "h", help: "打印帮助" },
+          runner: { short: "r", help: "烧录runner" },
+          port: { short: "p", help: "烧录COM口 (仅适用于csk runner)" },
+          baudrate: { short: "b", help: "波特率 (仅适用于csk runner, 默认: 748800)" },
+          frequency: { short: "f", help: "烧录频率 (仅适用于pyocd runner, 默认: 30000000)" }
+        });
+        if (args['task-help']) {
+          return printHelp(["flash {path/to/lpk} [options]"]);
+        }
+        if (!args.runner) {
+          throw new Error("未在参数或west.config中指定runner");
+        }
+        const intendedRunner: string = args['runner'].toString() || '';
+
         if (!(await pathExists(intendedLpkPath))) {
           throw new Error(`指定路径的LPK不存在。Path = ${intendedLpkPath}`);
         }
-        // let lpk = new Lpk();
-        // await lpk.load(intendedLpkPath);
-        // if (!lpk._tmp_path || lpk._manifest.images.length === 0) {
-        //   throw new Error('LPK不存在或已损坏。');
-        // }
+        let lpk = new Lpk();
+        console.log('正在解析LPK...');
+        await lpk.load(intendedLpkPath);
+        if (!lpk._tmp_path || lpk._manifest.images.length === 0) {
+          throw new Error('LPK不存在或已损坏。');
+        }
+        const images: IImage[] = lpk._manifest.images;
+        console.log(`解析完成！共有 ${images.length} 个固件。开始烧录...\n`);
 
-        // 串口
-        // await flashRun([], 'csk', {
-        //   p: '/dev/tty.usbmodem141202'
-        // })
+        const flashArgs: IFlashOpts = {
+          p: args['port']?.toString(),
+          b: toNumber(args['baudrate']),
+          f: toNumber(args['frequency']),
+        }
 
-        // pyocd
-        // await flashRun([], 'pyocd', {
-          // f: 30000000
-        // })
+        await flashRun(images, intendedRunner, flashArgs);
 
-        // jlink
-        await flashRun([], 'jlink')
-
-        // task.title = JSON.stringify(lpk._manifest.images);
         task.title = "结束";
       } else {
         //or, just proceed to west
