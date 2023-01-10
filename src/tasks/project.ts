@@ -154,7 +154,7 @@ export default ({ application, cmd, cli }: LisaType) => {
         if (args['task-help']) {
           return printHelp(["flash {path/to/lpk} [options]"]);
         }
-        if (!args.runner) {
+        if (!args.runner || args.runner.toString() === 'true') {
           throw new Error("未在参数或west.config中指定runner");
         }
         const intendedRunner: string = args['runner'].toString() || '';
@@ -169,6 +169,9 @@ export default ({ application, cmd, cli }: LisaType) => {
           throw new Error('LPK不存在或已损坏。');
         }
         const images: IImage[] = lpk._manifest.images;
+        for (let i = 0; i < images.length; i++) {
+          images[i].file = join(lpk._tmp_path, images[i].file);
+        }
         console.log(`解析完成！共有 ${images.length} 个固件。开始烧录...\n`);
 
         const flashArgs: IFlashOpts = {

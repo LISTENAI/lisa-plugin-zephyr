@@ -65,23 +65,6 @@ export interface IFlashOpts {
 }
 
 export async function flashRun(images: IImage[], runner: string, opts?: IFlashOpts): Promise<void> {
-  /*images = [
-    {
-			"name": "zephyr.bin",
-			"addr": "0",
-			"size": 39428,
-			"md5": "1dc86e2a06744f0c83a27b0369c751c9",
-			"file": "/Users/zhaozhuobin/zzb/hello_world/build/hello_world-1.0.0-20230105-15-40-factory/images/zephyr.bin"
-		},
-		{
-			"name": "cp.bin",
-			"addr": "0x100000",
-			"size": 39428,
-			"md5": "1dc86e2a06744f0c83a27b0369c751c9",
-			"file": "/Users/zhaozhuobin/zzb/hello_world/build/hello_world-1.0.0-20230105-15-40-factory/images/cp.bin"
-		}
-  ]*/
-
   let flashCmd = '', flashArgs = '';
   
   switch(runner) {
@@ -91,7 +74,7 @@ export async function flashRun(images: IImage[], runner: string, opts?: IFlashOp
         throw new Error('串口烧录需要使用 --port 或 -p 参数指定端口号')
       }
       flashArgs = images.map(image => {
-        return `0x${image.addr} ${image.file}`
+        return `${image.addr} ${image.file}`
       }).join(' ')
       flashCmd = `cskburn -s ${opts?.p} -C 6 ${flashArgs} -b ${opts?.b || 748800}`
       await cmdRun(flashCmd)
@@ -141,6 +124,6 @@ async function cmdRun(cmd: string) {
       env: await getEnv(),
     });
   } catch (error) {
-    throw new Error(`Command failed : ${cmd}`)
+    throw new Error(`Command failed : ${cmd}, Error = ${error}`)
   }
 }
