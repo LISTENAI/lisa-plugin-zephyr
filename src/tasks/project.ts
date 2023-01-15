@@ -154,10 +154,11 @@ export default ({ application, cmd, cli }: LisaType) => {
         if (args['task-help']) {
           return printHelp(["flash {path/to/lpk} [options]"]);
         }
-        if (!args.runner || args.runner.toString() === 'true') {
+        const parsedFlashArgs = require('minimist')(await flashFlags());
+        const intendedRunner: string | undefined = args.runner?.toString() || parsedFlashArgs.runner?.toString() || undefined;
+        if (!intendedRunner) {
           throw new Error("未在参数或west.config中指定runner");
         }
-        const intendedRunner: string = args['runner'].toString() || '';
 
         if (!(await pathExists(intendedLpkPath))) {
           throw new Error(`指定路径的LPK不存在。Path = ${intendedLpkPath}`);
