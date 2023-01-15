@@ -174,8 +174,13 @@ export default ({ application, cmd, cli }: LisaType) => {
         }
         console.log(`解析完成！共有 ${images.length} 个固件。开始烧录...\n`);
 
+        const assignedPort = args['port']?.toString() ?
+            (args['port']?.toString().toLowerCase().startsWith('com') ?
+                '\\\\.\\' + args['port']?.toString() :
+                args['port']?.toString()) :
+            undefined;
         const flashArgs: IFlashOpts = {
-          p: args['port']?.toString(),
+          p: assignedPort,
           b: toNumber(args['baudrate']),
           f: toNumber(args['frequency']),
         }
