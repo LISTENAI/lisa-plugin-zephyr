@@ -4,7 +4,7 @@ import { stat, writeFile } from 'fs-extra';
 import { IImage } from '@tool/lpk/lib/manifest';
 import { getEnv } from '../env';
 import { join } from 'path';
-import { getBinarie } from '../env'
+import * as iconv from 'iconv-lite';
 import {homedir, platform, tmpdir} from 'os';
 
 interface Context {
@@ -99,10 +99,15 @@ export async function flashRun(images: IImage[], runner: string, opts?: IFlashOp
 
       console.log(CommanderScript)
 
-      await writeFile(join(tmpdir(), 'runner.jlink'), CommanderScript.join('\n'))
+      
       const jlinkArgs = [];
-      const nonWinOSJlinkExe = `${homedir()}/.listenai/lisa-zephyr/packages/node_modules/@binary/jlink-venus/binary/JLinkExe`;
-      jlinkArgs.push(platform() === 'win32' ? 'JLink.exe' : nonWinOSJlinkExe);
+      if (platform() === 'win32') {
+        jlinkArgs.push('JLink.exe');
+        await writeFile(join(tmpdir(), 'runner.jlink'), iconv.encode(CommanderScript.join('\n'), 'gbk'));
+      } else {
+        jlinkArgs.push(`${homedir()}/.listenai/lisa-zephyr/packages/node_modules/@binary/jlink-venus/binary/JLinkExe`);
+        await writeFile(join(tmpdir(), 'runner.jlink'), CommanderScript.join('\n'));
+      }
       jlinkArgs.push('-nogui', '1');
       jlinkArgs.push('-if', 'swd');
       jlinkArgs.push('-speed', opts?.speed ?? 'auto');
