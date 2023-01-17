@@ -97,9 +97,6 @@ export async function flashRun(images: IImage[], runner: string, opts?: IFlashOp
       })
       CommanderScript.push('q')
 
-      console.log(CommanderScript)
-
-      
       const jlinkArgs = [];
       if (platform() === 'win32') {
         jlinkArgs.push('JLink.exe');

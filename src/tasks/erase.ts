@@ -75,7 +75,6 @@ export default ({ application, cmd }: LisaType) => {
         }
       }
       CommanderScript.push('q')
-      console.log(CommanderScript)
       const tmpfile = join(tmpdir(), 'runner.jlink')
       await writeFile(join(tmpdir(), 'runner.jlink'), CommanderScript.join('\n'))
 
@@ -96,8 +95,6 @@ export default ({ application, cmd }: LisaType) => {
       commandArgs.push('-CommanderScript', tmpfile);
       commandArgs.push('-nogui', '1');
 
-      console.log(commander)
-      console.log(commandArgs)
 
       await cmd(commander, commandArgs, {
         stdio: "inherit",
