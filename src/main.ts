@@ -23,7 +23,9 @@ Sentry.init({
 const execFile = promisify(_execFile);
 
 export async function env(): Promise<Record<string, string>> {
-  const env = await get("env");
+  // let env = await get("env");
+  let env: string[] = [];
+  let err = false;
   const bundles = await loadBundles(env);
 
   const versions: Record<string, string> = {};
@@ -33,7 +35,8 @@ export async function env(): Promise<Record<string, string>> {
     try {
       versions[name] = await binary.version();
     } catch (e) {
-      versions[name] = "(缺失)";
+      versions[name] = redChar("(缺失)");
+      err = true;
     }
     Object.assign(variables, binary.env);
   }
@@ -44,13 +47,34 @@ export async function env(): Promise<Record<string, string>> {
     for (const bundle of bundles.slice(1)) {
       defaults(variables, bundle.env);
     }
+  } else {
+    env = [];
+  }
+  let envShow = '';
+  if (env && env.length > 0) {
+    envShow = env.join(", ");
+  } else {
+    envShow = redChar("(未设置)");
+    err = true;
+  }
+
+  let westShow = await getWestVersion();
+  if (!westShow) {
+    westShow = redChar("(未安装)");
+    err = true;
+  }
+
+  if (err) {
+    Object.assign(variables, {
+      check: redChar('检查存在环境缺失，请看文档faq进行处理')
+    });
   }
 
   return {
-    env: env && env.length > 0 ? env.join(", ") : "(未设置)",
-    west: (await getWestVersion()) || "(未安装)",
+    env: envShow,
+    west: westShow,
     ...versions,
-    ZEPHYR_BASE: (await getZephyrInfo()) || "(未设置)",
+    ZEPHYR_BASE: (await getZephyrInfo()) || redChar("(未设置)"),
     PLUGIN_HOME,
     ...variables,
   };
@@ -139,4 +163,8 @@ export async function undertake(
     process.exit(error.exitCode);
   }
   return true;
+}
+
+function redChar(char: string) {
+  return `\x1b[31m${char}\x1B[0m`;
 }
