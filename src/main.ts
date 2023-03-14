@@ -66,7 +66,7 @@ export async function env(): Promise<Record<string, string>> {
 
   if (err) {
     Object.assign(variables, {
-      check: redChar('检查存在环境缺失，请看文档faq进行处理')
+      check: redChar('检查存在环境缺失，请看文档faq章节进行处理')
     });
   }
 
