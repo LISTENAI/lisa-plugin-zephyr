@@ -74,7 +74,7 @@ export async function loadBinaries(bundles?: Bundle[]): Promise<Record<string, B
   const binaries: Record<string, Binary> = {};
   for (const name of BUILTIN_BINARIES) {
     const unprefixedName = name.split('/').slice(1).join('/');
-    binaries[unprefixedName] = await typedImport<Binary>(name);
+    binaries[unprefixedName] = await typedImport<Binary>(name);  
   }
   for (const bundle of bundles || []) {
     for (const name of bundle.binaries || []) {
