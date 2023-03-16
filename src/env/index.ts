@@ -74,11 +74,19 @@ export async function loadBinaries(bundles?: Bundle[]): Promise<Record<string, B
   const binaries: Record<string, Binary> = {};
   for (const name of BUILTIN_BINARIES) {
     const unprefixedName = name.split('/').slice(1).join('/');
-    binaries[unprefixedName] = await typedImport<Binary>(name);  
+    try {
+      binaries[unprefixedName] = await typedImport<Binary>(name);    
+    } catch (error) {
+      binaries[unprefixedName] = <Binary>{}
+    }
   }
   for (const bundle of bundles || []) {
     for (const name of bundle.binaries || []) {
-      binaries[name] = await typedImport<Binary>(`${PACKAGE_MODULES_DIR}/@binary/${name}`);
+      try {
+        binaries[name] = await typedImport<Binary>(`${PACKAGE_MODULES_DIR}/@binary/${name}`);   
+      } catch (error) {
+        binaries[name] = <Binary>{};
+      }
     }
   }
   return binaries;
