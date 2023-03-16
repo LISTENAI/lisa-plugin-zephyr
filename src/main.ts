@@ -23,8 +23,8 @@ Sentry.init({
 const execFile = promisify(_execFile);
 
 export async function env(): Promise<Record<string, string>> {
-  // let env = await get("env");
-  let env: string[] = [];
+  let env = await get("env");
+  // let env: string[] = [];
   let err = false;
   const bundles = await loadBundles(env);
 
