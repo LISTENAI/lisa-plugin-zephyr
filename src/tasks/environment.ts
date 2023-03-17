@@ -40,6 +40,17 @@ export default ({ application, cmd, got }: LisaType) => {
       }
 
       await mkdirs(PACKAGE_HOME);
+      if (!(await pathExists(join(PACKAGE_HOME, 'package.json')))) {
+        await exec(
+          "npm",
+          [
+            "init", "-y"
+          ],
+          {
+            cwd: PACKAGE_HOME,
+          }
+        );
+      }
 
       if (args["clear"]) {
         await set("env", undefined);
