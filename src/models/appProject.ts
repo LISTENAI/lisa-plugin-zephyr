@@ -111,7 +111,7 @@ export default class AppProject {
     }
 
     update = async (): Promise<void> => {
-        if (platform() !== 'win32') {
+        if (false) {
             const selfSDK = await this.selfSDK();
             if (selfSDK) {
                 await this.updateSelfSDK()
