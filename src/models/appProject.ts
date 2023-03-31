@@ -111,7 +111,7 @@ export default class AppProject {
     }
 
     update = async (): Promise<void> => {
-        if (false) {
+        /*if (platform() !== 'win32') {
             const selfSDK = await this.selfSDK();
             if (selfSDK) {
                 await this.updateSelfSDK()
@@ -139,7 +139,7 @@ export default class AppProject {
                 }
             }
             this.setTaskTitle('');
-        }
+        }*/
         Lisa.application.debug(this.workspace);
         await undertake(['update'], {
             cwd: this.workspace
