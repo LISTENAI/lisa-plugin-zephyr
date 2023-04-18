@@ -41,11 +41,15 @@ export default ({ application, cmd }: LisaType) => {
 
         try {
           await cmd('git', ['clone', fromGit, targetDir], {
-            stdio: 'inherit',
+            stdio: ['inherit', 'inherit', 'pipe'],
           })
         } catch (error: any) {
+          const stderr = error.stderr || 'git clone 执行错误'
+          console.log(stderr)
+          if (stderr.indexOf('The project you were looking for could not be found')) {
+            console.log(`\x1B[31m请确认仓库地址是否有误，或是否有该仓库权限\x1B[0m`)
+          }
           process.exit(error.exitCode);
-          // console.log(error)
         }
         
         const app = new AppProject(targetDir);
