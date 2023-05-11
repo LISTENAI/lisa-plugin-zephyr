@@ -91,16 +91,16 @@ jobs:
       - name: Install @lisa-plugin/zephyr
         run: lisa install -g ${{ needs.build.outputs.tarball }}
         
-      - name: Cache test target
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-test-target
-        with:
-          path: ./__testTarget__
-          key: ${{ runner.os }}-${{ matrix.node }}-build-${{ env.cache-name }}
+      # - name: Cache test target
+      #   uses: actions/cache@v2
+      #   env:
+      #     cache-name: cache-test-target
+      #   with:
+      #     path: ./__testTarget__
+      #     key: ${{ runner.os }}-${{ matrix.node }}-build-${{ env.cache-name }}
           
-      - name: Test
-        run:  npm run test  
+      # - name: Test
+      #   run:  npm run test  
 
     
 

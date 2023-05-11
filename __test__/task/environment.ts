@@ -16,7 +16,7 @@ export const testEnvironment = () =>
           "use-sdk",
           TEST_SDK_DIR,
           "--from-git",
-          "https://cloud.listenai.com/zephyr/manifest.git",
+          "https://cloud.listenai.com/zephyr/zephyr.git",
         ]);
         expect(stdout).toMatch("成功");
       } else {
