@@ -139,6 +139,27 @@ export async function undertake(
     env["ZEPHYR_BASE"] = selfSDK;
   }
 
+  //TODO: get sdk and set ZEPHYR_SDK_INSTALL_DIR
+  const sdk = await get("sdk");
+  if (!sdk) {
+    throw new Error("sdk not found");
+  }
+  if (!(await pathExists(sdk))) {
+    throw new Error("sdk not found");
+  }
+  const tag = await sdkTag(sdk);
+  if (!tag) {
+    throw new Error("sdk version not found");
+  }
+  if (tag.startsWith('v1.')) {
+    env['ZEPHYR_SDK_INSTALL_DIR'] = env['ZEPHYR_14_SDK_INSTALL_DIR']
+  } else if (tag.startsWith('v2.')) {
+    env['ZEPHYR_SDK_INSTALL_DIR'] = env['ZEPHYR_16_SDK_INSTALL_DIR']
+  } else {
+    throw new Error(`no suitable zephyr-sdk for this operation. version = ${tag}`);
+  }
+  console.log(`ZEPHYR_SDK_INSTALL_DIR = ${env['ZEPHYR_SDK_INSTALL_DIR']}`);
+
   const isUpdate = env["ZEPHYR_BASE"] && argv[0] === "update";
   Lisa.application.debug(env["ZEPHYR_BASE"]);
   try {
