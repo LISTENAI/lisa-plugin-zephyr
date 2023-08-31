@@ -292,6 +292,20 @@ export default ({ application, cmd, got }: LisaType) => {
           if (!isZephyrBase) {
             throw new Error(`该路径不是一个 Zephyr base: ${zephyrPath}`);
           }
+
+          // requirements.txt might not in CSK folder, so try every possible paths in pathNested
+          let requirementPath = null;
+          for (const nested of pathNested) {
+            const tryRequirementPath = join(resolve(target), nested, "scripts", "requirements.txt");
+            if (await pathExists(tryRequirementPath)) {
+              requirementPath = tryRequirementPath;
+              break;
+            }
+          }
+          if (!requirementPath) {
+            throw new Error(`在所有可能的路径中没有找到 requirements.txt : ${zephyrPath}`);
+          }
+
           await exec(
             "python",
             [
@@ -299,7 +313,7 @@ export default ({ application, cmd, got }: LisaType) => {
               "pip",
               "install",
               "-r",
-              join(zephyrPath, "scripts", "requirements.txt"),
+              requirementPath,
             ],
             { env: await getEnv() }
           );

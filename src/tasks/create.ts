@@ -68,7 +68,7 @@ export default ({ application, cmd }: LisaType) => {
         let _samplePathGlob = join(sdk, "samples", "boards", "*", "sample.list");
         if (!(await pathExists(_samplePathGlob))) {
           _samplePathGlob = join(sdk, "samples", "sample.list");
-          _singleBoardFlag = true;
+          _singleBoardFlag = false;
         }
         const singleBoardFlag = _singleBoardFlag;
         const samplePathGlob = _samplePathGlob;
