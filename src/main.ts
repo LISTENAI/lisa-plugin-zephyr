@@ -155,7 +155,7 @@ export async function undertake(
     env['ZEPHYR_SDK_INSTALL_DIR'] = env['ZEPHYR_14_SDK_INSTALL_DIR']
   } else if (tag.startsWith('v2.')) {
     env['ZEPHYR_SDK_INSTALL_DIR'] = env['ZEPHYR_16_SDK_INSTALL_DIR']
-    env['ZEPHYR_BASE'] = join(env["ZEPHYR_BASE"], '..')
+    //env['ZEPHYR_BASE'] = join(env["ZEPHYR_BASE"], '..')
   } else {
     throw new Error(`no suitable zephyr-sdk for this operation. version = ${tag}`);
   }

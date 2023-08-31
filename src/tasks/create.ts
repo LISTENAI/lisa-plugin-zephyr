@@ -64,14 +64,25 @@ export default ({ application, cmd }: LisaType) => {
       if (!from) {
         const sdk = (await get("sdk")) || "";
         // 查看含有 sample.list 的 board
-        const samplePathGlob = join(sdk, "samples", "boards", "*", "sample.list");
+        let _singleBoardFlag = false;
+        let _samplePathGlob = join(sdk, "samples", "boards", "*", "sample.list");
+        if (!(await pathExists(_samplePathGlob))) {
+          _samplePathGlob = join(sdk, "samples", "sample.list");
+          _singleBoardFlag = true;
+        }
+        const singleBoardFlag = _singleBoardFlag;
+        const samplePathGlob = _samplePathGlob;
         const sampleFiles = glob.sync(samplePathGlob, {});
         const boardsSampleList: ISampleList = {};
-        for (const file of sampleFiles) {
-          const board = resolve(parse(file).dir).split(sep).pop() ;
-          if (board) {
-            boardsSampleList[board] = file;
+        if (!singleBoardFlag) {
+          for (const file of sampleFiles) {
+            const board = resolve(parse(file).dir).split(sep).pop() ;
+            if (board) {
+              boardsSampleList[board] = file;
+            }
           }
+        } else {
+          boardsSampleList["csk6"] = samplePathGlob;
         }
 
         // 选择 board (当board仅一个时，跳过选择)
@@ -79,6 +90,7 @@ export default ({ application, cmd }: LisaType) => {
         if (boards.length === 0) {
           throw new Error("当前 SDK 暂不支持 create 项目");
         }
+        application.debug(boards);
 
         let board = boards[0];
         if (Object.keys(boardsSampleList).length > 1) {
@@ -98,7 +110,7 @@ export default ({ application, cmd }: LisaType) => {
         const sampleListFile = resolve(boardsSampleList[board] as string);
         application.debug(sampleListFile);
         if (!(await pathExists(sampleListFile))) {
-          throw new Error(`当前 SDK 的 ${board} 暂不支持 create 项目`);
+          throw new Error(`当前 SDK 的 ${board} 暂不支持 create 项目 ${sampleListFile}`);
         }
 
         // 解析sampleListFile 按文件夹的json结构
