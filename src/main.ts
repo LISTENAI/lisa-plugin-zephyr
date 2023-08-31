@@ -155,12 +155,10 @@ export async function undertake(
     env['ZEPHYR_SDK_INSTALL_DIR'] = env['ZEPHYR_14_SDK_INSTALL_DIR']
   } else if (tag.startsWith('v2.') || tag.startsWith('zephyr-v3.')) {
     env['ZEPHYR_SDK_INSTALL_DIR'] = env['ZEPHYR_16_SDK_INSTALL_DIR']
-    env['ZEPHYR_BASE'] = join(env["ZEPHYR_BASE"], '..')
+    env['ZEPHYR_BASE'] = join(env["ZEPHYR_BASE"], '..', 'zephyr')
   } else {
     throw new Error(`no suitable zephyr-sdk for this operation. version = ${tag}`);
   }
-  console.log(`ZEPHYR_SDK_INSTALL_DIR = ${env['ZEPHYR_SDK_INSTALL_DIR']}`);
-  console.log(`ZEPHYR_BASE = ${env['ZEPHYR_BASE']}`);
 
   const isUpdate = env["ZEPHYR_BASE"] && argv[0] === "update";
   Lisa.application.debug(env["ZEPHYR_BASE"]);
