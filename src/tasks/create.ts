@@ -177,7 +177,7 @@ export default ({ application, cmd }: LisaType) => {
               return val;
             },
             transformer: (item) => {
-              const dirParse = resolve(item).replace(join(sdk, "samples"), "").split(sep);
+              const dirParse = resolve(item).replace(join(sdk, ".."), "").split(sep);
               let name = item.split(sep).pop();
               let startJson = JSON.parse(JSON.stringify(sampleListJson))
               while(dirParse.length) {
@@ -195,7 +195,7 @@ export default ({ application, cmd }: LisaType) => {
         ])
         const selected = resolve(answers.file);
 
-        const dirParse = selected.replace(join(sdk, "samples"), "").split(sep);
+        const dirParse = selected.replace(join(sdk, ".."), "").split(sep);
         let val = false;
         let startJson = JSON.parse(JSON.stringify(sampleListJson))
         while(dirParse.length) {

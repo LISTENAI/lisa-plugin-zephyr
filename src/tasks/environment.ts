@@ -322,8 +322,8 @@ export default ({ application, cmd, got }: LisaType) => {
           await invalidateEnv();
         }
       }
-      await getEnv();
-      const sdk = env['CSK_BASE'];
+      const newEnv = await getEnv();
+      const sdk = newEnv['CSK_BASE'];
       const version = sdk ? await sdkTag(sdk) : null;
       const branch = sdk ? await getRepoStatus(sdk) : null;
    
