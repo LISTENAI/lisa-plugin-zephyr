@@ -74,7 +74,7 @@ export async function env(): Promise<Record<string, string>> {
     env: envShow,
     west: westShow,
     ...versions,
-    CSK_BASE: (await getCskInfo()) || redChar("(未设置)"),
+    CSK_BASE: (await getCskInfo()) || (await getZephyrInfo()) || redChar("(未设置)"),
     ZEPHYR_BASE: (await getZephyrInfo()) || redChar("(未设置)"),
     PLUGIN_HOME,
     ...variables,
