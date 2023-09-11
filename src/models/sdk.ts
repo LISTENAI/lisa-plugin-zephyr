@@ -127,19 +127,4 @@ export default class SDK {
         }
         );
     }
-   
-    async getCskZephyrBaseVersion() {
-      const zephyrbase = await this.zephyrbase();
-      const versionFilePath = join(zephyrbase, 'VERSION');
-      if (!(await pathExists(versionFilePath))) {
-        throw new Error('Unable to determine the zephyr base version, repo may be corrupted?');
-      }
-
-      const versionFileContent: string = readFileSync(versionFilePath, { encoding: 'utf8'});
-      if (!versionFileContent.includes('VERSION_MAJOR = 3') || !versionFileContent.includes('VERSION_MINOR = ')) {
-        throw new Error(`Unable to determine the zephyr base version, invalid zephyr base referred?`);
-      }
-
-      return versionFileContent.includes('VERSION_MINOR = 1') ? 1 : 2;
-    }
 } 
