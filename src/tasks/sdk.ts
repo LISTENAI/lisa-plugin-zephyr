@@ -77,7 +77,7 @@ export default ({ application, cmd, got, fs, cli }: LisaType) => {
           if (hasZephyrPath) {
             let zephyrPath = resolve(sdkPath);
             // 可能存在zephyr或zephyr.git两个命名的文件夹
-            let pathNested = ["", "zephyr", "zephyr.git"];
+            let pathNested = ["", "csk", "zephyr", "zephyr.git"];
             let isZephyrBase = false;
             for (const nested of pathNested) {
               if (await zephyrVersion(join(zephyrPath, nested))) {
