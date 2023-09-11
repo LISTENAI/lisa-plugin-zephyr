@@ -4,7 +4,7 @@ import { defaults } from "lodash";
 import { pathExists } from "fs-extra";
 import { loadBundles, loadBinaries, getEnv } from "./env";
 import { PLUGIN_HOME, get } from "./env/config";
-import { sdkTag } from "./utils/sdk";
+import { cskZephyrVersion, sdkTag, zephyrVersion } from "./utils/sdk";
 import { getCommit, getBranch, clean } from "./utils/repo";
 import Lisa from "@listenai/lisa_core";
 import { venvScripts } from "./venv";
@@ -74,6 +74,7 @@ export async function env(): Promise<Record<string, string>> {
     env: envShow,
     west: westShow,
     ...versions,
+    CSK_BASE: (await getCskInfo()) || redChar("(未设置)"),
     ZEPHYR_BASE: (await getZephyrInfo()) || redChar("(未设置)"),
     PLUGIN_HOME,
     ...variables,
@@ -88,6 +89,36 @@ async function getWestVersion(): Promise<string | null> {
     return stdout.trim();
   } catch (e) {
     return null;
+  }
+}
+
+async function getCskInfo(): Promise<string | null> {
+  const sdk = await get("sdk");
+  if (!sdk) return null;
+  if (!(await pathExists(sdk))) return null;
+
+  let _sdkBasePath = sdk;
+  const zepVer = await zephyrVersion(sdk);
+  if (zepVer === '3.4.0') {
+    _sdkBasePath = join(sdk, '..', 'csk');
+  }
+  const sdkBasePath = _sdkBasePath;
+  const tag = await sdkTag(sdkBasePath);
+
+  const git = simpleGit(sdkBasePath);
+  const commit = await getCommit(git);
+  const branch = await getBranch(git);
+  const isClean = await clean(git);
+
+  const commitMsg = `commit: ${commit}${isClean ? "" : "*"}`;
+
+  if (tag && !branch) {
+    return `${sdkBasePath} (版本: ${tag}, ${commitMsg})`;
+  }
+  if (branch) {
+    return `${sdkBasePath} (分支: ${branch}, ${commitMsg})`;
+  } else {
+    return `${sdkBasePath} (${commitMsg})`;
   }
 }
 
@@ -147,17 +178,20 @@ export async function undertake(
   if (!(await pathExists(sdk))) {
     throw new Error("sdk not found");
   }
-  const tag = await sdkTag(sdk);
-  if (!tag) {
+
+  const cskZepVer = await cskZephyrVersion(sdk);
+  if (!cskZepVer) {
     throw new Error("sdk version not found");
   }
-  if (tag.startsWith('v1.')) {
-    env['ZEPHYR_SDK_INSTALL_DIR'] = env['ZEPHYR_14_SDK_INSTALL_DIR']
-  } else if (tag.startsWith('v2.') || tag.startsWith('zephyr-v3.')) {
-    env['ZEPHYR_SDK_INSTALL_DIR'] = env['ZEPHYR_16_SDK_INSTALL_DIR']
-    env['ZEPHYR_BASE'] = join(env["ZEPHYR_BASE"], '..', 'zephyr')
-  } else {
-    throw new Error(`no suitable zephyr-sdk for this operation. version = ${tag}`);
+  switch (cskZepVer) {
+    case 1:
+      env['ZEPHYR_SDK_INSTALL_DIR'] = env['ZEPHYR_14_SDK_INSTALL_DIR'];
+      break;
+    case 2:
+      env['ZEPHYR_SDK_INSTALL_DIR'] = env['ZEPHYR_16_SDK_INSTALL_DIR'];
+      break;
+    default:
+      throw new Error(`no suitable zephyr-sdk for this operation.`);
   }
 
   const isUpdate = env["ZEPHYR_BASE"] && argv[0] === "update";

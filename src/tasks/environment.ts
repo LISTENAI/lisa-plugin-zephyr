@@ -256,6 +256,7 @@ export default ({ application, cmd, got }: LisaType) => {
           await invalidateEnv();
           const env = await getEnv();
           delete env.ZEPHYR_BASE;
+          delete env.CSK_BASE;
 
           if (!await pathExists(workspacePath)) {
             const initArgs = ["init"];
@@ -279,7 +280,7 @@ export default ({ application, cmd, got }: LisaType) => {
         if (target && install) {
           let zephyrPath = resolve(target);
           // 可能存在zephyr或zephyr.git两个命名的文件夹
-          let pathNested = ["", "csk", "zephyr", "zephyr.git"];
+          let pathNested = ["", "zephyr", "zephyr.git"];
           let isZephyrBase = false;
           for (const nested of pathNested) {
             if (await zephyrVersion(join(zephyrPath, nested))) {
@@ -321,7 +322,8 @@ export default ({ application, cmd, got }: LisaType) => {
           await invalidateEnv();
         }
       }
-      const sdk = await get("sdk");
+      await getEnv();
+      const sdk = env['CSK_BASE'];
       const version = sdk ? await sdkTag(sdk) : null;
       const branch = sdk ? await getRepoStatus(sdk) : null;
    
@@ -355,3 +357,4 @@ const getManifestPath = async (basicPath: string) => {
   );
   return join(basicPath, stdout);
 };
+

@@ -1,11 +1,10 @@
-import { pathExists, mkdirp, writeFile } from 'fs-extra';
-import { undertake } from "../main";
+import { pathExists } from 'fs-extra';
 import Lisa from '@listenai/lisa_core';
-import { venvScripts } from '../venv';
 
 import { resolve, join } from "path";
-import { PACKAGE_HOME, loadBundles, getEnv, invalidateEnv } from "../env";
-import { get, set } from "../env/config";
+import { getEnv, invalidateEnv } from "../env";
+import { set } from "../env/config";
+import { readFileSync } from 'fs';
 
 export default class SDK {
 
@@ -32,6 +31,11 @@ export default class SDK {
     async zephyrbase() {
         const env = await getEnv();
         return env["ZEPHYR_BASE"] ?? '';
+    }
+
+    async cskbase() {
+      const env = await getEnv();
+      return env["CSK_BASE"] ?? '';
     }
 
     async westConfigPath() {
@@ -63,7 +67,7 @@ export default class SDK {
     }
 
     async changeVersion(version: string, install: boolean = false) {
-        const zephyrbase = await this.zephyrbase();
+        const zephyrbase = await this.cskbase();
         const tag = await this.sdkTag(zephyrbase);
         await this._checkZephyrBase(zephyrbase, await this.westConfigPath());
         const {cmd} = Lisa;
@@ -124,4 +128,18 @@ export default class SDK {
         );
     }
    
+    async getCskZephyrBaseVersion() {
+      const zephyrbase = await this.zephyrbase();
+      const versionFilePath = join(zephyrbase, 'VERSION');
+      if (!(await pathExists(versionFilePath))) {
+        throw new Error('Unable to determine the zephyr base version, repo may be corrupted?');
+      }
+
+      const versionFileContent: string = readFileSync(versionFilePath, { encoding: 'utf8'});
+      if (!versionFileContent.includes('VERSION_MAJOR = 3') || !versionFileContent.includes('VERSION_MINOR = ')) {
+        throw new Error(`Unable to determine the zephyr base version, invalid zephyr base referred?`);
+      }
+
+      return versionFileContent.includes('VERSION_MINOR = 1') ? 1 : 2;
+    }
 } 
