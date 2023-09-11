@@ -4,7 +4,7 @@ import { undertake } from "../main";
 import { getEnv } from '../env';
 import Lisa, { TaskObject } from '@listenai/lisa_core';
 import { venvScripts } from '../venv';
-import { PLUGIN_HOME } from '../env/config';
+import { get, PLUGIN_HOME } from '../env/config';
 import * as yaml from 'js-yaml';
 import { platform } from "os";
 import simpleGit from "simple-git";
@@ -90,7 +90,7 @@ export default class AppProject {
 
         const westConfig = join(this.workspace, '.sdk', '.west', 'config');
         if (!await pathExists(westConfig)) {
-            const sdkBaseVer = await cskZephyrVersion(env['CSK_BASE']);
+            const sdkBaseVer = await cskZephyrVersion(env['CSK_BASE'] || (await get("sdk")) || '');
             switch (sdkBaseVer) {
                 case 1:
                     await writeFile(westConfig, `[manifest]\npath = ..\nfile = west.yml\n\n[zephyr]\nbase=zephyr`);

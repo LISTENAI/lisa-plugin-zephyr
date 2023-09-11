@@ -35,7 +35,7 @@ export default class SDK {
 
     async cskbase() {
       const env = await getEnv();
-      return env["CSK_BASE"] ?? '';
+      return (env["CSK_BASE"] || env["ZEPHYR_BASE"]) ?? '';
     }
 
     async westConfigPath() {

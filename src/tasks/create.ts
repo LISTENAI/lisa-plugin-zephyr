@@ -65,7 +65,7 @@ export default ({ application, cmd }: LisaType) => {
 
       if (!from) {
         const env = await getEnv();
-        const sdk = env['CSK_BASE'];
+        const sdk = env['CSK_BASE'] || env['ZEPHYR_BASE'];
         const cskZepVer = await cskZephyrVersion(env['ZEPHYR_BASE']);
         // 查看含有 sample.list 的 board
         const samplePathGlob = cskZepVer === 2 ?
