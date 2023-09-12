@@ -115,7 +115,8 @@ async function makeEnv(override?: string): Promise<Record<string, string>> {
   const sdk = await get('sdk');
   if (sdk) {
     env['ZEPHYR_BASE'] = sdk;
-    env['CSK_BASE'] = (await cskZephyrVersion(sdk)) === 2 ? join(sdk, '..', 'csk') : sdk;
+    const cskZepVer = await cskZephyrVersion(sdk);
+    env['CSK_BASE'] = cskZepVer === 2 ? join(sdk, '..', 'csk') : sdk;
   }
 
   Object.assign(env, {
