@@ -1,7 +1,7 @@
 import { LisaType, job } from "../utils/lisa_ex";
 import { ParsedArgs } from "minimist";
 import { resolve, join } from "path";
-import { mkdirs, pathExists, readFile } from "fs-extra";
+import { mkdirs, pathExists } from "fs-extra";
 import { isEqual } from "lodash";
 import Lisa from "@listenai/lisa_core";
 
@@ -13,6 +13,7 @@ import extendExec from "../utils/extendExec";
 import { zephyrVersion, sdkTag } from "../utils/sdk";
 import { getRepoStatus } from "../utils/repo";
 import { testLog } from "../utils/testLog";
+import { rmSync } from "fs";
 
 async function checkZephyrBase(ZEPHYR_BASE: string, westConfigPath: string) {
   if (!ZEPHYR_BASE) {
@@ -55,6 +56,7 @@ export default ({ application, cmd, got }: LisaType) => {
       if (args["clear"]) {
         await set("env", undefined);
         await invalidateEnv();
+        rmSync(join(PACKAGE_HOME, "node_modules"),  { force: true, recursive: true });
       } else {
         const envs = argv._.slice(1);
         const current = (await get("env")) || [];
