@@ -1,7 +1,7 @@
 import { LisaType, job } from "../utils/lisa_ex";
 import { ParsedArgs } from "minimist";
 import { resolve, join } from "path";
-import { mkdirs, pathExists, readFile } from "fs-extra";
+import { mkdirs, pathExists } from "fs-extra";
 import { isEqual } from "lodash";
 import Lisa from "@listenai/lisa_core";
 
@@ -13,6 +13,7 @@ import extendExec from "../utils/extendExec";
 import { zephyrVersion, sdkTag } from "../utils/sdk";
 import { getRepoStatus } from "../utils/repo";
 import { testLog } from "../utils/testLog";
+import { rmSync } from "fs";
 
 async function checkZephyrBase(ZEPHYR_BASE: string, westConfigPath: string) {
   if (!ZEPHYR_BASE) {
@@ -55,6 +56,7 @@ export default ({ application, cmd, got }: LisaType) => {
       if (args["clear"]) {
         await set("env", undefined);
         await invalidateEnv();
+        rmSync(join(PACKAGE_HOME, "node_modules"),  { force: true, recursive: true });
       } else {
         const envs = argv._.slice(1);
         const current = (await get("env")) || [];
@@ -256,6 +258,7 @@ export default ({ application, cmd, got }: LisaType) => {
           await invalidateEnv();
           const env = await getEnv();
           delete env.ZEPHYR_BASE;
+          delete env.CSK_BASE;
 
           if (!await pathExists(workspacePath)) {
             const initArgs = ["init"];
@@ -292,6 +295,20 @@ export default ({ application, cmd, got }: LisaType) => {
           if (!isZephyrBase) {
             throw new Error(`该路径不是一个 Zephyr base: ${zephyrPath}`);
           }
+
+          // requirements.txt might not in CSK folder, so try every possible paths in pathNested
+          let requirementPath = null;
+          for (const nested of pathNested) {
+            const tryRequirementPath = join(resolve(target), nested, "scripts", "requirements.txt");
+            if (await pathExists(tryRequirementPath)) {
+              requirementPath = tryRequirementPath;
+              break;
+            }
+          }
+          if (!requirementPath) {
+            throw new Error(`在所有可能的路径中没有找到 requirements.txt : ${zephyrPath}`);
+          }
+
           await exec(
             "python",
             [
@@ -299,7 +316,7 @@ export default ({ application, cmd, got }: LisaType) => {
               "pip",
               "install",
               "-r",
-              join(zephyrPath, "scripts", "requirements.txt"),
+              requirementPath,
             ],
             { env: await getEnv() }
           );
@@ -307,7 +324,8 @@ export default ({ application, cmd, got }: LisaType) => {
           await invalidateEnv();
         }
       }
-      const sdk = await get("sdk");
+      const newEnv = await getEnv();
+      const sdk = newEnv['CSK_BASE'];
       const version = sdk ? await sdkTag(sdk) : null;
       const branch = sdk ? await getRepoStatus(sdk) : null;
    
@@ -341,3 +359,4 @@ const getManifestPath = async (basicPath: string) => {
   );
   return join(basicPath, stdout);
 };
+

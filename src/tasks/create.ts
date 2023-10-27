@@ -12,6 +12,8 @@ import { ParsedArgs } from "minimist";
 import parseArgs from "../utils/parseArgs";
 import AppProject from "../models/appProject";
 import * as inquirer from 'inquirer';
+import { cskZephyrVersion } from "../utils/sdk";
+import { getEnv } from "../env";
 const inquirerFileTreeSelection = require('inquirer-file-tree-selection-prompt');
 inquirer.registerPrompt('file-tree-selection', inquirerFileTreeSelection)
 
@@ -62,16 +64,24 @@ export default ({ application, cmd }: LisaType) => {
       let from = args["from"] || '';
 
       if (!from) {
-        const sdk = (await get("sdk")) || "";
+        const env = await getEnv();
+        const sdk = env['CSK_BASE'] || env['ZEPHYR_BASE'];
+        const cskZepVer = await cskZephyrVersion(env['ZEPHYR_BASE']);
         // 查看含有 sample.list 的 board
-        const samplePathGlob = join(sdk, "samples", "boards", "*", "sample.list");
-        const sampleFiles = glob.sync(samplePathGlob, {});
+        const samplePathGlob = cskZepVer === 2 ?
+            join(sdk, "samples", "sample.list") :
+            join(sdk, "samples", "boards", "*", "sample.list");
         const boardsSampleList: ISampleList = {};
-        for (const file of sampleFiles) {
-          const board = resolve(parse(file).dir).split(sep).pop() ;
-          if (board) {
-            boardsSampleList[board] = file;
+        if (cskZepVer === 1) {
+          const sampleFiles = glob.sync(samplePathGlob, {});
+          for (const file of sampleFiles) {
+            const board = resolve(parse(file).dir).split(sep).pop() ;
+            if (board) {
+              boardsSampleList[board] = file;
+            }
           }
+        } else {
+          boardsSampleList["csk6"] = samplePathGlob;
         }
 
         // 选择 board (当board仅一个时，跳过选择)
@@ -79,6 +89,7 @@ export default ({ application, cmd }: LisaType) => {
         if (boards.length === 0) {
           throw new Error("当前 SDK 暂不支持 create 项目");
         }
+        application.debug(boards);
 
         let board = boards[0];
         if (Object.keys(boardsSampleList).length > 1) {
@@ -98,7 +109,7 @@ export default ({ application, cmd }: LisaType) => {
         const sampleListFile = resolve(boardsSampleList[board] as string);
         application.debug(sampleListFile);
         if (!(await pathExists(sampleListFile))) {
-          throw new Error(`当前 SDK 的 ${board} 暂不支持 create 项目`);
+          throw new Error(`当前 SDK 的 ${board} 暂不支持 create 项目 ${sampleListFile}`);
         }
 
         // 解析sampleListFile 按文件夹的json结构
@@ -109,24 +120,34 @@ export default ({ application, cmd }: LisaType) => {
         rl.on("line", async (line) => {
           line = line.trim();
           if (line && !line.startsWith("#")) {
-            line = !line.endsWith("*")
-              ? resolve(sdk, line, "./**/CMakeLists.txt")
-              : resolve(sdk, `${line}*`, "./CMakeLists.txt");
-            sampleList.push(resolve(line));
+            line = line.replace('${ZEPHYR_BASE}', env['ZEPHYR_BASE']);
+            const isDelete = line[0] === '-';
+            const isAbsolutePath = line[0] === '/';
+
+            if (!isDelete) {
+              const prefix = isAbsolutePath ? '' : sdk;
+              line = !line.endsWith("*")
+                ? resolve(prefix, line, "./**/CMakeLists.txt")
+                : resolve(prefix, `${line}*`, "./CMakeLists.txt");
+              sampleList.push(resolve(line));
+            }
           }
         });
 
         await once(rl, "close");
+        if (cskZepVer === 2) {
+          sampleList.push(resolve(sdk, 'samples/**', './CMakeLists.txt'));
+        }
 
         let sampleListJson: ISampleList = {};
-        // console.log(sampleList)
+        //console.log(sampleList)
         for (const samplePath of sampleList) {
           const files = glob.sync(samplePath, {});
           for (const file of files) {
             const dirParse = resolve(parse(file).dir)
-              .replace(join(sdk, "samples"), "")
+              .replace(join(sdk, '..'), "")
               .split(sep);
-            // console.log(dirParse);
+            //console.log(dirParse);
             sampleListJson = await path2json(dirParse, sampleListJson);
           }
         }
@@ -138,10 +159,10 @@ export default ({ application, cmd }: LisaType) => {
             type: 'file-tree-selection',
             name: 'file',
             message: '选择sample. (`左右键/空格键` 展开文件夹，`回车键` 确定选择)',
-            root: join(sdk, 'samples'),
+            root: join(sdk, '..'),
             onlyShowValid: true,
             validate: (item) => {
-              const dirParse = resolve(item).replace(join(sdk, "samples"), "").split(sep);
+              const dirParse = resolve(item).replace(join(sdk, ".."), "").split(sep);
               let val = false;
               let startJson = JSON.parse(JSON.stringify(sampleListJson))
               while(dirParse.length) {
@@ -156,7 +177,7 @@ export default ({ application, cmd }: LisaType) => {
               return val;
             },
             transformer: (item) => {
-              const dirParse = resolve(item).replace(join(sdk, "samples"), "").split(sep);
+              const dirParse = resolve(item).replace(join(sdk, ".."), "").split(sep);
               let name = item.split(sep).pop();
               let startJson = JSON.parse(JSON.stringify(sampleListJson))
               while(dirParse.length) {
@@ -174,7 +195,7 @@ export default ({ application, cmd }: LisaType) => {
         ])
         const selected = resolve(answers.file);
 
-        const dirParse = selected.replace(join(sdk, "samples"), "").split(sep);
+        const dirParse = selected.replace(join(sdk, ".."), "").split(sep);
         let val = false;
         let startJson = JSON.parse(JSON.stringify(sampleListJson))
         while(dirParse.length) {

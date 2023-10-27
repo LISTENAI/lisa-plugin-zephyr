@@ -4,11 +4,12 @@ import { undertake } from "../main";
 import { getEnv } from '../env';
 import Lisa, { TaskObject } from '@listenai/lisa_core';
 import { venvScripts } from '../venv';
-import { PLUGIN_HOME } from '../env/config';
+import { get, PLUGIN_HOME } from '../env/config';
 import * as yaml from 'js-yaml';
 import { platform } from "os";
 import simpleGit from "simple-git";
 import { clean } from "../utils/repo";
+import { cskZephyrVersion } from '../utils/sdk';
 // import { parse } from 'ini';
 type TaskArguments = Parameters<TaskObject['task']>;
 
@@ -89,7 +90,17 @@ export default class AppProject {
 
         const westConfig = join(this.workspace, '.sdk', '.west', 'config');
         if (!await pathExists(westConfig)) {
-            await writeFile(westConfig, `[manifest]\npath = ..\nfile = west.yml\n\n[zephyr]\nbase=zephyr`);
+            const sdkBaseVer = await cskZephyrVersion(env['CSK_BASE'] || (await get("sdk")) || '');
+            switch (sdkBaseVer) {
+                case 1:
+                    await writeFile(westConfig, `[manifest]\npath = ..\nfile = west.yml\n\n[zephyr]\nbase=zephyr`);
+                    break;
+                case 2:
+                    await writeFile(westConfig, `[manifest]\npath = ..\nfile = west.yml\n\n[zephyr]\nbase=zephyr`);
+                    break;
+                default:
+                    throw new Error('Unsupported zephyr base version');
+            }
         }
 
         await this.update();

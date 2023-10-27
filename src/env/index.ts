@@ -9,6 +9,7 @@ import { KEY_OF_PATH, SYSTEM_PATHS, makePath, splitPath } from '../utils/path';
 import typedImport from '../utils/typedImport';
 
 import { PLUGIN_HOME, get } from './config';
+import { cskZephyrVersion } from '../utils/sdk';
 
 export const PACKAGE_HOME = join(PLUGIN_HOME, 'packages');
 const PACKAGE_MODULES_DIR = join(PACKAGE_HOME, 'node_modules');
@@ -114,6 +115,8 @@ async function makeEnv(override?: string): Promise<Record<string, string>> {
   const sdk = await get('sdk');
   if (sdk) {
     env['ZEPHYR_BASE'] = sdk;
+    const cskZepVer = await cskZephyrVersion(sdk);
+    env['CSK_BASE'] = cskZepVer === 2 ? join(sdk, '..', 'csk') : sdk;
   }
 
   Object.assign(env, {
