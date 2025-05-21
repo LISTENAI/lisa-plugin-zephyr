@@ -15,6 +15,7 @@ import AppProject from "./models/appProject";
 import { resolve, dirname } from "path";
 import * as Sentry from "@sentry/node";
 import { join } from "path";
+import { connCheck } from "./utils/connCheck";
 Sentry.init({
   dsn: "http://e1729ec787e54957b0252fff58844c80@sentry.iflyos.cn/106",
   tracesSampleRate: 1.0,
@@ -67,6 +68,15 @@ export async function env(): Promise<Record<string, string>> {
   if (err) {
     Object.assign(variables, {
       check: redChar('检查存在环境缺失，请看文档faq章节进行处理')
+    });
+  }
+
+  try {
+    await connCheck();
+  } catch (e) {
+    const errmsg = (e as Error).message;
+    Object.assign(variables, {
+      res: redChar(errmsg)
     });
   }
 

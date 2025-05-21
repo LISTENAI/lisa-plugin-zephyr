@@ -107,7 +107,7 @@ export default ({ application, cmd, cli }: LisaType) => {
   job("init-app", {
     title: "初始化项目",
     async task(ctx, task) {
-      connCheck();
+      await connCheck(task);
 
       task.title = "";
       const targetDir = workspace() || process.cwd();
@@ -120,6 +120,8 @@ export default ({ application, cmd, cli }: LisaType) => {
   job("update", {
     title: "更新提货单projects",
     async task(ctx, task) {
+      await connCheck(task);
+
       task.title = "";
       const targetDir = workspace() || process.cwd();
       const app = new AppProject(targetDir, task);
