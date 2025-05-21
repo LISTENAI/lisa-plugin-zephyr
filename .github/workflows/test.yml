@@ -40,13 +40,13 @@ jobs:
           args: zip -qq -r ./eup.zip lib scripts vscode package.json
 
       - name: Upload tarball
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.build.outputs.tarball }}
           path: ${{ steps.build.outputs.tarball }}
 
       - name: Upload EUP package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: eup.zip
           path: eup.zip
@@ -60,7 +60,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest, ubuntu-latest]
         node: ['16']
 
     steps:
@@ -81,7 +81,7 @@ jobs:
         run: yarn --ignore-scripts --registry=https://registry-lpm.listenai.com
 
       - name: Download tarball
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ needs.build.outputs.tarball }}
 

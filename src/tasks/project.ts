@@ -23,6 +23,7 @@ import {
 import {flashRun, IFlashOpts} from "../utils/flash";
 import {IImage} from "@tool/lpk/lib/manifest";
 import {toNumber} from "lodash";
+import { connCheck } from "../utils/connCheck";
 
 async function getAppFlashAddr(buildDir: string): Promise<number> {
   const hasLoadOffset = await getKconfig(buildDir, 'CONFIG_HAS_FLASH_LOAD_OFFSET');
@@ -106,6 +107,8 @@ export default ({ application, cmd, cli }: LisaType) => {
   job("init-app", {
     title: "初始化项目",
     async task(ctx, task) {
+      await connCheck(task);
+
       task.title = "";
       const targetDir = workspace() || process.cwd();
       const app = new AppProject(targetDir, task);
@@ -117,6 +120,8 @@ export default ({ application, cmd, cli }: LisaType) => {
   job("update", {
     title: "更新提货单projects",
     async task(ctx, task) {
+      await connCheck(task);
+
       task.title = "";
       const targetDir = workspace() || process.cwd();
       const app = new AppProject(targetDir, task);
