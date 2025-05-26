@@ -22,7 +22,7 @@ export async function connCheck(task?: any): Promise<void> {
   const failedUrls = checkResult.filter(result => !result.ok);
   if (failedUrls.length > 0) {
     const failedItems = failedUrls.map(result => urlBase[result.url]).join(', ');
-    throw new Error(`资源访问失败，请检查网络连接是否正常。item = ${failedItems}`);
+    throw new Error(`资源访问失败，请检查网络是否正常，可尝试更换网络或关闭本地网络代理后重试。item = ${failedItems}`);
   }
 }
 
